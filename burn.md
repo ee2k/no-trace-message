@@ -15,7 +15,6 @@
 
 ## After message creation
 - Upon successful burn message creation, the user could see the link to the message and a copy button, and a preview of the message
-- QRCode could be generated
 
 ## TODO
 

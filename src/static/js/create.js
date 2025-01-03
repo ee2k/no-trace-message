@@ -36,10 +36,19 @@ class MessageCreator {
             { value: Infinity, label: 'Never' }
         ];
         
+        this.customTokenBtn = document.getElementById('customTokenBtn');
+        this.tokenInputContainer = document.getElementById('tokenInputContainer');
+        this.customToken = document.getElementById('customToken');
+        this.tokenCounter = document.getElementById('tokenCounter');
+        
+        this.MIN_TOKEN_LENGTH = 4;
+        this.MAX_TOKEN_LENGTH = 70;
+        
         this.setupEventListeners();
         this.setupCharCounter();
         this.setupSlider();
         this.setupBurnTimeSlider();
+        this.setupTokenInput();
     }
     
     setupEventListeners() {
@@ -145,6 +154,39 @@ class MessageCreator {
         updateSliderValue(); // Set initial value
     }
     
+    setupTokenInput() {
+        this.customTokenBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent jumping to top
+            
+            if (this.tokenInputContainer.style.display === 'none') {
+                this.tokenInputContainer.style.display = 'block';
+                this.customTokenBtn.textContent = 'Use system generated password';
+                
+                // Let browser handle visibility after a short delay
+                setTimeout(() => {
+                    this.tokenInputContainer.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+            } else {
+                this.tokenInputContainer.style.display = 'none';
+                this.customToken.value = '';
+                this.customTokenBtn.textContent = 'Use custom password';
+            }
+        });
+
+        this.customToken.addEventListener('input', () => {
+            const length = this.customToken.value.length;
+            this.tokenCounter.textContent = `${length}/${this.MAX_TOKEN_LENGTH}`;
+            
+            if (length > 0 && length < this.MIN_TOKEN_LENGTH) {
+                this.tokenCounter.classList.add('error');
+                this.createBtn.disabled = true;
+            } else {
+                this.tokenCounter.classList.remove('error');
+                this.createBtn.disabled = false;
+            }
+        });
+    }
+    
     handleFiles(files) {
         if (this.images.size >= this.MAX_IMAGES) {
             alert(`Only ${this.MAX_IMAGES} image allowed. Please remove the existing image first.`);
@@ -206,6 +248,17 @@ class MessageCreator {
         formData.append('message', message);
         formData.append('expiry', this.expiryTimes[document.getElementById('expiryTime').value].value);
         formData.append('burnTime', this.burnTimes[document.getElementById('burnTime').value].value);
+        
+        // Add custom token if provided
+        const customToken = this.customToken.value.trim();
+        if (this.tokenInputContainer.style.display !== 'none' && customToken) {
+            if (customToken.length < this.MIN_TOKEN_LENGTH) {
+                alert(`Password must be at least ${this.MIN_TOKEN_LENGTH} characters`);
+                return;
+            }
+            formData.append('token', customToken);
+        }
+        
         this.images.forEach(file => formData.append('images', file));
         
         try {
