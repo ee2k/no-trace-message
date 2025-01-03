@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoTrace Message - Create</title>
+    <link rel="stylesheet" href="static/css/global.css">
+    <link rel="stylesheet" href="static/css/create.css">
+    <link rel="icon" type="image/svg+xml" href="static/images/favicon.svg">
+</head>
+<body>
+    <div class="container">
+        <!-- GitHub link in top right -->
+        <a href="https://github.com/yourusername/notrace-message" target="_blank" class="github-corner">
+            <svg class="github-logo icon-primary">
+                <use href="static/images/github-icon.svg#icon"></use>
+            </svg>
+        </a>
+
+        <!-- Header with reduced top margin -->
+        <header>
+            <h1>Burn after reading</h1>
+            <p class="subtitle">A secure, anonymous open-source platform</p>
+            
+            <div class="features">
+                <!-- <div class="feature-item">
+                    <span>• No registration</span>
+                </div> -->
+                <div class="feature-item">
+                    <span>• No history</span>
+                </div>
+                <div class="feature-item">
+                    <span>• No tracking</span>
+                </div>
+                <div class="feature-item">
+                    <span>• No database</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Message creation form -->
+        <main>
+            <div class="message-form">
+                <div class="textarea-container">
+                    <textarea 
+                        id="messageContent" 
+                        placeholder="Type your message here..."
+                        rows="6"
+                    ></textarea>
+                    <div class="char-counter"></div>
+                </div>
+
+                <div class="image-upload">
+                    <div class="drop-zone" id="dropZone">
+                        <svg class="upload-icon" width="48" height="48">
+                            <use href="static/images/upload.svg#icon"></use>
+                        </svg>
+                        <p>Click or drop image here to upload</p>
+                        <p class="upload-hint">1 image, 3MB max</p>
+                        <input type="file" id="fileInput" accept="image/*" hidden>
+                    </div>
+                    <div class="image-previews" id="imagePreviews">
+                        <!-- Image previews will be added here -->
+                    </div>
+                </div>
+
+                <div class="settings">
+                    <div class="setting-item">
+                        <label for="burnTime">Burn after reading in&nbsp;&nbsp;<span class="slider-value"></span></label>
+                        <input type="range" id="burnTime" min="0" max="6" value="3" class="slider">
+                    </div>
+                    <div class="setting-item">
+                        <label for="expiryTime">Message expires without reading after&nbsp;<span class="slider-value"></span></label>
+                        <input type="range" id="expiryTime" min="0" max="6" value="3" class="slider">
+                    </div>
+                </div>
+
+                <button id="createBtn" class="primary-button">Create Burning Message</button>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="static/js/create.js"></script>
+</body>
+</html>
