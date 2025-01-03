@@ -2,7 +2,7 @@
 
 ## URL pattern
 
-https://domain.com/msg/messageID?token=one_time_token
+https://domain.com/message/messageID?token=one_time_token
 
 ## Creation page design
 

@@ -1,14 +1,5 @@
 ## Tech Stack
 
-- Linux
-- Python (FastAPI)
-- HTML
-- CSS
-- JavaScript
-- WebSocket
-
-## Version
-
 - Linux     Debian 11 (Bullseye)
 - Python    Python 3.10.12
 - FastAPI   FastAPI 0.95.2
@@ -41,10 +32,11 @@ Note: These versions represent >98% of global browser usage as of 2024.
 python3 -m venv venv
 
 # Activate venv
-# On Windows:
-venv\Scripts\activate
 # On Unix/MacOS:
 source venv/bin/activate
+
+# On Windows:
+venv\Scripts\activate
 
 # Install requirements with proxy
 pip3 --proxy http://ip:port --trusted-host pypi.org --trusted-host files.pythonhosted.org install -r requirements.txt
@@ -64,5 +56,5 @@ pip3 install -r requirements.txt
 ## Local http server setup
 ```bash
 cd src
-python3 -m http.server 8000
+python3 -m http.server 80
 ```
