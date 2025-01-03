@@ -1,0 +1,147 @@
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.success-message {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.checkmark-icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 1rem;
+}
+
+.icon-success {
+    fill: var(--success-color, #22c55e);
+}
+
+.highlight {
+    color: var(--accent-color);
+    font-weight: 500;
+}
+
+.share-section {
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.url-box, .token-box {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    margin-top: 0.5rem;
+}
+
+.url-box span, .token-box span {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: monospace;
+}
+
+.token-box span {
+    color: var(--text-secondary);
+}
+
+.copy-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    background: var(--accent-color);
+    color: white;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.copy-btn:hover {
+    background: var(--accent-hover);
+}
+
+.copy-icon {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.button {
+    flex: 1;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.button.primary {
+    background: var(--accent-color);
+    color: white;
+}
+
+.button.primary:hover {
+    background: var(--accent-hover);
+}
+
+.button.secondary {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.button.secondary:hover {
+    background: var(--border-color);
+}
+
+.preview-section {
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.preview-section h2 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.message-content {
+    background: var(--bg-color);
+    border-radius: 6px;
+    padding: 1rem;
+}
+
+.image-preview img {
+    max-width: 100%;
+    border-radius: 4px;
+    margin-top: 1rem;
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    .actions {
+        flex-direction: column;
+    }
+}

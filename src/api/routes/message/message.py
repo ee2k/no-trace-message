@@ -14,14 +14,16 @@ async def create_message(
     message: str = Form(""),
     images: Optional[List[UploadFile]] = File(None),
     expiry: int = Form(...),
-    burn_time: float = Form(...)
+    burn_time: float = Form(...),
+    token: Optional[str] = Form(None)
 ):
     try:
         # Validate request data
         create_request = CreateMessageRequest(
             message=message,
             expiry=expiry,
-            burn_time=burn_time
+            burn_time=burn_time,
+            token=token
         )
 
         # Validate images
@@ -51,7 +53,9 @@ async def create_message(
         message_id = generate_message_id(
             exists_check=lambda id: id in message_store.messages
         )
-        access_token = generate_access_token()
+        
+        # Use custom token or generate one
+        access_token = token.strip() if token else generate_access_token()
         expires_at = datetime.now() + timedelta(minutes=expiry)
 
         # Process images
@@ -65,6 +69,7 @@ async def create_message(
                     'type': img.content_type
                 })
 
+        is_custom_token = bool(token)
         # Create message object
         message_obj = {
             'id': message_id,
@@ -74,7 +79,8 @@ async def create_message(
             'expires_at': expires_at,
             'burn_time': burn_time,
             'access_token': access_token,
-            'is_read': False
+            'is_read': False,
+            'is_custom_token': is_custom_token
         }
 
         # Store message
@@ -83,7 +89,9 @@ async def create_message(
         return MessageResponse(
             id=message_id,
             token=access_token,
-            expires_at=expires_at
+            burn_time=burn_time,
+            expires_at=expires_at,
+            is_custom_token=is_custom_token
         )
 
     except Exception as e:
