@@ -1,10 +1,8 @@
 from fastapi import APIRouter
-from . import APITags
-from .private.room import router as room_router
-from .chat.chat import router as chat_router
+from api.models.enums import APITags
+from api.routes.message.message import router as message_router
 
 api_router = APIRouter(prefix="/api")
 
 # Include sub-routers
-api_router.include_router(room_router, prefix="/rooms", tags=[APITags.ROOMS])
-api_router.include_router(chat_router, prefix="/chat", tags=[APITags.CHAT]) 
+api_router.include_router(message_router, prefix="/message", tags=[APITags.MESSAGE]) 

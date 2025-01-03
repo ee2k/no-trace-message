@@ -1,9 +1,5 @@
 # Burn after read service
 
-## URL pattern
-
-https://domain.com/message/messageID?token=one_time_token
-
 ## Creation page design
 
 - Service explanation

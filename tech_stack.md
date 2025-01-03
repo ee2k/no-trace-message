@@ -3,7 +3,6 @@
 - Linux     Debian 11 (Bullseye)
 - Python    Python 3.10.12
 - FastAPI   FastAPI 0.95.2
-- WebSocket WebSocket 1.0.0
 - HTML      HTML5
 - CSS       CSS3
 - JavaScript JavaScript ES6 (ECMAScript 2015)

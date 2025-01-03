@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from routes.api import api_router
 
-app = FastAPI(title="NoTrace Chat")
+app = FastAPI(title="Burn after reading message")
 
 # CORS middleware
 app.add_middleware(
