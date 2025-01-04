@@ -40,8 +40,10 @@ class MessageCreator {
         this.tokenInputContainer = document.getElementById('tokenInputContainer');
         this.customToken = document.getElementById('customToken');
         this.tokenCounter = document.getElementById('tokenCounter');
+        this.tokenHint = document.getElementById('tokenHint');
+        this.hintCounter = document.getElementById('hintCounter');
         
-        this.MIN_TOKEN_LENGTH = 4;
+        this.MIN_TOKEN_LENGTH = 6;
         this.MAX_TOKEN_LENGTH = 70;
         
         this.setupEventListeners();
@@ -161,6 +163,8 @@ class MessageCreator {
             if (this.tokenInputContainer.style.display === 'none') {
                 this.tokenInputContainer.style.display = 'block';
                 this.customTokenBtn.textContent = 'Use system generated password';
+                this.tokenCounter.textContent = '70';  // Initial count
+                this.hintCounter.textContent = '70';   // Initial count for hint
                 
                 // Let browser handle visibility after a short delay
                 setTimeout(() => {
@@ -169,21 +173,29 @@ class MessageCreator {
             } else {
                 this.tokenInputContainer.style.display = 'none';
                 this.customToken.value = '';
+                this.tokenHint.value = '';
                 this.customTokenBtn.textContent = 'Use custom password';
             }
         });
 
+        // Token counter
         this.customToken.addEventListener('input', () => {
-            const length = this.customToken.value.length;
-            this.tokenCounter.textContent = `${length}/${this.MAX_TOKEN_LENGTH}`;
+            const remaining = this.MAX_TOKEN_LENGTH - this.customToken.value.length;
+            this.tokenCounter.textContent = remaining.toString();
             
-            if (length > 0 && length < this.MIN_TOKEN_LENGTH) {
+            if (this.customToken.value.length > 0 && this.customToken.value.length < this.MIN_TOKEN_LENGTH) {
                 this.tokenCounter.classList.add('error');
                 this.createBtn.disabled = true;
             } else {
                 this.tokenCounter.classList.remove('error');
                 this.createBtn.disabled = false;
             }
+        });
+
+        // Hint counter
+        this.tokenHint.addEventListener('input', () => {
+            const remaining = this.MAX_TOKEN_LENGTH - this.tokenHint.value.length;
+            this.hintCounter.textContent = remaining.toString();
         });
     }
     

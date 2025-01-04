@@ -79,15 +79,28 @@
                 <div class="token-section">
                     <a href="#" class="token-link" id="customTokenBtn">Use custom access token</a>
                     <div class="token-input-container" id="tokenInputContainer" style="display: none;">
-                        <textarea 
-                            id="customToken" 
-                            rows="3"
-                            placeholder="min 4 chars, no longer than an SMS
+                        <div class="token-row">
+                            <textarea 
+                                id="customToken" 
+                                rows="3"
+                                placeholder="6~70 characters
 
-a poetic line could be good~"
-                            maxlength="70"
-                        ></textarea>
-                        <div class="char-counter" id="tokenCounter"></div>
+a memorable line could be good~"
+                                maxlength="70"
+                            ></textarea>
+                            <div class="char-counter" id="tokenCounter"></div>
+                        </div>
+                        <div class="token-row">
+                            <textarea 
+                                id="tokenHint" 
+                                rows="3"
+                                placeholder="Optional password hint
+
+e.g., 'Our favorite coffee shop'"
+                                maxlength="70"
+                            ></textarea>
+                            <div class="char-counter" id="hintCounter"></div>
+                        </div>
                     </div>
                 </div>
 

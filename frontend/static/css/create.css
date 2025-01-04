@@ -321,10 +321,20 @@ footer {
 }
 
 .token-input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.token-row {
     position: relative;
 }
 
-.token-input-container textarea {
+.token-row + .token-row {
+    margin-top: 1rem;  /* Add top margin to hint textarea */
+}
+
+.token-row textarea {
     width: 100%;
     padding: 0.75rem 1rem;
     border: 1px solid var(--border-color);
@@ -334,12 +344,22 @@ footer {
     font-size: 1rem;
     font-family: inherit;
     resize: none;
+    height: auto;  /* Let rows control height */
 }
 
-.token-input-container .char-counter {
+.token-row:last-child textarea {
+    color: var(--text-secondary);
+}
+
+.token-row .char-counter {
     position: absolute;
     bottom: 0.5rem;
     right: 0.5rem;
-    color: var(--text-secondary);
-    font-size: 0.8rem;
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+    .token-row:last-child textarea {
+        width: 100%;
+    }
 }
