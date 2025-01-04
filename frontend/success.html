@@ -12,21 +12,23 @@
     <div class="container">
         <main>
             <div class="success-message">
-                <svg class="checkmark-icon icon-success">
-                    <use href="static/images/checkmark.svg#icon"></use>
-                </svg>
-                <h1>Burn after reading message created</h1>
-                <p>
-                    It will burn in <span id="burnTime" class="highlight"></span> upon reading 🔥<br>
-                    Expires <span id="expiryTime" class="relative-time"></span> if not read ⏰
+                <div class="success-header">
+                    <svg class="checkmark-icon icon-success">
+                        <use href="static/images/checkmark.svg#icon"></use>
+                    </svg>
+                    <h2>Message created!</h2>
+                </div>
+                <p class="message-timing">
+                    Will burn after <span id="burnTime" class="highlight"></span> of reading<br>
+                    Message expires in:&emsp;<span id="expiryTime" class="relative-time"></span>
                 </p>
             </div>
 
             <div class="share-section">
                 <div class="url-container">
-                    <p>Share this link with your friend:</p>
+                    <p>Share this link:</p>
                     <div class="url-box">
-                        <span id="messageUrl">https://domain/message/abc123</span>
+                        <span id="messageUrl"></span>
                         <button class="copy-btn" data-clipboard="messageUrl">
                             <svg class="copy-icon">
                                 <use href="static/images/copy.svg#icon"></use>
@@ -47,12 +49,14 @@
                             <span>Copy</span>
                         </button>
                     </div>
+                    <div id="tokenHintSection" class="token-hint" style="display: none;">
+                        <p>Hint: <span id="messageTokenHint"></span></p>
+                    </div>
                 </div>
             </div>
 
             <div class="actions">
                 <a href="/" class="button primary">Create Another Message</a>
-                <button class="button secondary">Close</button>
             </div>
         </main>
     </div>

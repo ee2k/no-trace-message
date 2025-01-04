@@ -15,14 +15,16 @@
     --icon-secondary: #a1a1a1;
     --icon-accent: #2563eb;
     --icon-disabled: #4a4a4a;
-    /* --check-blue: #3b82f6; */
+    --success-color: #22c55e;
     --accent-color: #2563eb;
     --accent-color-dark: #1d4ed8;
+    --accent-hover: #1d4ed8;
     /* --accent-color: #1d4ed8;
     --accent-color-dark: #1e40af; */
     /* --accent-color: #2564ebc8;
     --accent-color-dark: #1d4fd8a5; */
     --bg-secondary: #2d2d2d;
+    /* --check-blue: #3b82f6; */
 }
 
 * {

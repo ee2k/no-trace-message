@@ -31,3 +31,6 @@ class MessageStore:
             for msg_id in expired:
                 await self.delete_message(msg_id)
             await asyncio.sleep(60)  # Check every minute
+    
+    async def get_message_meta(self, message_id: str) -> Optional[dict]:
+        return self.messages.get(message_id)

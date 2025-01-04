@@ -259,34 +259,51 @@ class MessageCreator {
         const formData = new FormData();
         formData.append('message', message);
         formData.append('expiry', this.expiryTimes[document.getElementById('expiryTime').value].value);
-        formData.append('burnTime', this.burnTimes[document.getElementById('burnTime').value].value);
+        formData.append('burn_time', this.burnTimes[document.getElementById('burnTime').value].value);
         
-        // Add custom token if provided
+        // Add custom token and hint if provided
         const customToken = this.customToken.value.trim();
+        const tokenHint = this.tokenHint.value.trim();
+
         if (this.tokenInputContainer.style.display !== 'none' && customToken) {
             if (customToken.length < this.MIN_TOKEN_LENGTH) {
                 alert(`Password must be at least ${this.MIN_TOKEN_LENGTH} characters`);
                 return;
             }
             formData.append('token', customToken);
+            if (tokenHint) {
+                formData.append('token_hint', tokenHint);
+            }
         }
-        
+
         this.images.forEach(file => formData.append('images', file));
         
         try {
-            const response = await fetch('/api/create', {
+            const response = await fetch('/api/message/create', {
                 method: 'POST',
                 body: formData
             });
             
+            const data = await response.json();
+            
             if (response.ok) {
-                const data = await response.json();
+                // Store token in sessionStorage instead of URL
+                sessionStorage.setItem(`msg_token_${data.id}`, data.token);
                 window.location.href = `/success?id=${data.id}`;
             } else {
-                throw new Error('Failed to create message');
+                console.error('Server error:', data);
+                if (data.detail?.errors) {
+                    const errors = data.detail.errors
+                        .map(err => `${err.loc.join('.')}: ${err.msg}`)
+                        .join('\n');
+                    alert(`Validation errors:\n${errors}`);
+                } else {
+                    alert(data.detail?.message || 'Failed to create message');
+                }
             }
         } catch (error) {
-            alert('Error creating message: ' + error.message);
+            console.error('Network error:', error);
+            alert('Network error: ' + error.message);
         }
     }
 }

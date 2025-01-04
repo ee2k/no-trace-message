@@ -12,11 +12,10 @@
 .checkmark-icon {
     width: 48px;
     height: 48px;
-    margin-bottom: 1rem;
 }
 
 .icon-success {
-    fill: var(--success-color, #22c55e);
+    color: var(--success-color, #22c55e);
 }
 
 .highlight {
@@ -68,7 +67,7 @@
 }
 
 .copy-btn:hover {
-    background: var(--accent-hover);
+    background: var(--accent-color-dark);
 }
 
 .copy-icon {
@@ -78,9 +77,16 @@
 }
 
 .actions {
+    margin-top: 2rem;
     display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
+    justify-content: center;
+}
+
+.actions .button {
+    padding-left: 2rem;
+    padding-right: 2rem;
+    width: auto;
+    flex: none;
 }
 
 .button {
@@ -101,7 +107,7 @@
 }
 
 .button.primary:hover {
-    background: var(--accent-hover);
+    background: var(--accent-color-dark);
 }
 
 .button.secondary {
@@ -121,4 +127,32 @@
     .actions {
         flex-direction: column;
     }
+}
+
+.token-hint {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-color);
+    border-radius: 6px;
+    color: var(--text-secondary);
+}
+
+.token-hint p {
+    margin: 0;
+}
+
+.message-timing {
+    margin-top: 1rem;
+    line-height: 2;
+}
+
+.success-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.success-header h2 {
+    margin: 0;
 }
