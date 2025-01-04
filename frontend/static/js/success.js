@@ -102,7 +102,7 @@ class SuccessPage {
             sessionStorage.removeItem(`msg_token_${this.messageId}`);
         } catch (error) {
             console.error('Error loading message metadata:', error);
-            alert('Failed to load message details. Please try again.');
+            alert('Error');
         }
     }
 

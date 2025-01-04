@@ -21,9 +21,9 @@ class MessageCreator {
             { value: 5, label: '5 min' },
             { value: 30, label: '30 min' },
             { value: 60, label: '1 hour' },
-            { value: 720, label: '12 hours' },
             { value: 1440, label: '1 day' },
-            { value: 4320, label: '3 days' }
+            { value: 4320, label: '3 days' },
+            { value: 8640, label: '7 days' }
         ];
         
         this.burnTimes = [

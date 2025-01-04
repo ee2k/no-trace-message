@@ -156,3 +156,25 @@
 .success-header h2 {
     margin: 0;
 }
+
+.divider {
+    display: inline-block;
+    color: var(--icon-secondary);
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    position: relative;
+}
+
+/* Optional: add lines on both sides */
+.divider::before,
+.divider::after {
+    content: '';
+    display: inline-block;
+    width: 30px;
+    height: 1px;
+    background: var(--icon-secondary);
+    margin: 0 10px;
+    vertical-align: middle;
+    opacity: 0.5;
+}

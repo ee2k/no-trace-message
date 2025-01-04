@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 
 class RateLimiter:
-    def __init__(self, requests_per_minute=10):
+    def __init__(self, requests_per_minute=6):
         self.requests = defaultdict(list)
         self.limit = requests_per_minute
 
