@@ -116,11 +116,11 @@ class SuccessPage {
         
         if (hours > 24) {
             const days = Math.floor(hours / 24);
-            return `in ${days} day${days === 1 ? '' : 's'}`;
+            return `${days} day${days === 1 ? '' : 's'}`;
         } else if (hours > 0) {
-            return `in ${hours} hour${hours === 1 ? '' : 's'} and ${minutes} minute${minutes === 1 ? '' : 's'}`;
+            return `${hours} hour${hours === 1 ? '' : 's'} and ${minutes} minute${minutes === 1 ? '' : 's'}`;
         } else {
-            return `in ${minutes} minute${minutes === 1 ? '' : 's'}`;
+            return `${minutes} minute${minutes === 1 ? '' : 's'}`;
         }
     }
 }
