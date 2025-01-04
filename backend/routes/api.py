@@ -1,6 +1,6 @@
 from fastapi import APIRouter
-from api.models.enums import APITags
-from api.routes.message.message import router as message_router
+from models.enums import APITags
+from routes.message.message import router as message_router
 
 api_router = APIRouter(prefix="/api")
 

@@ -113,29 +113,6 @@
     background: var(--border-color);
 }
 
-.preview-section {
-    background: var(--bg-secondary);
-    border-radius: 8px;
-    padding: 1.5rem;
-}
-
-.preview-section h2 {
-    margin-top: 0;
-    margin-bottom: 1rem;
-}
-
-.message-content {
-    background: var(--bg-color);
-    border-radius: 6px;
-    padding: 1rem;
-}
-
-.image-preview img {
-    max-width: 100%;
-    border-radius: 4px;
-    margin-top: 1rem;
-}
-
 @media (max-width: 600px) {
     .container {
         padding: 1rem;

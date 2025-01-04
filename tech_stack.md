@@ -57,3 +57,25 @@ pip3 install -r requirements.txt
 cd src
 python3 -m http.server 80
 ```
+
+## Uvicorn setup
+```bash
+# Basic with port
+uvicorn main:app --port 80
+
+# Development mode with auto-reload, sudo is required to bind to port 80
+sudo uvicorn main:app --reload --port 80
+
+# Production settings
+uvicorn main:app \
+    --host 0.0.0.0 \
+    --port 80 \
+    --workers 4 \
+    --proxy-headers \
+    --forwarded-allow-ips='*'
+
+# With SSL/HTTPS
+uvicorn main:app \
+    --ssl-keyfile=./key.pem \
+    --ssl-certfile=./cert.pem
+```

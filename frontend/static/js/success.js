@@ -12,13 +12,12 @@ class SuccessPage {
         this.messageUrl = document.getElementById('messageUrl');
         this.messageToken = document.getElementById('messageToken');
         this.tokenSection = document.getElementById('tokenSection');
-        this.messagePreview = document.getElementById('messagePreview');
-        this.imagePreview = document.getElementById('imagePreview');
-        this.closeButton = document.querySelector('.button.secondary');
+        this.burnTime = document.getElementById('burnTime');
+        this.expiryTime = document.getElementById('expiryTime');
         
         this.setupCopyButtons();
         this.setupCloseButton();
-        this.loadMessageData();
+        this.loadMessageMeta();
     }
     
     setupCopyButtons() {
@@ -63,37 +62,41 @@ class SuccessPage {
         });
     }
     
-    async loadMessageData() {
+    async loadMessageMeta() {
         try {
-            const response = await fetch(`/api/message/${this.messageId}/preview`);
-            if (!response.ok) throw new Error('Failed to load message data');
+            const response = await fetch(`/api/message/${this.messageId}/meta`);
+            if (!response.ok) throw new Error('Failed to load message metadata');
             
             const data = await response.json();
             
+            // Update all dynamic content
+            this.burnTime.textContent = `${data.burn_time} seconds`;
+            this.expiryTime.textContent = this.formatExpiryTime(data.expires_at);
+            
             // Update URL display
             const baseUrl = `${window.location.origin}/message/${this.messageId}`;
-            if (data.customToken) {
+            if (data.is_custom_token) {
                 this.messageUrl.textContent = baseUrl;
                 this.messageToken.textContent = data.token;
                 this.tokenSection.style.display = 'block';
             } else {
                 this.messageUrl.textContent = `${baseUrl}?token=${data.token}`;
             }
-            
-            // Update preview
-            this.messagePreview.textContent = data.text;
-            
-            // Update image preview if exists
-            if (data.hasImage) {
-                const img = document.createElement('img');
-                img.src = `/api/message/${this.messageId}/image/preview`;
-                img.alt = 'Message image';
-                this.imagePreview.appendChild(img);
-            }
-            
         } catch (error) {
-            console.error('Error loading message data:', error);
+            console.error('Error loading message metadata:', error);
         }
+    }
+
+    formatExpiryTime(expiryDate) {
+        const expiry = new Date(expiryDate);
+        const now = new Date();
+        const diff = expiry - now;
+        
+        const minutes = Math.floor(diff / 60000);
+        if (minutes < 60) return `in ${minutes} minutes`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `in ${hours} hours`;
+        return `in ${Math.floor(hours / 24)} days`;
     }
 }
 

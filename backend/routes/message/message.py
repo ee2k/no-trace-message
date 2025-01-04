@@ -1,10 +1,10 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 from typing import List, Optional
-from api.models.message import CreateMessageRequest, MessageResponse
-from api.services.message_store import MessageStore
+from models.message import CreateMessageRequest, MessageResponse
+from services.message_store import MessageStore
 import secrets
 from datetime import datetime, timedelta
-from api.utils.num_generator import generate_message_id, generate_access_token
+from utils.num_generator import generate_message_id, generate_access_token
 
 router = APIRouter()
 message_store = MessageStore()
