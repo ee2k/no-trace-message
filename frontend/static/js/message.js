@@ -106,18 +106,22 @@ class MessagePage {
                     const minutes = Math.ceil(error.detail.wait_time / 60);
                     this.showError(`Too many failed attempts. Please wait ${minutes} minutes before trying again.`);
                 } else if (response.status === 401 || response.status === 404) {
+                    // Keep token form visible, hide other content on failed attempt
                     this.showError('Wrong token. Please try again.');
+                    document.querySelector('.actions').style.display = 'none';
+                    document.querySelector('.message-content').style.display = 'none';
+                    document.querySelector('.burn-progress').style.display = 'none';
                 } else {
                     this.showError('Network error. Please try again later.');
                 }
                 return;
             }
             
-            // Hide token form and show message content on success
+            // Show content and create button on successful token validation
             this.tokenForm.style.display = 'none';
             document.querySelector('.message-content').style.display = 'block';
             document.querySelector('.burn-progress').style.display = 'block';
-            document.querySelector('.actions').style.display = 'block';  // Show create new button after successful validation
+            document.querySelector('.actions').style.display = 'block';
             
             const data = await response.json();
             this.burnTimeSeconds = data.burn_time === 'never' ? Infinity : parseFloat(data.burn_time);
@@ -215,16 +219,26 @@ class MessagePage {
             return;
         }
 
-        // Control visibility of Create New Message button
+        // Control visibility of elements
         const createNewBtn = document.querySelector('.actions');
-        if (!token && metadata.needs_token) {
-            // Show token form, hide other content and create button
+        const messageContent = document.querySelector('.message-content');
+        const burnProgress = document.querySelector('.burn-progress');
+
+        // Hide content and progress by default
+        messageContent.style.display = 'none';
+        burnProgress.style.display = 'none';
+        createNewBtn.style.display = 'none';
+
+        if (metadata.needs_token) {
+            // Show token form, hide other content
             this.tokenForm.style.display = 'block';
-            document.querySelector('.message-content').style.display = 'none';
-            document.querySelector('.burn-progress').style.display = 'none';
-            createNewBtn.style.display = 'none';  // Hide create new button
+            // Clear any existing token from sessionStorage on page load
+            sessionStorage.removeItem(`msg_token_${this.messageId}`);
+            // Clear token input value
+            this.tokenInput.value = '';
         } else {
-            createNewBtn.style.display = 'block';  // Show create new button
+            // No token needed
+            createNewBtn.style.display = 'block';
             this.loadMessage();
         }
     }
