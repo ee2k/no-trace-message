@@ -141,35 +141,6 @@ async def create_message(
             }
         )
 
-# @router.get("/{message_id}/meta", response_model=MessageResponse)
-# async def get_message_meta(
-#     message_id: str,
-#     token: str = Form(...)  # Require token in POST body
-# ):
-#     try:
-#         # Validate message ID and token
-#         if not message_id or len(message_id) != 10:
-#             raise HTTPException(status_code=400, detail="Invalid message ID")
-            
-#         message = await message_store.get_message(message_id, token)
-#         if not message:
-#             raise HTTPException(status_code=404, detail="Message not found or invalid token")
-
-#         return MessageResponse(
-#             id=message_id,
-#             token=token,  # Safe to return as user already knows it
-#             token_hint=message.get('token_hint'),
-#             burn_time=message['burn_time'],
-#             expires_at=message['expires_at'],
-#             is_custom_token=message.get('is_custom_token', False)
-#         )
-
-#     except HTTPException:
-#         raise
-#     except Exception as e:
-#         print(f"Unexpected error in get_message_meta: {str(e)}")
-#         raise HTTPException(status_code=500, detail="Internal server error")
-
 @router.post("/{message_id}/meta", response_model=MessageResponse)
 async def get_message_meta(message_id: str, token: str = Form(...)):
     try:
@@ -203,3 +174,31 @@ async def get_message_meta(message_id: str, token: str = Form(...)):
             status_code=500,
             detail={"message": "Failed to get message metadata"}
         )
+
+@router.post("/{message_id}")
+async def get_message(
+    message_id: str,
+    token: str = Form(None)
+):
+    try:
+        # Get message from RAM storage
+        message = await message_store.get_message(message_id, token)
+        
+        if not message:
+            raise HTTPException(status_code=404)
+        
+        # Get message content
+        response_data = {
+            "text": message['text'],
+            "images": message['images'],
+            "burn_time": message['burn_time']
+        }
+        
+        # Delete message after retrieval
+        await message_store.delete_message(message_id)
+        
+        return response_data
+        
+    except Exception as e:
+        print(f"Error retrieving message: {str(e)}")
+        raise HTTPException(status_code=404)

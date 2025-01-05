@@ -162,7 +162,7 @@ class MessageCreator {
             
             if (this.tokenInputContainer.style.display === 'none') {
                 this.tokenInputContainer.style.display = 'block';
-                this.customTokenBtn.textContent = 'Use system generated password';
+                this.customTokenBtn.textContent = 'Use system generated token';
                 this.tokenCounter.textContent = '70';  // Initial count
                 this.hintCounter.textContent = '70';   // Initial count for hint
                 
@@ -174,7 +174,7 @@ class MessageCreator {
                 this.tokenInputContainer.style.display = 'none';
                 this.customToken.value = '';
                 this.tokenHint.value = '';
-                this.customTokenBtn.textContent = 'Use custom password';
+                this.customTokenBtn.textContent = 'Use custom token';
             }
         });
 

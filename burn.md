@@ -16,6 +16,32 @@
 ## After message creation
 - Upon successful burn message creation, the user could see the link to the message and a copy button, and a preview of the message
 
-## TODO
+<!--
+display images when finished loading images and text
 
-- after receiving read message request, when should the server delete the message from RAM? The images may take some time to load
+timeout page will display some explanation, and a button to create a new message
+
+or shall we use timeout page to display info when no message if found?
+
+suggestions:
+
+Use skeleton loading, display it when both text and images are loaded
+
+for custom token, prompt for token, each failed attempt will increase the wait time for the next attempt, 6 attempts in 1st hour, and then increase the timeframe to like 2 hours or somehow
+
+Clean, centered layout similar to success page
+Message text with proper formatting
+Image below text, fit to page width
+Image display with simple lightbox capability
+Progress bar at the top showing burn countdown
+Burn time fixed in text format
+
+a more advanced paper burning effect using Canvas
+Clear DOM and js content after burn
+Redirect to a "Message Burned" page
+
+Error States:
+Message not found
+Network errors
+
+-->

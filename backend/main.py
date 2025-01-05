@@ -57,6 +57,14 @@ async def create():
 async def success():
     return FileResponse(str(FRONTEND_DIR / "success.html"))
 
+@app.get("/message/{message_id}", response_class=HTMLResponse)
+async def message_page(message_id: str):
+    return FileResponse(FRONTEND_DIR / "message.html")
+
+@app.get("/not-found", response_class=HTMLResponse)
+async def not_found_page():
+    return FileResponse(FRONTEND_DIR / "not-found.html")
+
 # Add rate limiter middleware
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
