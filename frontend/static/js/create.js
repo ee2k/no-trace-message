@@ -259,7 +259,10 @@ class MessageCreator {
         const formData = new FormData();
         formData.append('message', message);
         formData.append('expiry', this.expiryTimes[document.getElementById('expiryTime').value].value);
-        formData.append('burn_time', this.burnTimes[document.getElementById('burnTime').value].value);
+        
+        // Handle infinity case for burn_time (only append once)
+        const burnTime = this.burnTimes[document.getElementById('burnTime').value].value;
+        formData.append('burn_time', burnTime === Infinity ? 'never' : burnTime.toString());
         
         // Add custom token and hint if provided
         const customToken = this.customToken.value.trim();
@@ -276,18 +279,40 @@ class MessageCreator {
             }
         }
 
-        this.images.forEach(file => formData.append('images', file));
+        // Add images with array-like syntax for FastAPI
+        Array.from(this.images).forEach((file, index) => {
+            formData.append(`images`, file);  // FastAPI will handle this as a list
+        });
         
         try {
+            // Log initial data
+            console.log('Creating message with:', {
+                messageLength: this.messageInput.value.trim().length,
+                imagesCount: this.images.size,
+                imageDetails: Array.from(this.images).map(file => ({
+                    name: file.name,
+                    type: file.type,
+                    size: file.size
+                }))
+            });
+
+            // Disable button during upload
+            this.createBtn.disabled = true;
+            this.createBtn.textContent = 'Creating...';
+            
             const response = await fetch('/api/message/create', {
                 method: 'POST',
                 body: formData
             });
             
             const data = await response.json();
+            console.log('Server response:', {
+                status: response.status,
+                statusText: response.statusText,
+                data: data
+            });
             
             if (response.ok) {
-                // Store token in sessionStorage instead of URL
                 sessionStorage.setItem(`msg_token_${data.id}`, data.token);
                 window.location.href = `/success?id=${data.id}`;
             } else {
@@ -302,8 +327,16 @@ class MessageCreator {
                 }
             }
         } catch (error) {
-            console.error('Network error:', error);
+            console.error('Creation error details:', {
+                name: error.name,
+                message: error.message,
+                stack: error.stack
+            });
             alert('Network error: ' + error.message);
+        } finally {
+            // Re-enable button
+            this.createBtn.disabled = false;
+            this.createBtn.textContent = 'Create Burning Message';
         }
     }
 }

@@ -12,10 +12,16 @@
 <body>
     <div class="container">
         <main>
+            <h1>Burn after reading</h1>
             <!-- Progress bar for burn countdown -->
             <div class="burn-progress">
                 <div class="progress-bar"></div>
                 <span class="burn-timer"></span>
+            </div>
+
+            <!-- Server deletion notice -->
+            <div class="server-notice">
+                Message deleted from server
             </div>
 
             <!-- Message content with skeleton loading -->
@@ -45,6 +51,11 @@
             <div class="lightbox" style="display: none;">
                 <button class="close-lightbox">&times;</button>
                 <img src="" alt="Enlarged image">
+            </div>
+
+            <!-- Create new message button -->
+            <div class="actions">
+                <a href="/" class="button primary">Create New Message</a>
             </div>
         </main>
     </div>

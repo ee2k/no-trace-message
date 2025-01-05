@@ -55,7 +55,7 @@ class MessagePage {
             }
             
             const data = await response.json();
-            this.burnTimeSeconds = data.burn_time;
+            this.burnTimeSeconds = data.burn_time === 'never' ? Infinity : parseFloat(data.burn_time);
             
             // Load content only when both text and images are ready
             await Promise.all([
@@ -63,9 +63,10 @@ class MessagePage {
                 this.displayImage(data.images?.[0])
             ]);
             
-            // Start burn countdown
-            this.startBurnCountdown();
-            
+            // Only start countdown if not 'never'
+            if (data.burn_time !== 'never') {
+                this.startBurnCountdown();
+            }
         } catch (error) {
             console.error('Failed to load message:', error);
             window.location.href = '/not-found';
@@ -95,8 +96,10 @@ class MessagePage {
                 this.imageContent.style.display = 'block';
                 resolve();
             };
-            this.messageImage.src = imageData;
-            this.lightboxImage.src = imageData;
+            // Create data URL from base64 content
+            const dataUrl = `data:${imageData.type};base64,${imageData.content}`;
+            this.messageImage.src = dataUrl;
+            this.lightboxImage.src = dataUrl;
         });
     }
     

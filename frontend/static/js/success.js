@@ -71,9 +71,9 @@ class SuccessPage {
             const data = await response.json();
             
             // Format burn time nicely
-            const burnTimeText = data.burn_time === Infinity ? 
+            const burnTimeText = data.burn_time === 'never' ? 
                 'never' : 
-                `${data.burn_time} second${data.burn_time === 1 ? '' : 's'}`;
+                `${parseFloat(data.burn_time).toString().replace(/\.0$/, '')} second${parseFloat(data.burn_time) === 1 || parseFloat(data.burn_time) === 0.1 ? '' : 's'}`;
             this.burnTime.textContent = burnTimeText;
             
             // Update expiry time

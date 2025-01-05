@@ -71,7 +71,7 @@
 .actions .button {
     padding-left: 2rem;
     padding-right: 2rem;
-    width: auto;
+    width: fit-content;
     flex: none;
 }
 .button {
@@ -156,4 +156,21 @@
 }
 #messageTokenHint {
     padding-left: 1rem;
+}
+.actions .button.primary {
+    padding-left: 2rem;
+    padding-right: 2rem;
+    width: fit-content;
+    flex: none;
+    margin: 0 auto;
+    display: block;
+}
+@media (max-width: 600px) {
+    .actions {
+        flex-direction: column;
+    }
+    
+    .actions .button.primary {
+        margin: 0 auto;
+    }
 }

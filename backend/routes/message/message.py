@@ -5,34 +5,55 @@ from services.message_store import MessageStore
 import secrets
 from datetime import datetime, timedelta
 from utils.num_generator import generate_message_id, generate_access_token
-from pydantic import ValidationError
+from pydantic import ValidationError, Field, validator, BaseModel
+import traceback
+import base64
 
 router = APIRouter()
 message_store = MessageStore()
 
+class MessageCreate(BaseModel):
+    message: str
+    expiry: int = Field(..., gt=0)
+    burn_time: float = Field(..., ge=0.1)  # Allow Infinity
+    token: Optional[str] = None
+    token_hint: Optional[str] = None
+    
+    @validator('burn_time')
+    def validate_burn_time(cls, v):
+        if v == float('inf'):  # Allow infinity
+            return v
+        if v < 0.1:  # Validate minimum for non-infinite values
+            raise ValueError('Burn time must be at least 0.1 seconds')
+        return v
+
 @router.post("/create", response_model=MessageResponse)
 async def create_message(
     message: str = Form(""),
-    images: Optional[List[UploadFile]] = File(None),
+    images: List[UploadFile] = File(default=[]),
     expiry: int = Form(...),
-    burn_time: float = Form(...),
+    burn_time: str = Form(...),
     token: Optional[str] = Form(None),
     token_hint: Optional[str] = Form(None)
 ):
     try:
-        # Debug logging
-        print(f"Received request data:")
-        print(f"- message length: {len(message)}")
-        print(f"- expiry: {expiry}")
-        print(f"- burn_time: {burn_time}")
-        print(f"- token: {'provided' if token else 'not provided'}")
-        print(f"- token_hint: {'provided' if token_hint else 'not provided'}")
+        # Detailed request logging
+        print("\n=== Message Creation Request ===")
+        print(f"Message length: {len(message)}")
+        print(f"Expiry: {expiry}")
+        print(f"Burn time: {burn_time}")
+        print(f"Token provided: {bool(token)}")
+        print(f"Token hint provided: {bool(token_hint)}")
+        
         if images:
-            print(f"- images: {len(images)} files")
             for img in images:
-                print(f"  - {img.filename}: {img.content_type}, size: {img.size}")
-
-        # Validate request data
+                print(f"\nImage details:")
+                print(f"- Filename: {img.filename}")
+                print(f"- Content type: {img.content_type}")
+                print(f"- File size: {img.size} bytes")
+                
+        # Log validation attempt
+        print("\nAttempting request validation...")
         try:
             create_request = CreateMessageRequest(
                 message=message,
@@ -41,8 +62,13 @@ async def create_message(
                 token=token,
                 token_hint=token_hint
             )
+            print("Request validation successful")
         except ValidationError as ve:
-            print("Validation error details:", ve.errors())
+            print("\nValidation error details:")
+            for error in ve.errors():
+                print(f"- Field: {'.'.join(error['loc'])}")
+                print(f"  Message: {error['msg']}")
+                print(f"  Type: {error['type']}")
             raise HTTPException(
                 status_code=422,
                 detail={
@@ -90,7 +116,7 @@ async def create_message(
                 content = await img.read()
                 image_data.append({
                     'id': secrets.token_urlsafe(8),
-                    'content': content,
+                    'content': base64.b64encode(content).decode('utf-8'),  # Encode binary data as base64
                     'type': img.content_type
                 })
 
@@ -122,24 +148,11 @@ async def create_message(
             is_custom_token=is_custom_token
         )
 
-    except ValidationError as ve:
-        print("Validation error:", ve.errors())
-        raise HTTPException(
-            status_code=422,
-            detail={
-                "message": "Validation error",
-                "errors": ve.errors()
-            }
-        )
     except Exception as e:
-        print("Unexpected error:", str(e))
-        raise HTTPException(
-            status_code=500,
-            detail={
-                "message": "Server error",
-                "error": str(e)
-            }
-        )
+        print(f"\nUnexpected error: {str(e)}")
+        print(f"Error type: {type(e).__name__}")
+        traceback.print_exc()
+        raise
 
 @router.post("/{message_id}/meta", response_model=MessageResponse)
 async def get_message_meta(message_id: str, token: str = Form(...)):
