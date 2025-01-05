@@ -1,8 +1,8 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from routes.api import api_router
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
 from pathlib import Path
 from middleware.rate_limit import RateLimiter
 
@@ -46,7 +46,6 @@ app.include_router(api_router)
 # Serve HTML pages
 @app.get("/")
 async def root():
-    from fastapi.responses import RedirectResponse
     return RedirectResponse(url="/create")
 
 @app.get("/create")

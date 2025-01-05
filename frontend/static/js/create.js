@@ -46,11 +46,16 @@ class MessageCreator {
         this.MIN_TOKEN_LENGTH = 6;
         this.MAX_TOKEN_LENGTH = 70;
         
+        // Characters chosen for readability (no I,l,0,O etc.)
+        this.TOKEN_CHARS = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        this.TOKEN_LENGTH = 8;
+        
         this.setupEventListeners();
         this.setupCharCounter();
         this.setupSlider();
         this.setupBurnTimeSlider();
         this.setupTokenInput();
+        this.setupTokenGenerator();
     }
     
     setupEventListeners() {
@@ -162,7 +167,7 @@ class MessageCreator {
             
             if (this.tokenInputContainer.style.display === 'none') {
                 this.tokenInputContainer.style.display = 'block';
-                this.customTokenBtn.textContent = 'Use system generated token';
+                this.customTokenBtn.textContent = 'Do not use token';
                 this.tokenCounter.textContent = '70';  // Initial count
                 this.hintCounter.textContent = '70';   // Initial count for hint
                 
@@ -174,7 +179,7 @@ class MessageCreator {
                 this.tokenInputContainer.style.display = 'none';
                 this.customToken.value = '';
                 this.tokenHint.value = '';
-                this.customTokenBtn.textContent = 'Use custom token';
+                this.customTokenBtn.textContent = 'Use access token';
             }
         });
 
@@ -197,6 +202,26 @@ class MessageCreator {
             const remaining = this.MAX_TOKEN_LENGTH - this.tokenHint.value.length;
             this.hintCounter.textContent = remaining.toString();
         });
+    }
+    
+    setupTokenGenerator() {
+        const generateBtn = document.querySelector('.generate-token');
+        generateBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const token = this.generateReadableToken();
+            this.customToken.value = token;
+            // Trigger input event to update character counter
+            this.customToken.dispatchEvent(new Event('input'));
+        });
+    }
+
+    generateReadableToken() {
+        let token = '';
+        for (let i = 0; i < this.TOKEN_LENGTH; i++) {
+            const randomIndex = Math.floor(Math.random() * this.TOKEN_CHARS.length);
+            token += this.TOKEN_CHARS[randomIndex];
+        }
+        return token;
     }
     
     handleFiles(files) {
@@ -273,6 +298,8 @@ class MessageCreator {
                 alert(`Password must be at least ${this.MIN_TOKEN_LENGTH} characters`);
                 return;
             }
+            // Store token in sessionStorage before sending to server
+            sessionStorage.setItem(`msg_token_${this.messageId}`, customToken);
             formData.append('token', customToken);
             if (tokenHint) {
                 formData.append('token_hint', tokenHint);
@@ -313,8 +340,9 @@ class MessageCreator {
             });
             
             if (response.ok) {
-                sessionStorage.setItem(`msg_token_${data.id}`, data.token);
-                window.location.href = `/success?id=${data.id}`;
+                // Store ID in sessionStorage
+                sessionStorage.setItem('current_message_id', data.id);
+                window.location.href = '/success';
             } else {
                 console.error('Server error:', data);
                 if (data.detail?.errors) {

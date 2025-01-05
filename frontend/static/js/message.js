@@ -3,7 +3,7 @@ class MessagePage {
         // Get message ID and token from URL
         const urlParams = new URLSearchParams(window.location.search);
         this.messageId = window.location.pathname.split('/').pop();
-        this.token = urlParams.get('token');
+        this.token = null;
         
         // Elements
         this.progressBar = document.querySelector('.progress-bar');
@@ -41,12 +41,14 @@ class MessagePage {
     
     async loadMessage() {
         try {
-            const formData = new FormData();
-            if (this.token) formData.append('token', this.token);
+            const token = sessionStorage.getItem(`msg_token_${this.messageId}`);
             
             const response = await fetch(`/api/message/${this.messageId}`, {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ token: token || '' })
             });
             
             if (!response.ok) {

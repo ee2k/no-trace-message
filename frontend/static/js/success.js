@@ -4,9 +4,9 @@ class SuccessPage {
     constructor() {
         initSvgIcons();
         
-        // Get message ID from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        this.messageId = urlParams.get('id');
+        // Get message ID from sessionStorage
+        this.messageId = sessionStorage.getItem('current_message_id');
+        sessionStorage.removeItem('current_message_id'); // Clean up after use
         
         // Get token from sessionStorage
         this.token = sessionStorage.getItem(`msg_token_${this.messageId}`);
@@ -58,12 +58,14 @@ class SuccessPage {
     
     async loadMessageMeta() {
         try {
-            const formData = new FormData();
-            formData.append('token', this.token);
+            const token = sessionStorage.getItem(`msg_token_${this.messageId}`);
             
             const response = await fetch(`/api/message/${this.messageId}/meta`, {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ token: token || '' })
             });
             
             if (!response.ok) throw new Error('Failed to load message metadata');
@@ -83,26 +85,17 @@ class SuccessPage {
             const baseUrl = `${window.location.origin}/message/${this.messageId}`;
             this.messageUrl.textContent = baseUrl;
             
-            if (data.is_custom_token) {
-                // Show token section only for custom tokens
-                this.messageToken.textContent = this.token;
+            if (token) {
+                this.messageToken.textContent = token;
                 this.tokenSection.style.display = 'block';
                 
                 if (data.token_hint) {
                     this.messageTokenHint.textContent = data.token_hint;
                     this.tokenHintSection.style.display = 'block';
                 }
-            } else {
-                // For system-generated tokens, append to URL
-                this.messageUrl.textContent = `${baseUrl}?token=${this.token}`;
-                this.tokenSection.style.display = 'none';
             }
-
-            // Clear token from sessionStorage after displaying
-            sessionStorage.removeItem(`msg_token_${this.messageId}`);
         } catch (error) {
-            console.error('Error loading message metadata:', error);
-            alert('Error');
+            console.error('Failed to load message metadata:', error);
         }
     }
 

@@ -1,18 +1,20 @@
-from datetime import datetime
 from typing import Dict, Optional
 import asyncio
+from models.message import Message
 
 class MessageStore:
     def __init__(self):
-        self.messages: Dict[str, dict] = {}
+        self.messages: Dict[str, Message] = {}
         self.cleanup_task = asyncio.create_task(self._cleanup_expired())
     
-    async def store_message(self, message: dict) -> None:
-        self.messages[message['id']] = message
+    async def store_message(self, message: Message) -> None:
+        self.messages[message.id] = message
     
-    async def get_message(self, message_id: str, token: str) -> Optional[dict]:
+    async def get_message(self, message_id: str, token: str) -> Optional[Message]:
         message = self.messages.get(message_id)
-        if not message or message['access_token'] != token:
+        if not message:
+            return None
+        if message.token and message.token != token:  # Only check token if message has one
             return None
         return message
     
@@ -22,15 +24,13 @@ class MessageStore:
     
     async def _cleanup_expired(self) -> None:
         while True:
-            now = datetime.now()
             expired = [
                 msg_id for msg_id, msg in self.messages.items()
-                if msg['expires_at'] <= now or 
-                (msg['is_read'] and msg['burn_time'] > 0)
+                if msg.should_burn()
             ]
             for msg_id in expired:
                 await self.delete_message(msg_id)
             await asyncio.sleep(60)  # Check every minute
     
-    async def get_message_meta(self, message_id: str) -> Optional[dict]:
+    async def get_message_meta(self, message_id: str) -> Optional[Message]:
         return self.messages.get(message_id)

@@ -11,7 +11,7 @@ def generate_message_id(
     Generate a random message ID with collision checking.
     
     Args:
-        length: Length of the ID (default: 10)
+        length: Length of the ID
         exists_check: Function to check if ID exists
         max_attempts: Maximum number of generation attempts (default: 5)
     

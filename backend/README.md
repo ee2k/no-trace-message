@@ -17,12 +17,8 @@ https://domain/api/message/create
 
 # Burn message URL format
 ```
-https://domain/message/messageID?token=one_time_token
-```
+https://domain/message/messageID
 
-## request body
-```json
-{
-  "id": "abc123xyz789"
-}
+# custom token
+https://domain/message/messageID?token=one_time_token
 ```

@@ -77,7 +77,7 @@
 
                 <!-- Add custom token section -->
                 <div class="token-section">
-                    <a href="#" class="token-link" id="customTokenBtn">Use custom access token</a>
+                    <a href="#" class="token-link" id="customTokenBtn">Use access token</a>
                     <div class="token-input-container" id="tokenInputContainer" style="display: none;">
                         <div class="token-row">
                             <textarea 
@@ -88,6 +88,11 @@
 a memorable line could be good~"
                                 maxlength="70"
                             ></textarea>
+                            <button class="generate-token" title="Generate readable token">
+                                <svg class="pencil-icon">
+                                    <use href="static/images/pencil.svg#icon"></use>
+                                </svg>
+                            </button>
                             <div class="char-counter" id="tokenCounter"></div>
                         </div>
                         <div class="token-row">
