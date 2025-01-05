@@ -49,7 +49,6 @@ async def create_message(
             for img in images:
                 content = await img.read()
                 image_data.append({
-                    'id': message_id,
                     'content': base64.b64encode(content).decode('utf-8'),
                     'type': img.content_type
                 })
@@ -61,7 +60,7 @@ async def create_message(
             images=image_data,
             burn_time=burn_time,
             expires_at=datetime.now() + timedelta(minutes=expiry),
-            token=token.strip() if token else "",  # Empty string if no token provided
+            token=token.strip() if token else "",
             token_hint=token_hint.strip() if token_hint else None
         )
 

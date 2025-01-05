@@ -3,10 +3,14 @@ from datetime import datetime
 from typing import List, Optional
 from fastapi import UploadFile
 
+class ImageData(BaseModel):
+    content: str
+    type: str
+
 class Message(BaseModel):
     id: str
     text: str | None = None
-    images: list[str] | None = None
+    images: list[ImageData] | None = None
     burn_time: str | float
     expires_at: datetime
     token: str | None = Field(default=None)  # Remove min_length constraint
