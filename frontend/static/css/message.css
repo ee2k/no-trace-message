@@ -191,4 +191,51 @@ h1 {
     background: var(--border-color);
     border-radius: 8px;
     margin: 0 auto;
-} 
+}
+
+/* Token form styles */
+.token-form {
+    margin: 2rem auto;
+    max-width: 90%;
+}
+
+.token-form > p {
+    text-align: left;
+}
+
+.token-form .token-row {
+    position: relative;
+    margin: 0.6rem 0;
+}
+
+.token-form textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-secondary);
+    color: var(--text-color);
+    resize: none;
+    font-size: 1rem;
+}
+
+.token-form .button {
+    margin: 0 auto;
+    display: block;
+}
+
+.token-form .error-message {
+    color: var(--error-color);
+    margin-top: 1rem;
+}
+
+.token-form .token-hint {
+    margin: 0rem 0 1rem;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    text-align: left;
+}
+.error-message {
+    transition: opacity 0.3s ease;
+    opacity: 0;
+}

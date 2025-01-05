@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Body
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Request
 from typing import List, Optional
 from models.message import Message
 from services.message_store import MessageStore
@@ -7,6 +7,9 @@ from utils.num_generator import generate_message_id
 import base64
 import traceback
 from pydantic import BaseModel
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 message_store = MessageStore()
@@ -77,19 +80,39 @@ async def create_message(
         raise
 
 @router.post("/{message_id}")
-async def get_message(message_id: str, request: TokenRequest):
+async def get_message(message_id: str, request: TokenRequest, client: Request):
     try:
+        # Check rate limiting first
+        check_result = await message_store.check_token_attempts(message_id, client.client.host)
+        if not check_result["allowed"]:
+            raise HTTPException(
+                status_code=429, 
+                detail={
+                    "message": "Too many failed attempts",
+                    "wait_time": check_result["wait_time"]
+                }
+            )
+        
+        # First check if message exists
+        message = await message_store.check_message(message_id)
+        if not message:
+            raise HTTPException(status_code=404, detail="Message not found")
+            
+        # Then try to get with token
         message = await message_store.get_message(message_id, request.token)
         if not message:
-            raise HTTPException(status_code=404)
+            await message_store.record_failed_attempt(message_id, client.client.host)
+            raise HTTPException(status_code=401, detail="Invalid token")
         
         response_data = message.to_content()
         await message_store.delete_message(message_id)
         return response_data
         
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Error retrieving message: {str(e)}")
-        raise HTTPException(status_code=404)
+        raise HTTPException(status_code=500, detail="Server error")
 
 @router.post("/{message_id}/meta")
 async def get_message_meta(message_id: str, request: TokenRequest):
@@ -108,3 +131,23 @@ async def get_message_meta(message_id: str, request: TokenRequest):
             status_code=500,
             detail={"message": "Failed to get message metadata"}
         )
+
+@router.get("/{message_id}/check")
+async def check_message(message_id: str):
+    """Check if message exists and if it needs a token"""
+    try:
+        # Just check if message exists and get token info
+        message_info = await message_store.check_message(message_id)
+        if not message_info:
+            raise HTTPException(status_code=404, detail="Message not found")
+            
+        return {
+            "needs_token": message_info.get("needs_token", False),
+            "token_hint": message_info.get("token_hint")
+        }
+    except HTTPException as he:
+        # Re-raise HTTP exceptions (like 404)
+        raise he
+    except Exception as e:
+        print(f"Error checking message {message_id}: {str(e)}")
+        raise HTTPException(status_code=404, detail="Message not found")

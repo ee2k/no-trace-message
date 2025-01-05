@@ -19,10 +19,26 @@
                 <span class="burn-timer"></span>
             </div>
 
-            <!-- Server deletion notice -->
-            <div class="server-notice">
-                Message deleted from server
+            <!-- Token form (hidden by default) -->
+            <div class="token-form" style="display: none;">
+                <p>An access token is required:</p>
+                <div class="token-row">
+                    <textarea 
+                        id="tokenInput" 
+                        rows="3"
+                        placeholder="Enter access token"
+                        maxlength="70"
+                    ></textarea>
+                </div>
+                <div id="tokenHintSection" class="token-hint" style="display: none;">
+                    <p>Token hint: <span id="messageTokenHint"></span></p>
+                </div>
+                <button id="submitToken" class="button primary">Submit</button>
+                <p class="error-message" style="display: none;"></p>
             </div>
+
+            <!-- Server deletion notice -->
+            <div class="server-notice"></div>
 
             <!-- Message content with skeleton loading -->
             <div class="message-content">

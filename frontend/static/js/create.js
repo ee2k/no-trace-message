@@ -340,7 +340,11 @@ class MessageCreator {
             });
             
             if (response.ok) {
-                // Store ID in sessionStorage
+                // First store the token if it exists
+                if (customToken) {
+                    sessionStorage.setItem(`msg_token_${data.id}`, customToken);
+                }
+                // Then store message ID and redirect
                 sessionStorage.setItem('current_message_id', data.id);
                 window.location.href = '/success';
             } else {

@@ -21,10 +21,7 @@ suggestions:
 
 for custom token, prompt for token, each failed attempt will increase the wait time for the next attempt, 6 attempts in 1st hour, and then increase the timeframe to like 2 hours or somehow
 
-
 a more advanced paper burning effect using Canvas
-Clear DOM and js content after burn
-Redirect to a "Message Burned" page
 
 Error States:
 Message not found
