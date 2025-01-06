@@ -94,14 +94,13 @@ async def get_message(message_id: str, request: TokenRequest, client: Request):
                 }
             )
         
-        # First check if message exists
+        # Get message and check existence
         message = await message_store.check_message(message_id)
         if not message:
             raise HTTPException(status_code=404, detail="Message not found")
             
-        # Then try to get with token
-        message = await message_store.get_message(message_id, request.token)
-        if not message:
+        # Validate token
+        if not message.check_token(request.token):
             await message_store.record_failed_attempt(message_id, client.client.host)
             raise HTTPException(status_code=401, detail="Invalid token")
         
@@ -143,17 +142,20 @@ async def get_message_meta(message_id: str, request: TokenRequest):
 async def check_message(message_id: str):
     """Check if message exists and if it needs a token"""
     try:
-        # Just check if message exists and get token info
-        message_info = await message_store.check_message(message_id)
-        if not message_info:
+        message = await message_store.check_message(message_id)
+        if not message:
             raise HTTPException(status_code=404, detail="Message not found")
-            
+
+        # Check expiry
+        if message.is_expired():
+            await message_store.delete_message(message_id)
+            raise HTTPException(status_code=404, detail="Message not found")
+
         return {
-            "needs_token": message_info.get("needs_token", False),
-            "token_hint": message_info.get("token_hint")
+            "needs_token": bool(message.token),
+            "token_hint": message.token_hint
         }
     except HTTPException as he:
-        # Re-raise HTTP exceptions (like 404)
         raise he
     except Exception as e:
         print(f"Error checking message {message_id}: {str(e)}")

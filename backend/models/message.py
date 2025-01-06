@@ -89,6 +89,16 @@ class Message(BaseModel):
         }
         yield json.dumps(content).encode('utf-8')
 
+    def check_expiry(self) -> bool:
+        """Check if message is expired and should be deleted immediately"""
+        return self.is_expired()
+
+    def check_token(self, token: str) -> bool:
+        """Check if provided token matches message token"""
+        if not self.token:
+            return True
+        return self.token == token
+
 # class CreateMessageRequest(BaseModel):
 #     message: str = Field(default="", max_length=2000)
 #     expiry: int = Field(..., gt=0, le=4320)  # Max 3 days in minutes

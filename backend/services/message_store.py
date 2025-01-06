@@ -37,17 +37,10 @@ class MessageStore:
     async def get_message_meta(self, message_id: str) -> Optional[Message]:
         return self.messages.get(message_id)
     
-    async def check_message(self, message_id: str) -> dict:
-        """Check if message exists and if it needs a token"""
+    async def check_message(self, message_id: str) -> Optional[Message]:
+        """Check if message exists and return the Message object"""
         try:
-            message = self.messages.get(message_id)
-            if not message:
-                return None
-            
-            return {
-                "needs_token": bool(message.token),
-                "token_hint": message.token_hint if message.token else None
-            }
+            return self.messages.get(message_id)
         except Exception as e:
             print(f"Error in check_message: {str(e)}")
             return None
