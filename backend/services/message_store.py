@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, AsyncGenerator, Any
 import asyncio
 from models.message import Message
 import time
@@ -73,3 +73,14 @@ class MessageStore:
             "timestamp": time.time(),
             "ip": ip
         })
+    
+    async def stream_and_delete_message(self, message_id: str) -> AsyncGenerator[bytes, None]:
+        """Stream message content and delete after successful streaming"""
+        try:
+            message = self.messages[message_id]
+            async for chunk in message.stream_content():
+                yield chunk
+            await asyncio.sleep(0.1)  # Small delay to ensure client receives data
+            await self.delete_message(message_id)
+        except Exception as e:
+            print(f"Error in stream_and_delete: {str(e)}")

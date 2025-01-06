@@ -8,6 +8,7 @@ import base64
 import traceback
 from pydantic import BaseModel
 import logging
+from fastapi.responses import StreamingResponse
 
 logger = logging.getLogger(__name__)
 
@@ -104,9 +105,15 @@ async def get_message(message_id: str, request: TokenRequest, client: Request):
             await message_store.record_failed_attempt(message_id, client.client.host)
             raise HTTPException(status_code=401, detail="Invalid token")
         
-        response_data = message.to_content()
-        await message_store.delete_message(message_id)
-        return response_data
+        # response_data = message.to_content()
+        # await message_store.delete_message(message_id)
+        # return response_data
+
+        # Return streaming response
+        return StreamingResponse(
+            message_store.stream_and_delete_message(message_id),
+            media_type="application/json"
+        )
         
     except HTTPException:
         raise

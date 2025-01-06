@@ -1,3 +1,3 @@
-from .message import Message, CreateMessageRequest, MessageResponse
+from .message import Message
 
-__all__ = ['Message', 'CreateMessageRequest', 'MessageResponse']
+__all__ = ['Message']

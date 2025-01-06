@@ -1,8 +1,28 @@
 import random
 import string
+import secrets
 from typing import Callable
 
 def generate_message_id(
+    length: int = 16,
+    exists_check: Callable[[str], bool] = lambda _: False,
+    max_attempts: int = 5
+) -> str:
+    """
+    Generate a URL-safe random message ID using secrets module.
+    Returns base64-encoded random bytes, using '-' and '_' as the URL-safe alphabet.
+    """
+    for attempt in range(max_attempts):
+        # Generate URL-safe token (will be ~1.3x length in base64)
+        message_id = secrets.token_urlsafe(12)[:length]  # 12 bytes gives ~16 chars
+        
+        # Check if ID exists
+        if not exists_check(message_id):
+            return message_id
+            
+    raise RuntimeError(f"Failed to generate unique message ID after {max_attempts} attempts")
+
+def generate_short_message_id(
     length: int = 10,
     exists_check: Callable[[str], bool] = lambda _: False,
     max_attempts: int = 5
