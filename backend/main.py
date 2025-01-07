@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 # Get project root directory
 PROJECT_ROOT = Path(__file__).parent.parent.resolve()
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
+ENV_DIR = PROJECT_ROOT  # For environment files
 
 # Get environment mode
 ENVIRONMENT = os.getenv("ENVIRONMENT", "production")

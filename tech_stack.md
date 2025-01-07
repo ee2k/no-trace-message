@@ -83,8 +83,8 @@ uvicorn main:app \
 # Deployment
 ```bash
 # Development
-ENVIRONMENT=development ./backend/scripts/load_env.sh --reload
+ENVIRONMENT=development ./scripts/load_env.sh --reload
 
 # Production
-ENVIRONMENT=production ./backend/scripts/load_env.sh --workers 4 --port 3000
+ENVIRONMENT=production ./scripts/load_env.sh --workers 4 --port 3000
 ```
