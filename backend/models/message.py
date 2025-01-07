@@ -14,6 +14,7 @@ class Message(BaseModel):
     images: list[ImageData] | None = None
     burn_time: str | float
     expires_at: datetime
+    expiry_index: int
     token: str | None = Field(default=None)
     token_hint: str | None = Field(default=None, max_length=70)
     # is_read: bool = False

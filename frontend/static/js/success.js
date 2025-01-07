@@ -1,4 +1,5 @@
 import { initSvgIcons } from './global.js';
+import { EXPIRY_TIMES, BURN_TIMES } from './constants.js';
 
 class SuccessPage {
     constructor() {
@@ -19,6 +20,9 @@ class SuccessPage {
         this.expiryTime = document.getElementById('expiryTime');
         this.messageTokenHint = document.getElementById('messageTokenHint');
         this.tokenHintSection = document.getElementById('tokenHintSection');
+        
+        this.expiryTimes = EXPIRY_TIMES;
+        this.burnTimes = BURN_TIMES;
         
         this.setupCopyButtons();
         this.loadMessageMeta();
@@ -78,8 +82,8 @@ class SuccessPage {
                 `${parseFloat(data.burn_time).toString().replace(/\.0$/, '')} second${parseFloat(data.burn_time) === 1 || parseFloat(data.burn_time) === 0.1 ? '' : 's'}`;
             this.burnTime.textContent = burnTimeText;
             
-            // Update expiry time
-            this.expiryTime.textContent = this.formatExpiryTime(data.expires_at);
+            // Use index to get label
+            this.expiryTime.textContent = this.expiryTimes[data.expiry_index];
             
             // Update URL and token display
             const baseUrl = `${window.location.origin}/message/${this.messageId}`;
@@ -96,24 +100,6 @@ class SuccessPage {
             }
         } catch (error) {
             console.error('Failed to load message metadata:', error);
-        }
-    }
-
-    formatExpiryTime(expiryTime) {
-        const expiry = new Date(expiryTime);
-        const now = new Date();
-        const diff = expiry - now;
-        
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        
-        if (hours > 24) {
-            const days = Math.floor(hours / 24);
-            return `${days} day${days === 1 ? '' : 's'}`;
-        } else if (hours > 0) {
-            return `${hours} hour${hours === 1 ? '' : 's'} and ${minutes} minute${minutes === 1 ? '' : 's'}`;
-        } else {
-            return `${minutes} minute${minutes === 1 ? '' : 's'}`;
         }
     }
 }

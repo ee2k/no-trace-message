@@ -98,6 +98,7 @@ async def create_message(
             images=image_data,
             burn_time=burn_time,
             expires_at=expires_at,
+            expiry_index=expiry_index,
             token=token.strip() if token else "",
             token_hint=token_hint.strip() if token_hint else None
         )
@@ -163,18 +164,18 @@ async def get_message_meta(message_id: str, request: TokenRequest):
     try:
         message = await message_store.get_message(message_id, request.token)
         if not message:
-            raise HTTPException(
-                status_code=404, 
-                detail="Message not found or invalid token"
-            )
-        return message.to_response()
+            raise HTTPException(status_code=401, detail="Message not found")
 
+        return {
+            "burn_time": message.burn_time,
+            "expiry_index": message.expiry_index,
+            "token_hint": message.token_hint if message.token else None
+        }
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Error getting message metadata: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail={"message": "Failed to get message metadata"}
-        )
+        raise HTTPException(status_code=500, detail="Server error")
 
 @router.get("/{message_id}/check")
 async def check_message(message_id: str):

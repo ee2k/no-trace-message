@@ -1,4 +1,5 @@
 import { initSvgIcons } from './global.js';
+import { EXPIRY_TIMES, BURN_TIMES } from './constants.js';
 
 class MessageCreator {
     constructor() {
@@ -16,25 +17,8 @@ class MessageCreator {
         this.ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
         this.MAX_MESSAGE_LENGTH = 2000;
         
-        this.expiryTimes = [
-            '1 min',
-            '10 min',
-            '1 hour',
-            '12 hours',
-            '1 day',
-            '3 days',
-            '1 week'
-        ];
-        
-        this.burnTimes = [
-            '0.1 second',
-            '1 second',
-            '3 seconds',
-            '7 seconds',
-            '3 minutes',
-            '10 minutes',
-            'till closed'
-        ];
+        this.expiryTimes = EXPIRY_TIMES;
+        this.burnTimes = BURN_TIMES;
         
         this.customTokenBtn = document.getElementById('customTokenBtn');
         this.tokenInputContainer = document.getElementById('tokenInputContainer');
