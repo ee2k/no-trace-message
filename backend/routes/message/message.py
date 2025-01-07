@@ -18,16 +18,50 @@ message_store = MessageStore()
 class TokenRequest(BaseModel):
     token: str = ''
 
+# Define time mappings (in minutes)
+EXPIRY_TIMES = [
+    1,      # 1 min
+    10,     # 10 min
+    60,     # 1 hour
+    720,    # 12 hours
+    1440,   # 1 day
+    4320,   # 3 days
+    10080   # 1 week
+]
+
+# Define burn times (in seconds)
+BURN_TIMES = [
+    0.1,    # 0.1 second
+    1,      # 1 second
+    3,      # 3 seconds
+    7,      # 7 seconds
+    180,    # 3 minutes
+    600,    # 10 minutes
+    "never" # till closed
+]
+
 @router.post("/create", response_model=dict)
 async def create_message(
     message: str = Form(""),
     images: List[UploadFile] = File(default=[]),
-    expiry: int = Form(...),
-    burn_time: str = Form(...),
+    expiry_index: int = Form(...),
+    burn_index: int = Form(...),
     token: Optional[str] = Form(None),
     token_hint: Optional[str] = Form(None)
 ):
     try:
+        # Validate indices
+        if not (0 <= expiry_index < len(EXPIRY_TIMES)):
+            raise HTTPException(status_code=400, detail="Invalid expiry time")
+        if not (0 <= burn_index < len(BURN_TIMES)):
+            raise HTTPException(status_code=400, detail="Invalid burn time")
+
+        # Convert expiry index to datetime
+        expires_at = datetime.now() + timedelta(minutes=EXPIRY_TIMES[expiry_index])
+        
+        # Get burn time value
+        burn_time = BURN_TIMES[burn_index]
+
         # Validate images
         if images:
             if len(images) > 1:
@@ -63,7 +97,7 @@ async def create_message(
             text=message,
             images=image_data,
             burn_time=burn_time,
-            expires_at=datetime.now() + timedelta(minutes=expiry),
+            expires_at=expires_at,
             token=token.strip() if token else "",
             token_hint=token_hint.strip() if token_hint else None
         )
@@ -74,11 +108,15 @@ async def create_message(
         # Return response
         return message_obj.to_response()
 
-    except Exception as e:
-        print(f"\nUnexpected error: {str(e)}")
-        print(f"Error type: {type(e).__name__}")
-        traceback.print_exc()
+    except HTTPException:
         raise
+    except Exception as e:
+        print(f"Error creating message: {str(e)}")
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail={"message": "Failed to create message"}
+        )
 
 @router.post("/{message_id}")
 async def get_message(message_id: str, request: TokenRequest, client: Request):

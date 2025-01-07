@@ -17,23 +17,23 @@ class MessageCreator {
         this.MAX_MESSAGE_LENGTH = 2000;
         
         this.expiryTimes = [
-            { value: 1, label: '1 min' },
-            { value: 5, label: '5 min' },
-            { value: 30, label: '30 min' },
-            { value: 60, label: '1 hour' },
-            { value: 1440, label: '1 day' },
-            { value: 4320, label: '3 days' },
-            { value: 8640, label: '7 days' }
+            '1 min',
+            '10 min',
+            '1 hour',
+            '12 hours',
+            '1 day',
+            '3 days',
+            '1 week'
         ];
         
         this.burnTimes = [
-            { value: 0.1, label: '0.1 second' },
-            { value: 1, label: '1 second' },
-            { value: 3, label: '3 seconds' },
-            { value: 7, label: '7 seconds' },
-            { value: 180, label: '3 minutes' },
-            { value: 600, label: '10 minutes' },
-            { value: Infinity, label: 'Never' }
+            '0.1 second',
+            '1 second',
+            '3 seconds',
+            '7 seconds',
+            '3 minutes',
+            '10 minutes',
+            'till closed'
         ];
         
         this.customTokenBtn = document.getElementById('customTokenBtn');
@@ -52,7 +52,7 @@ class MessageCreator {
         
         this.setupEventListeners();
         this.setupCharCounter();
-        this.setupSlider();
+        this.setupExpirySlider();
         this.setupBurnTimeSlider();
         this.setupTokenInput();
         this.setupTokenGenerator();
@@ -123,7 +123,7 @@ class MessageCreator {
         });
     }
     
-    setupSlider() {
+    setupExpirySlider() {
         const slider = document.getElementById('expiryTime');
         const value = slider.parentElement.querySelector('.slider-value');
         
@@ -133,8 +133,7 @@ class MessageCreator {
         };
         
         const updateSliderValue = () => {
-            const time = this.expiryTimes[slider.value];
-            value.textContent = time.label;
+            value.textContent = this.expiryTimes[slider.value];  // Direct array access
             updateSliderProgress();
         };
         
@@ -152,8 +151,7 @@ class MessageCreator {
         };
         
         const updateSliderValue = () => {
-            const time = this.burnTimes[slider.value];
-            value.textContent = time.label;
+            value.textContent = this.burnTimes[slider.value];  // Direct array access
             updateSliderProgress();
         };
         
@@ -283,11 +281,10 @@ class MessageCreator {
         
         const formData = new FormData();
         formData.append('message', message);
-        formData.append('expiry', this.expiryTimes[document.getElementById('expiryTime').value].value);
         
-        // Handle infinity case for burn_time (only append once)
-        const burnTime = this.burnTimes[document.getElementById('burnTime').value].value;
-        formData.append('burn_time', burnTime === Infinity ? 'never' : burnTime.toString());
+        // Send slider indices instead of actual values
+        formData.append('expiry_index', document.getElementById('expiryTime').value);
+        formData.append('burn_index', document.getElementById('burnTime').value);
         
         // Add custom token and hint if provided
         const customToken = this.customToken.value.trim();
@@ -306,9 +303,9 @@ class MessageCreator {
             }
         }
 
-        // Add images with array-like syntax for FastAPI
+        // Add images
         Array.from(this.images).forEach((file, index) => {
-            formData.append(`images`, file);  // FastAPI will handle this as a list
+            formData.append(`images`, file);
         });
         
         try {
