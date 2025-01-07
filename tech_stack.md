@@ -79,3 +79,12 @@ uvicorn main:app \
     --ssl-keyfile=./key.pem \
     --ssl-certfile=./cert.pem
 ```
+
+# Deployment
+```bash
+# Development
+ENVIRONMENT=development ./backend/scripts/load_env.sh --reload
+
+# Production
+ENVIRONMENT=production ./backend/scripts/load_env.sh --workers 4 --port 3000
+```

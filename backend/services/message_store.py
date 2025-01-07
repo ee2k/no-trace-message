@@ -4,11 +4,38 @@ from models.message import Message
 import time
 
 class MessageStore:
-    def __init__(self):
-        self.messages: Dict[str, Message] = {}
-        self.failed_attempts = {}  # Format: {message_id: [{timestamp: time, ip: ip}]}
-        self.cleanup_task = asyncio.create_task(self._cleanup_expired())
+    _instance = None
     
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance.messages = {}
+            cls._instance.failed_attempts = {}
+            cls._instance.cleanup_task = None
+        return cls._instance
+
+    async def initialize(self) -> None:
+        """Initialize the message store and start cleanup task"""
+        if self.cleanup_task is None:
+            self.cleanup_task = asyncio.create_task(self._cleanup_expired())
+
+    async def cleanup(self) -> None:
+        """Cleanup resources"""
+        if self.cleanup_task:
+            self.cleanup_task.cancel()
+            try:
+                await self.cleanup_task
+            except asyncio.CancelledError:
+                pass
+            self.cleanup_task = None
+
+    async def check_health(self) -> dict:
+        """Check store health"""
+        return {
+            "message_count": len(self.messages),
+            "cleanup_task_running": self.cleanup_task is not None and not self.cleanup_task.done()
+        }
+
     async def store_message(self, message: Message) -> None:
         self.messages[message.id] = message
     
@@ -16,7 +43,7 @@ class MessageStore:
         message = self.messages.get(message_id)
         if not message:
             return None
-        if message.token and message.token != token:  # Only check token if message has one
+        if message.token and message.token != token:
             return None
         return message
     
@@ -26,17 +53,20 @@ class MessageStore:
     
     async def _cleanup_expired(self) -> None:
         while True:
-            expired = [
-                msg_id for msg_id, msg in self.messages.items()
-                if msg.should_burn()
-            ]
-            for msg_id in expired:
-                await self.delete_message(msg_id)
-            await asyncio.sleep(60)  # Check every minute
-    
-    async def get_message_meta(self, message_id: str) -> Optional[Message]:
-        return self.messages.get(message_id)
-    
+            try:
+                expired = [
+                    msg_id for msg_id, msg in self.messages.items()
+                    if msg.should_burn()
+                ]
+                for msg_id in expired:
+                    await self.delete_message(msg_id)
+                await asyncio.sleep(60)  # Check every minute
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                print(f"Cleanup error: {e}")
+                await asyncio.sleep(60)
+
     async def check_message(self, message_id: str) -> Optional[Message]:
         """Check if message exists and return the Message object"""
         try:
@@ -44,7 +74,7 @@ class MessageStore:
         except Exception as e:
             print(f"Error in check_message: {str(e)}")
             return None
-    
+
     async def check_token_attempts(self, message_id: str, ip: str) -> dict:
         """Check if too many failed attempts"""
         if message_id not in self.failed_attempts:
@@ -66,7 +96,7 @@ class MessageStore:
             "timestamp": time.time(),
             "ip": ip
         })
-    
+
     async def stream_and_delete_message(self, message_id: str) -> AsyncGenerator[bytes, None]:
         """Stream message content and delete after successful streaming"""
         try:

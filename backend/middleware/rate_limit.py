@@ -1,13 +1,15 @@
 from fastapi import Request, HTTPException
 from datetime import datetime, timedelta
 from collections import defaultdict
+from starlette.middleware.base import BaseHTTPMiddleware
 
-class RateLimiter:
-    def __init__(self, requests_per_minute=6):
+class RateLimiter(BaseHTTPMiddleware):
+    def __init__(self, app, requests_per_minute=6):
+        super().__init__(app)
         self.requests = defaultdict(list)
         self.limit = requests_per_minute
 
-    async def __call__(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next):
         client_ip = request.client.host
         
         # Skip rate limiting for non-API routes
