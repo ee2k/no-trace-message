@@ -25,6 +25,7 @@ class SuccessPage {
         this.burnTimes = BURN_TIMES;
         
         this.setupCopyButtons();
+        this.setupShareButton();
         this.loadMessageMeta();
     }
     
@@ -101,6 +102,30 @@ class SuccessPage {
         } catch (error) {
             console.error('Failed to load message metadata:', error);
         }
+    }
+    
+    setupShareButton() {
+        const shareBtn = document.querySelector('.share-btn');
+        
+        if (!navigator.share) {
+            return;
+        }
+
+        // Show button if share API is supported
+        shareBtn.style.display = 'flex';
+
+        // Share handler
+        shareBtn.addEventListener('click', async () => {
+            try {
+                await navigator.share({
+                    title: 'Burn after reading',
+                    text: '',
+                    url: this.messageUrl.textContent
+                });
+            } catch (err) {
+                console.log('Share failed:', err);
+            }
+        });
     }
 }
 

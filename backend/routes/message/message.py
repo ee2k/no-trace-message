@@ -40,6 +40,14 @@ BURN_TIMES = [
     "never" # till closed
 ]
 
+FONT_SIZES = [
+    0,
+    1,
+    2,
+    3,
+    4
+]
+
 @router.post("/create", response_model=dict)
 async def create_message(
     message: str = Form(""),
@@ -47,7 +55,8 @@ async def create_message(
     expiry_index: int = Form(...),
     burn_index: int = Form(...),
     token: Optional[str] = Form(None),
-    token_hint: Optional[str] = Form(None)
+    token_hint: Optional[str] = Form(None),
+    font_size: Optional[int] = Form(None)
 ):
     try:
         # Validate indices
@@ -55,6 +64,8 @@ async def create_message(
             raise HTTPException(status_code=400, detail="Invalid expiry time")
         if not (0 <= burn_index < len(BURN_TIMES)):
             raise HTTPException(status_code=400, detail="Invalid burn time")
+        if font_size is not None and not (0 <= font_size < 5):
+            raise HTTPException(status_code=400, detail="Invalid font size")
 
         # Convert expiry index to datetime
         expires_at = datetime.now() + timedelta(minutes=EXPIRY_TIMES[expiry_index])
@@ -100,7 +111,8 @@ async def create_message(
             expires_at=expires_at,
             expiry_index=expiry_index,
             token=token.strip() if token else "",
-            token_hint=token_hint.strip() if token_hint else None
+            token_hint=token_hint.strip() if token_hint else None,
+            font_size=font_size
         )
 
         # Store message

@@ -42,10 +42,17 @@
         <main>
             <div class="message-form">
                 <div class="textarea-container">
+                    <div class="message-toolbar">
+                        <div class="font-size-control">
+                            <span class="size-icon small">A</span>
+                            <input type="range" id="fontSize" min="0" max="4" value="1" class="slider">
+                            <span class="size-icon large">A</span>
+                        </div>
+                    </div>
                     <textarea 
                         id="messageContent" 
+                        rows="6" 
                         placeholder="Type your message here..."
-                        rows="6"
                     ></textarea>
                     <div class="char-counter"></div>
                 </div>

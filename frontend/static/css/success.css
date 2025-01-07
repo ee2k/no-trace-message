@@ -174,3 +174,61 @@
         margin: 0 auto;
     }
 }
+.share-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    background: var(--accent-color);
+    color: white;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.share-btn:hover {
+    background: var(--accent-color-dark);
+}
+.share-icon {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+/* For mobile layout */
+@media (max-width: 600px) {
+    .url-box {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .url-box span {
+        width: 100%;
+    }
+    
+    .url-box .copy-btn,
+    .url-box .share-btn {
+        flex: 1;
+    }
+}
+.button-group {
+    display: flex;
+    gap: 0.5rem;
+}
+/* Mobile layout */
+@media (max-width: 600px) {
+    .url-box {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .button-group .copy-btn,
+    .button-group .share-btn {
+        flex: 1;
+    }
+}

@@ -19,7 +19,7 @@ class Message(BaseModel):
     token_hint: str | None = Field(default=None, max_length=70)
     # is_read: bool = False
     created_at: datetime = Field(default_factory=datetime.now)
-
+    font_size: int | None = None
     @validator('burn_time')
     def validate_burn_time(cls, v):
         if v == 'never':
@@ -46,6 +46,13 @@ class Message(BaseModel):
                 raise ValueError('Token must be between 6 and 70 characters')
         return v
 
+    @validator('font_size')
+    def validate_font_size(cls, v):
+        if v is not None and v != "":  # Only validate non-empty tokens
+            if v < 0 or v > 4:
+                raise ValueError('Font size incorrect')
+        return v
+
     def to_response(self) -> dict:
         """Convert message to API response format"""
         return {
@@ -61,7 +68,8 @@ class Message(BaseModel):
         return {
             "text": self.text,
             "images": self.images,
-            "burn_time": self.burn_time
+            "burn_time": self.burn_time,
+            "font_size": self.font_size
         }
 
     # def mark_as_read(self) -> None:
@@ -86,7 +94,8 @@ class Message(BaseModel):
                     "content": img.content
                 } for img in (self.images or [])
             ],
-            "burn_time": self.burn_time
+            "burn_time": self.burn_time,
+            "font_size": self.font_size
         }
         yield json.dumps(content).encode('utf-8')
 

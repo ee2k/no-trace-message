@@ -1,3 +1,5 @@
+import { FONT_SIZES } from './constants.js';
+
 class MessagePage {
     constructor() {
         // Get message ID and token from URL
@@ -127,7 +129,7 @@ class MessagePage {
             this.burnTimeSeconds = data.burn_time === 'never' ? Infinity : parseFloat(data.burn_time);
             
             await Promise.all([
-                this.displayText(data.text),
+                this.displayText(data.text, data.font_size),
                 this.displayImage(data.images?.[0])
             ]);
 
@@ -141,13 +143,16 @@ class MessagePage {
         }
     }
     
-    async displayText(text) {
+    async displayText(text, fontSize) {
         if (!text) {
             this.textSkeleton.style.display = 'none';
             return;
         }
         
         this.textContent.textContent = text;
+        if (fontSize !== null && fontSize !== undefined) {
+            this.textContent.style.fontSize = FONT_SIZES[fontSize];
+        }
         this.textSkeleton.style.display = 'none';
         this.textContent.style.display = 'block';
     }

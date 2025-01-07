@@ -1,5 +1,5 @@
 import { initSvgIcons } from './global.js';
-import { EXPIRY_TIMES, BURN_TIMES } from './constants.js';
+import { EXPIRY_TIMES, BURN_TIMES, FONT_SIZES } from './constants.js';
 
 class MessageCreator {
     constructor() {
@@ -16,9 +16,6 @@ class MessageCreator {
         this.MAX_IMAGE_SIZE = 3 * 1024 * 1024; // 3MB
         this.ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
         this.MAX_MESSAGE_LENGTH = 2000;
-        
-        this.expiryTimes = EXPIRY_TIMES;
-        this.burnTimes = BURN_TIMES;
         
         this.customTokenBtn = document.getElementById('customTokenBtn');
         this.tokenInputContainer = document.getElementById('tokenInputContainer');
@@ -40,6 +37,7 @@ class MessageCreator {
         this.setupBurnTimeSlider();
         this.setupTokenInput();
         this.setupTokenGenerator();
+        this.setupFontSizeControls();
     }
     
     setupEventListeners() {
@@ -117,7 +115,7 @@ class MessageCreator {
         };
         
         const updateSliderValue = () => {
-            value.textContent = this.expiryTimes[slider.value];  // Direct array access
+            value.textContent = EXPIRY_TIMES[slider.value];  // Use constant directly
             updateSliderProgress();
         };
         
@@ -135,7 +133,7 @@ class MessageCreator {
         };
         
         const updateSliderValue = () => {
-            value.textContent = this.burnTimes[slider.value];  // Direct array access
+            value.textContent = BURN_TIMES[slider.value];  // Use constant directly
             updateSliderProgress();
         };
         
@@ -269,6 +267,7 @@ class MessageCreator {
         // Send slider indices instead of actual values
         formData.append('expiry_index', document.getElementById('expiryTime').value);
         formData.append('burn_index', document.getElementById('burnTime').value);
+        formData.append('font_size', this.fontSize);
         
         // Add custom token and hint if provided
         const customToken = this.customToken.value.trim();
@@ -351,6 +350,24 @@ class MessageCreator {
             this.createBtn.disabled = false;
             this.createBtn.textContent = 'Create Burning Message';
         }
+    }
+
+    setupFontSizeControls() {
+        const textarea = document.getElementById('messageContent');
+        const slider = document.getElementById('fontSize');
+        
+        const updateFontSize = () => {
+            const size = FONT_SIZES[slider.value];
+            textarea.style.fontSize = size;
+            this.fontSize = slider.value;
+            
+            // Update slider progress
+            const progress = (slider.value / slider.max) * 100;
+            slider.style.setProperty('--slider-progress', `${progress}%`);
+        };
+        
+        slider.addEventListener('input', updateFontSize);
+        updateFontSize(); // Set initial size
     }
 }
 

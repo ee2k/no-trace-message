@@ -17,3 +17,11 @@ export const BURN_TIMES = [
     '10 minutes',
     'till closed'
 ]; 
+
+export const FONT_SIZES = [
+    '0.5rem',
+    '1rem',
+    '2rem',
+    '4rem',
+    '8rem'
+]; 
