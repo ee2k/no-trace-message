@@ -1,6 +1,11 @@
 from datetime import datetime
 import json
 from pathlib import Path
+import sys
+
+# Get the backend directory (root of the program)
+BACKEND_ROOT = Path(sys.path[0])
+PROJECT_ROOT = BACKEND_ROOT.parent
 
 class Statistics:
     _instance = None
@@ -11,7 +16,8 @@ class Statistics:
             cls._instance.startup_time = datetime.now()
             cls._instance.messages_created = 0
             cls._instance.messages_read = 0
-            cls._instance.stats_file = Path("data/statistics.json")
+            # Use PROJECT_ROOT constant
+            cls._instance.stats_file = PROJECT_ROOT / "data" / "statistics.json"
             cls._instance.load_stats()
         return cls._instance
 
