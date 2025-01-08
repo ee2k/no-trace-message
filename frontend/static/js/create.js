@@ -40,6 +40,9 @@ class MessageCreator {
         this.setupTokenInput();
         this.setupTokenGenerator();
         this.setupFontSizeControls();
+        
+        // Initialize rate limiting
+        this.initRateLimiting();
     }
     
     setupEventListeners() {
@@ -214,6 +217,21 @@ class MessageCreator {
         reader.readAsDataURL(file);
     }
     
+    initRateLimiting() {
+        const now = Date.now();
+        const minute = 60 * 1000;
+        
+        // Get or initialize browser requests from sessionStorage
+        let browserRequests = JSON.parse(sessionStorage.getItem('create_requests') || '[]');
+        
+        // Clean old requests
+        browserRequests = browserRequests
+            .filter(time => (now - time) < minute)
+            .map(Number);  // Ensure numbers
+            
+        sessionStorage.setItem('create_requests', JSON.stringify(browserRequests));
+    }
+    
     async createMessage() {
         const message = this.messageInput.value.trim();
         if (!message && this.images.size === 0) {
@@ -248,17 +266,21 @@ class MessageCreator {
         });
         
         try {
-            // Log initial data
-            console.log('Creating message with:', {
-                messageLength: message.length,
-                imagesCount: this.images.size,
-                imageDetails: Array.from(this.images).map(file => ({
-                    name: file.name,
-                    type: file.type,
-                    size: file.size
-                }))
-            });
-
+            const now = Date.now();
+            const minute = 60 * 1000;
+            
+            // Check browser limit
+            let browserRequests = JSON.parse(sessionStorage.getItem('create_requests') || '[]');
+            browserRequests = browserRequests.filter(time => (now - time) < minute);
+            
+            if (browserRequests.length >= 3) {
+                throw new Error('Too many requests. Please wait a little.');
+            }
+            
+            // Add new request timestamp
+            browserRequests.push(now);
+            sessionStorage.setItem('create_requests', JSON.stringify(browserRequests));
+            
             // Disable button during upload
             this.createBtn.disabled = true;
             this.createBtn.textContent = 'Creating...';
@@ -268,6 +290,14 @@ class MessageCreator {
                 body: formData
             });
             
+            if (!response.ok) {
+                const error = await response.json();
+                if (response.status === 429) {
+                    throw new Error('Too many requests from this IP. Please wait a little.');
+                }
+                throw new Error(error.detail.message || 'Failed to create message');
+            }
+
             const data = await response.json();
             console.log('Server response:', {
                 status: response.status,
@@ -295,11 +325,16 @@ class MessageCreator {
                 }
             }
         } catch (error) {
-            console.error('Creation error:', error);
-            alert('Network error: ' + error.message);
-        } finally {
+            // Rate limit errors: just show alert, keep button enabled
+            if (error.message.includes('Too many')) {
+                alert(error.message);
+                return;
+            }
+            
+            // Other errors: reset button and show error
             this.createBtn.disabled = false;
-            this.createBtn.textContent = 'Create Burning Message';
+            console.error('Error creating message:', error);
+            alert('Failed to create message. Please try again.');
         }
     }
 

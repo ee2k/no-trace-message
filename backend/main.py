@@ -1,9 +1,8 @@
-from fastapi import FastAPI, Request, Form
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from routes.api import api_router
-from routes.pages import router as pages_router
-from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse, JSONResponse
+from routes.pages import router
+from fastapi.responses import JSONResponse
 from pathlib import Path
 from middleware.rate_limit import RateLimiter
 import logging
@@ -23,14 +22,6 @@ logger = logging.getLogger(__name__)
 # Get project root directory
 PROJECT_ROOT = Path(__file__).parent.parent.resolve()
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
-ENV_DIR = PROJECT_ROOT  # For environment files
-
-# Get environment mode
-ENVIRONMENT = os.getenv("ENVIRONMENT", "production")
-
-# Debug logging for paths
-logger.info(f"Project root: {PROJECT_ROOT}")
-logger.info(f"Frontend dir: {FRONTEND_DIR}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -56,10 +47,9 @@ async def lifespan(app: FastAPI):
 # Production settings
 app = FastAPI(
     title="Burn after reading message",
-    # Disable docs in production
-    docs_url=None,    # Removes /docs
-    redoc_url=None,   # Removes /redoc
-    openapi_url=None,  # Removes /openapi.json
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
     lifespan=lifespan
 )
 
@@ -77,20 +67,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files only in development mode
-if ENVIRONMENT == "development":
-    static_path = FRONTEND_DIR / "static"
-    if static_path.exists():
-        app.mount(
-            "/static",
-            StaticFiles(directory=str(static_path.absolute())),
-            name="static"
-        )
-    else:
-        logger.error(f"Static directory not found: {static_path}")
+# Include routers
+app.include_router(api_router)
+app.include_router(router)
 
-# Add rate limiting (increase to 60 requests per minute)
-app.add_middleware(RateLimiter, requests_per_minute=6)
+# Add rate limiting with browser and IP limits
+app.add_middleware(
+    RateLimiter,
+    browser_limit=3,    # 3 requests per minute per browser
+    ip_limit=10,        # 10 requests per minute per IP
+    window_size=60      # 1 minute window
+)
 
 # Security headers middleware
 @app.middleware("http")
@@ -123,10 +110,6 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         status_code=exc.status_code,
         content={"detail": str(exc.detail)}
     )
-
-# Include routers
-app.include_router(api_router)
-app.include_router(pages_router)
 
 # Health check endpoint
 @app.get("/health")

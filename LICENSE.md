@@ -1,59 +1,38 @@
-# Dual License
+# GNU General Public License v2.0
 
-This project is available under a dual-license model:
+This project is licensed under the GNU General Public License v2.0 (GPL-2.0):
 
-## 1. GNU Affero General Public License v3.0 (AGPL-3.0)
+[Full GPL-2.0 License Text]
+https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
-For personal, non-commercial, educational, and open source projects:
+## Key Points
 
-[Full AGPL-3.0 License Text]
-https://www.gnu.org/licenses/agpl-3.0.html
+1. **Freedom to Use**
+   - You are free to use this software for any purpose
+   - You can study how the software works and modify it
+   - You can redistribute copies of the software
+   - You can distribute copies of your modified versions
 
-## 2. Commercial License
+2. **Copyleft Requirements**
+   - If you modify and distribute this software, you MUST:
+     - Make your modifications open source
+     - License your modifications under GPL-2.0
+     - Provide clear notices of your changes
+     - Include the original copyright notice
+     - Include the full GPL-2.0 license text
 
-For commercial use, a separate commercial license is required.
-
-### Commercial Licensing Contact
-
-For commercial licensing inquiries, please choose the method you like:
-
-1. **GitHub Issues**
-   - Open a new issue with label "commercial-license"
-   - This is the preferred method for initial contact
-
-2. **GitHub Discussions**
-   - Post in the "Commercial License" category
-   - Good for general licensing questions
-
-3. **Direct Contact** (for private inquiries)
-   - Open a GitHub issue requesting private communication
-   - Check my GitHub profile for additional contact methods
-   - We'll establish secure communication channel for:
-     - Pricing information
-     - Custom development needs
-     - Support package details
-
-## License Definitions
-
-### Non-Commercial Use includes:
-- Personal projects
-- Educational purposes
-- Non-profit organizations
-- Open source projects
-- Evaluation purposes (30-day trial)
-
-### Commercial Use includes:
-- Using the software to provide commercial services
-- Using the software in a commercial organization
-- Integrating the software into a commercial product
-- Any use by a commercial entity
+3. **No Warranty**
+   - This software is provided "as is"
+   - There is no warranty for the program
 
 ## Compliance
 
-1. If you modify the software:
-   - Under AGPL-3.0: You must make your modifications open source
-   - Under Commercial License: You may keep modifications private
+1. When modifying the software:
+   - You must make your modifications available as open source
+   - You must clearly mark what changes you made
+   - You must include the date of your changes
 
-2. If you distribute the software:
-   - Under AGPL-3.0: Recipients must receive the same AGPL rights
-   - Under Commercial License: Distribution rights as per agreement
+2. When distributing the software:
+   - Recipients must receive the same GPL-2.0 rights
+   - You must provide or offer access to the source code
+   - You must include the original copyright notices

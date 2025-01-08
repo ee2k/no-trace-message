@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from pathlib import Path
 
 # Get project root directory
@@ -14,16 +14,21 @@ async def root():
 
 @router.get("/create")
 async def create():
-    return FileResponse(str(FRONTEND_DIR / "create.html"))
+    return FileResponse(FRONTEND_DIR / "create.html")
 
 @router.get("/success")
 async def success():
-    return FileResponse(str(FRONTEND_DIR / "success.html"))
+    return FileResponse(FRONTEND_DIR / "success.html")
 
-@router.get("/message/{message_id}", response_class=HTMLResponse)
+@router.get("/message/{message_id}")
 async def message_page(message_id: str):
     return FileResponse(FRONTEND_DIR / "message.html")
 
-@router.get("/not-found", response_class=HTMLResponse)
+@router.get("/not-found")
 async def not_found_page():
-    return FileResponse(FRONTEND_DIR / "not-found.html") 
+    return FileResponse(FRONTEND_DIR / "not-found.html")
+
+# Add static files route
+@router.get("/static/{file_path:path}")
+async def static_files(file_path: str):
+    return FileResponse(FRONTEND_DIR / "static" / file_path) 

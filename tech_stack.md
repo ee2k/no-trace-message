@@ -52,12 +52,6 @@ pip3 install -r requirements.txt
 }
 ```
 
-## Local http server setup
-```bash
-cd src
-python3 -m http.server 80
-```
-
 ## Uvicorn setup
 ```bash
 # Basic with port
@@ -86,5 +80,5 @@ uvicorn main:app \
 ENVIRONMENT=development ./scripts/load_env.sh --reload
 
 # Production
-ENVIRONMENT=production ./scripts/load_env.sh --workers 4 --port 3000
+ENVIRONMENT=production ./scripts/load_env.sh --workers 4 --port 8000
 ```
