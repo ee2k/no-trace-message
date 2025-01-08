@@ -79,6 +79,9 @@ uvicorn main:app \
 # Development
 ENVIRONMENT=development ./scripts/load_env.sh --reload
 
+# Staging
+nohup bash -c 'ENVIRONMENT=staging ./scripts/load_env.sh --workers 4 --port 8000' > ./logs/app.log 2>&1 &
+
 # Production
-ENVIRONMENT=production ./scripts/load_env.sh --workers 4 --port 8000
+# TODO:
 ```
