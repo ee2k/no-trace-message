@@ -28,6 +28,10 @@ async def message_page(message_id: str):
 async def not_found_page():
     return FileResponse(FRONTEND_DIR / "not-found.html")
 
+@router.get("/stats")
+async def stats_page():
+    return FileResponse(FRONTEND_DIR / "stats.html")
+
 # Add static files route
 @router.get("/static/{file_path:path}")
 async def static_files(file_path: str):

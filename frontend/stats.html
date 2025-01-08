@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistics - Burning Message</title>
+    <link rel="stylesheet" href="static/css/global.css">
+    <link rel="stylesheet" href="static/css/stats.css">
+    <link rel="icon" type="image/svg+xml" href="static/images/favicon.svg">
+</head>
+<body>
+    <div class="container">
+        <main>
+            <h1>System Statistics</h1>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Server Uptime</h3>
+                    <p id="uptime">Loading...</p>
+                    <small id="startupTime"></small>
+                </div>
+                
+                <div class="stat-card">
+                    <h3>Messages Created</h3>
+                    <p id="messagesCreated">Loading...</p>
+                </div>
+                
+                <div class="stat-card">
+                    <h3>Messages Read</h3>
+                    <p id="messagesRead">Loading...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="static/js/stats.js"></script>
+</body>
+</html> 

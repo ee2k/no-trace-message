@@ -2,6 +2,7 @@ from typing import Dict, Optional, AsyncGenerator, Any
 import asyncio
 from models.message import Message
 import time
+from services.statistics import Statistics
 
 class MessageStore:
     _instance = None
@@ -38,6 +39,7 @@ class MessageStore:
 
     async def store_message(self, message: Message) -> None:
         self.messages[message.id] = message
+        Statistics().increment_messages_created()
     
     async def get_message(self, message_id: str, token: str) -> Optional[Message]:
         message = self.messages.get(message_id)
@@ -101,6 +103,7 @@ class MessageStore:
         """Stream message content and delete after successful streaming"""
         try:
             message = self.messages[message_id]
+            Statistics().increment_messages_read()
             async for chunk in message.stream_content():
                 yield chunk
             await asyncio.sleep(0.1)  # Small delay to ensure client receives data
