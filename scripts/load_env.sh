@@ -55,12 +55,15 @@ if ! command -v uvicorn &> /dev/null; then
 fi
 
 # Run uvicorn with port check
-if echo "$*" | grep -q -- "--port 80"; then
+PORT=$(echo "$*" | grep -o -- "--port [0-9]*" | cut -d' ' -f2)
+
+if [ -z "$PORT" ]; then
+    echo "Error: Port must be specified (e.g., --port 8000)"
+    exit 1
+fi
+
+if [ "$PORT" = "80" ]; then
     sudo -E uvicorn main:app --host 0.0.0.0 $@
 else
-    if ! echo "$*" | grep -q -- "--port"; then
-        echo "Error: Port must be specified (e.g., --port 8000)"
-        exit 1
-    fi
     uvicorn main:app --host 0.0.0.0 $@
 fi

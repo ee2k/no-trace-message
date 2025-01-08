@@ -27,6 +27,10 @@ Note: These versions represent >98% of global browser usage as of 2024.
 
 ## VSCode setup
 ```bash
+# Install python3-venv package
+sudo apt-get update
+sudo apt-get install python3-venv
+
 # Create venv
 python3 -m venv venv
 
@@ -41,6 +45,8 @@ venv\Scripts\activate
 pip3 --proxy http://ip:port --trusted-host pypi.org --trusted-host files.pythonhosted.org install -r requirements.txt
 
 # Install dependencies directly
+pip install -r requirements.txt
+# or 
 pip3 install -r requirements.txt
 ```
 
