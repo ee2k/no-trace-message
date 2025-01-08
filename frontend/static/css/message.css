@@ -219,6 +219,19 @@ h1 {
     font-size: 1rem;
 }
 
+/* Add styles for char counter */
+.char-counter {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    font-size: 0.875rem;
+    color: var(--text-color);
+    opacity: 0.6;
+    padding: 0.2rem 0.8rem;
+    border-radius: 4px;
+    pointer-events: none;
+}
+
 .token-form .button {
     margin: 0 auto;
     display: block;

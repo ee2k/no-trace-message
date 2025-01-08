@@ -1,15 +1,17 @@
 import { initSvgIcons } from './global.js';
 import { EXPIRY_TIMES, BURN_TIMES, FONT_SIZES } from './constants.js';
+import { $ } from './utils/dom.js';
+import { setupSlider, updateCharCounter, toggleVisibility } from './utils/ui.js';
 
 class MessageCreator {
     constructor() {
         initSvgIcons();
         
-        this.messageInput = document.getElementById('messageContent');
-        this.dropZone = document.getElementById('dropZone');
-        this.fileInput = document.getElementById('fileInput');
-        this.imagePreviews = document.getElementById('imagePreviews');
-        this.createBtn = document.getElementById('createBtn');
+        this.messageInput = $('#messageContent');
+        this.dropZone = $('#dropZone');
+        this.fileInput = $('#fileInput');
+        this.imagePreviews = $('#imagePreviews');
+        this.createBtn = $('#createBtn');
         
         this.images = new Set();
         this.MAX_IMAGES = 1;
@@ -17,12 +19,12 @@ class MessageCreator {
         this.ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
         this.MAX_MESSAGE_LENGTH = 2000;
         
-        this.customTokenBtn = document.getElementById('customTokenBtn');
-        this.tokenInputContainer = document.getElementById('tokenInputContainer');
-        this.customToken = document.getElementById('customToken');
-        this.tokenCounter = document.getElementById('tokenCounter');
-        this.tokenHint = document.getElementById('tokenHint');
-        this.hintCounter = document.getElementById('hintCounter');
+        this.customTokenBtn = $('#customTokenBtn');
+        this.tokenInputContainer = $('#tokenInputContainer');
+        this.customToken = $('#customToken');
+        this.tokenCounter = $('#tokenCounter');
+        this.tokenHint = $('#tokenHint');
+        this.hintCounter = $('#hintCounter');
         
         this.MIN_TOKEN_LENGTH = 6;
         this.MAX_TOKEN_LENGTH = 70;
@@ -72,94 +74,52 @@ class MessageCreator {
     setupCharCounter() {
         const counter = document.createElement('div');
         counter.className = 'char-counter';
-        counter.style.display = 'none';  // Hide by default
+        counter.style.display = 'none';
         this.messageInput.parentNode.insertBefore(counter, this.messageInput.nextSibling);
         
         this.messageInput.addEventListener('input', () => {
-            const remaining = this.MAX_MESSAGE_LENGTH - this.messageInput.value.length;
-            
-            // Only show counter when approaching limit (last 100 chars) or exceeding
-            if (remaining <= 100) {
-                counter.textContent = `${remaining}`;
-                counter.style.display = 'block';
-                
-                if (remaining < 0) {
-                    counter.classList.add('error');
-                    counter.classList.remove('warning');
+            updateCharCounter(this.messageInput, counter, this.MAX_MESSAGE_LENGTH, {
+                warningThreshold: 100,
+                onValid: () => {
+                    this.messageInput.classList.remove('error', 'near-limit');
+                    this.createBtn.disabled = false;
+                },
+                onInvalid: () => {
                     this.messageInput.classList.add('error');
                     this.messageInput.classList.remove('near-limit');
                     this.createBtn.disabled = true;
-                } else {
-                    counter.classList.add('warning');
-                    counter.classList.remove('error');
-                    this.messageInput.classList.add('near-limit');
-                    this.messageInput.classList.remove('error');
-                    this.createBtn.disabled = false;
                 }
-            } else {
-                counter.style.display = 'none';
-                counter.classList.remove('warning', 'error');
-                this.messageInput.classList.remove('near-limit', 'error');
-                this.createBtn.disabled = false;
-            }
+            });
         });
     }
     
     setupExpirySlider() {
-        const slider = document.getElementById('expiryTime');
-        const value = slider.parentElement.querySelector('.slider-value');
-        
-        const updateSliderProgress = () => {
-            const progress = (slider.value / slider.max) * 100;
-            slider.style.setProperty('--slider-progress', `${progress}%`);
-        };
-        
-        const updateSliderValue = () => {
-            value.textContent = EXPIRY_TIMES[slider.value];  // Use constant directly
-            updateSliderProgress();
-        };
-        
-        slider.addEventListener('input', updateSliderValue);
-        updateSliderValue(); // Set initial value
+        const slider = $('#expiryTime');
+        const valueDisplay = slider.parentElement.querySelector('.slider-value');
+        setupSlider(slider, valueDisplay, EXPIRY_TIMES);
     }
     
     setupBurnTimeSlider() {
-        const slider = document.getElementById('burnTime');
-        const value = slider.parentElement.querySelector('.slider-value');
-        
-        const updateSliderProgress = () => {
-            const progress = (slider.value / slider.max) * 100;
-            slider.style.setProperty('--slider-progress', `${progress}%`);
-        };
-        
-        const updateSliderValue = () => {
-            value.textContent = BURN_TIMES[slider.value];  // Use constant directly
-            updateSliderProgress();
-        };
-        
-        slider.addEventListener('input', updateSliderValue);
-        updateSliderValue(); // Set initial value
+        const slider = $('#burnTime');
+        const valueDisplay = slider.parentElement.querySelector('.slider-value');
+        setupSlider(slider, valueDisplay, BURN_TIMES);
     }
     
     setupTokenInput() {
         this.customTokenBtn.addEventListener('click', (e) => {
-            e.preventDefault(); // Prevent jumping to top
+            e.preventDefault();
+            const isHidden = this.tokenInputContainer.style.display === 'none';
             
-            if (this.tokenInputContainer.style.display === 'none') {
-                this.tokenInputContainer.style.display = 'block';
-                this.customTokenBtn.textContent = 'Do not use token';
-                this.tokenCounter.textContent = '70';  // Initial count
-                this.hintCounter.textContent = '70';   // Initial count for hint
-                
-                // Let browser handle visibility after a short delay
+            toggleVisibility(this.tokenInputContainer, isHidden);
+            this.customTokenBtn.textContent = isHidden ? 'Do not use token' : 'Use access token';
+            
+            if (isHidden) {
                 setTimeout(() => {
                     this.tokenInputContainer.scrollIntoView({ behavior: 'smooth' });
                 }, 100);
             } else {
-                this.tokenInputContainer.style.display = 'none';
                 this.customToken.value = '';
                 this.tokenHint.value = '';
-                this.customTokenBtn.textContent = 'Use access token';
             }
         });
 
@@ -264,12 +224,10 @@ class MessageCreator {
         const formData = new FormData();
         formData.append('message', message);
         
-        // Send slider indices instead of actual values
-        formData.append('expiry_index', document.getElementById('expiryTime').value);
-        formData.append('burn_index', document.getElementById('burnTime').value);
+        formData.append('expiry_index', $('#expiryTime').value);
+        formData.append('burn_index', $('#burnTime').value);
         formData.append('font_size', this.fontSize);
         
-        // Add custom token and hint if provided
         const customToken = this.customToken.value.trim();
         const tokenHint = this.tokenHint.value.trim();
 
@@ -278,8 +236,6 @@ class MessageCreator {
                 alert(`Password must be at least ${this.MIN_TOKEN_LENGTH} characters`);
                 return;
             }
-            // Store token in sessionStorage before sending to server
-            sessionStorage.setItem(`msg_token_${this.messageId}`, customToken);
             formData.append('token', customToken);
             if (tokenHint) {
                 formData.append('token_hint', tokenHint);
@@ -294,7 +250,7 @@ class MessageCreator {
         try {
             // Log initial data
             console.log('Creating message with:', {
-                messageLength: this.messageInput.value.trim().length,
+                messageLength: message.length,
                 imagesCount: this.images.size,
                 imageDetails: Array.from(this.images).map(file => ({
                     name: file.name,
@@ -319,55 +275,42 @@ class MessageCreator {
                 data: data
             });
             
-            if (response.ok) {
-                // First store the token if it exists
+            if (response.ok && data.id) {  // Make sure we have a valid message ID
+                // Only store data and redirect on success
                 if (customToken) {
                     sessionStorage.setItem(`msg_token_${data.id}`, customToken);
                 }
-                // Then store message ID and redirect
                 sessionStorage.setItem('current_message_id', data.id);
                 window.location.href = '/success';
             } else {
-                console.error('Server error:', data);
                 if (data.detail?.errors) {
                     const errors = data.detail.errors
                         .map(err => `${err.loc.join('.')}: ${err.msg}`)
                         .join('\n');
                     alert(`Validation errors:\n${errors}`);
+                } else if (data.detail?.message) {
+                    alert(data.detail.message);
                 } else {
-                    alert(data.detail?.message || 'Failed to create message');
+                    alert('Failed to create message');
                 }
             }
         } catch (error) {
-            console.error('Creation error details:', {
-                name: error.name,
-                message: error.message,
-                stack: error.stack
-            });
+            console.error('Creation error:', error);
             alert('Network error: ' + error.message);
         } finally {
-            // Re-enable button
             this.createBtn.disabled = false;
             this.createBtn.textContent = 'Create Burning Message';
         }
     }
 
     setupFontSizeControls() {
-        const textarea = document.getElementById('messageContent');
-        const slider = document.getElementById('fontSize');
+        const textarea = this.messageInput;
+        const slider = $('#fontSize');
         
-        const updateFontSize = () => {
-            const size = FONT_SIZES[slider.value];
-            textarea.style.fontSize = size;
-            this.fontSize = slider.value;
-            
-            // Update slider progress
-            const progress = (slider.value / slider.max) * 100;
-            slider.style.setProperty('--slider-progress', `${progress}%`);
-        };
-        
-        slider.addEventListener('input', updateFontSize);
-        updateFontSize(); // Set initial size
+        setupSlider(slider, null, FONT_SIZES, (index) => {
+            textarea.style.fontSize = FONT_SIZES[index];
+            this.fontSize = index;
+        });
     }
 }
 

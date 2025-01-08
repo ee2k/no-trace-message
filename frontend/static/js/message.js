@@ -1,4 +1,6 @@
 import { FONT_SIZES } from './constants.js';
+import { $ } from './utils/dom.js';
+import { updateCharCounter } from './utils/ui.js';
 
 class MessagePage {
     constructor() {
@@ -8,26 +10,32 @@ class MessagePage {
         this.token = null;
         
         // Elements
-        this.progressBar = document.querySelector('.progress-bar');
-        this.burnTimer = document.querySelector('.burn-timer');
-        this.textSkeleton = document.querySelector('.text-skeleton');
-        this.textContent = document.querySelector('.text-content');
-        this.imageSkeleton = document.querySelector('.image-skeleton');
-        this.imageContent = document.querySelector('.image-content');
-        this.messageImage = document.querySelector('.message-image');
-        this.lightbox = document.querySelector('.lightbox');
-        this.lightboxImage = this.lightbox.querySelector('img');
+        this.progressBar = $('.progress-bar');
+        this.burnTimer = $('.burn-timer');
+        this.textSkeleton = $('.text-skeleton');
+        this.textContent = $('.text-content');
+        this.imageSkeleton = $('.image-skeleton');
+        this.imageContent = $('.image-content');
+        this.messageImage = $('.message-image');
+        this.lightbox = $('.lightbox');
+        this.lightboxImage = $('img', this.lightbox);
+        
+        // Token related elements
+        this.serverNotice = $('.server-notice');
+        this.tokenForm = $('.token-form');
+        this.tokenInput = $('#tokenInput');
+        this.submitToken = $('#submitToken');
+        this.errorMessage = $('.error-message');
+        this.tokenCounter = $('.char-counter');
+        
+        // Constants
+        this.MAX_TOKEN_LENGTH = 70;
+        this.MIN_TOKEN_LENGTH = 6;
         
         // State
         this.burnTimeSeconds = 0;
         this.startTime = null;
         this.animationFrame = null;
-        
-        this.serverNotice = document.querySelector('.server-notice');
-        this.tokenForm = document.querySelector('.token-form');
-        this.tokenInput = document.querySelector('#tokenInput');
-        this.submitToken = document.querySelector('#submitToken');
-        this.errorMessage = document.querySelector('.error-message');
         
         this.setupEventListeners();
         this.checkToken();
@@ -39,7 +47,7 @@ class MessagePage {
         this.lightbox?.addEventListener('click', (e) => {
             if (e.target === this.lightbox) this.closeLightbox();
         });
-        document.querySelector('.close-lightbox')?.addEventListener('click', () => this.closeLightbox());
+        $('.close-lightbox')?.addEventListener('click', () => this.closeLightbox());
         
         // Keyboard events
         document.addEventListener('keydown', (e) => {
@@ -49,7 +57,7 @@ class MessagePage {
         // Token submission
         this.submitToken?.addEventListener('click', () => {
             const token = this.tokenInput.value.trim();
-            if (token.length > 70) {
+            if (token.length > this.MAX_TOKEN_LENGTH) {
                 alert('Token is too long');
                 return;
             }
@@ -59,13 +67,12 @@ class MessagePage {
             }
         });
 
-        // Remove the keypress event listener that was handling Enter
-        // And add new keydown listener for Ctrl/Cmd+Enter
+        // Token input with Ctrl/Cmd+Enter
         this.tokenInput?.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 e.preventDefault();
                 const token = this.tokenInput.value.trim();
-                if (token.length > 70) {
+                if (token.length > this.MAX_TOKEN_LENGTH) {
                     alert('Token is too long');
                     return;
                 }
@@ -76,19 +83,22 @@ class MessagePage {
             }
         });
 
-        // Token input character counter
-        this.tokenInput?.addEventListener('input', () => {
-            const remaining = 70 - this.tokenInput.value.length;
-            this.tokenCounter.textContent = remaining.toString();
-            
-            if (this.tokenInput.value.length > 0 && this.tokenInput.value.length < 6) {
-                this.tokenCounter.classList.add('error');
-                this.submitToken.disabled = true;
-            } else {
-                this.tokenCounter.classList.remove('error');
-                this.submitToken.disabled = false;
-            }
-        });
+        // Create and setup token counter
+        if (this.tokenInput) {
+            const counter = document.createElement('div');
+            counter.className = 'char-counter';
+            this.tokenInput.parentNode.insertBefore(counter, this.tokenInput.nextSibling);
+            this.tokenCounter = counter;
+
+            // Show initial count
+            this.tokenCounter.textContent = this.MAX_TOKEN_LENGTH.toString();
+
+            // Update counter on input
+            this.tokenInput.addEventListener('input', () => {
+                const remaining = this.MAX_TOKEN_LENGTH - this.tokenInput.value.length;
+                this.tokenCounter.textContent = remaining.toString();
+            });
+        }
     }
     
     async loadMessage() {
@@ -110,9 +120,9 @@ class MessagePage {
                 } else if (response.status === 401 || response.status === 404) {
                     // Keep token form visible, hide other content on failed attempt
                     this.showError('Wrong token. Please try again.');
-                    document.querySelector('.actions').style.display = 'none';
-                    document.querySelector('.message-content').style.display = 'none';
-                    document.querySelector('.burn-progress').style.display = 'none';
+                    $('.actions').style.display = 'none';
+                    $('.message-content').style.display = 'none';
+                    $('.burn-progress').style.display = 'none';
                 } else {
                     this.showError('Network error. Please try again later.');
                 }
@@ -121,9 +131,9 @@ class MessagePage {
             
             // Show content and create button on successful token validation
             this.tokenForm.style.display = 'none';
-            document.querySelector('.message-content').style.display = 'block';
-            document.querySelector('.burn-progress').style.display = 'block';
-            document.querySelector('.actions').style.display = 'block';
+            $('.message-content').style.display = 'block';
+            $('.burn-progress').style.display = 'block';
+            $('.actions').style.display = 'block';
             
             const data = await response.json();
             this.burnTimeSeconds = data.burn_time === 'never' ? Infinity : parseFloat(data.burn_time);
@@ -225,9 +235,9 @@ class MessagePage {
         }
 
         // Control visibility of elements
-        const createNewBtn = document.querySelector('.actions');
-        const messageContent = document.querySelector('.message-content');
-        const burnProgress = document.querySelector('.burn-progress');
+        const createNewBtn = $('.actions');
+        const messageContent = $('.message-content');
+        const burnProgress = $('.burn-progress');
 
         // Hide content and progress by default
         messageContent.style.display = 'none';
@@ -266,8 +276,8 @@ class MessagePage {
             
             // Show hint if available
             if (data.needs_token && data.token_hint) {
-                const hintSection = document.getElementById('tokenHintSection');
-                const hintSpan = document.getElementById('messageTokenHint');
+                const hintSection = $('#tokenHintSection');
+                const hintSpan = $('#messageTokenHint');
                 hintSpan.textContent = ` ${data.token_hint}`;
                 hintSection.style.display = 'block';
             }
@@ -281,7 +291,7 @@ class MessagePage {
     }
 
     showError(message) {
-        const errorMessage = document.querySelector('.error-message');
+        const errorMessage = $('.error-message');
         
         // If already showing an error, fade out first
         if (errorMessage.style.display === 'block') {

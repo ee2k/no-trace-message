@@ -1,5 +1,6 @@
 import { initSvgIcons } from './global.js';
 import { EXPIRY_TIMES, BURN_TIMES } from './constants.js';
+import { $, $$ } from './utils/dom.js';
 
 class SuccessPage {
     constructor() {
@@ -13,13 +14,13 @@ class SuccessPage {
         this.token = sessionStorage.getItem(`msg_token_${this.messageId}`);
         
         // Elements
-        this.messageUrl = document.getElementById('messageUrl');
-        this.messageToken = document.getElementById('messageToken');
-        this.tokenSection = document.getElementById('tokenSection');
-        this.burnTime = document.getElementById('burnTime');
-        this.expiryTime = document.getElementById('expiryTime');
-        this.messageTokenHint = document.getElementById('messageTokenHint');
-        this.tokenHintSection = document.getElementById('tokenHintSection');
+        this.messageUrl = $('#messageUrl');
+        this.messageToken = $('#messageToken');
+        this.tokenSection = $('#tokenSection');
+        this.burnTime = $('#burnTime');
+        this.expiryTime = $('#expiryTime');
+        this.messageTokenHint = $('#messageTokenHint');
+        this.tokenHintSection = $('#tokenHintSection');
         
         this.expiryTimes = EXPIRY_TIMES;
         this.burnTimes = BURN_TIMES;
@@ -30,10 +31,10 @@ class SuccessPage {
     }
     
     setupCopyButtons() {
-        document.querySelectorAll('.copy-btn').forEach(button => {
+        $$('.copy-btn').forEach(button => {
             button.addEventListener('click', async () => {
                 const targetId = button.dataset.clipboard;
-                const text = document.getElementById(targetId).textContent;
+                const text = $('#' + targetId).textContent;
                 
                 try {
                     await navigator.clipboard.writeText(text);
@@ -73,9 +74,15 @@ class SuccessPage {
                 body: JSON.stringify({ token: token || '' })
             });
             
-            if (!response.ok) throw new Error('Failed to load message metadata');
-            
             const data = await response.json();
+            
+            if (!response.ok) {
+                // Show error message first
+                alert(data.detail?.message || 'Failed to load message metadata');
+                // Then redirect after user acknowledges
+                window.location.href = '/';
+                return;
+            }
             
             // Format burn time nicely
             const burnTimeText = data.burn_time === 'never' ? 
@@ -100,12 +107,14 @@ class SuccessPage {
                 }
             }
         } catch (error) {
-            console.error('Failed to load message metadata:', error);
+            console.error('Error loading message metadata:', error);
+            alert(error.message);
+            window.location.href = '/';
         }
     }
     
     setupShareButton() {
-        const shareBtn = document.querySelector('.share-btn');
+        const shareBtn = $('.share-btn');
         
         if (!navigator.share) {
             return;
