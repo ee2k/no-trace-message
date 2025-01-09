@@ -11,7 +11,6 @@ class MessagePage {
         
         // Elements
         this.progressBar = $('.progress-bar');
-        this.burnTimer = $('.burn-timer');
         this.textSkeleton = $('.text-skeleton');
         this.textContent = $('.text-content');
         this.imageSkeleton = $('.image-skeleton');
@@ -197,23 +196,26 @@ class MessagePage {
         const progress = (remaining / this.burnTimeSeconds) * 100;
         
         this.progressBar.style.width = `${progress}%`;
-        this.burnTimer.textContent = `${Math.ceil(remaining)}s`;
         
         if (remaining > 0) {
             this.animationFrame = requestAnimationFrame(() => this.updateBurnProgress());
         } else {
-            this.burnMessage();
+            // Clear content first
+            this.textContent.textContent = '';
+            this.imageContent.style.display = 'none';
+            this.messageImage.src = '';
+            this.lightboxImage.src = '';
+            
+            // Clear any stored data
+            sessionStorage.removeItem(`msg_token_${this.messageId}`);
+            
+            // Clear any references
+            this.token = null;
+            this.messageId = null;
+            
+            // Then navigate to not-found
+            window.location.href = '/not-found';
         }
-    }
-    
-    burnMessage() {
-        // Clear content
-        this.textContent.textContent = '';
-        this.messageImage.src = '';
-        this.lightboxImage.src = '';
-        
-        // Navigate to not-found page
-        window.location.href = '/not-found';
     }
     
     openLightbox() {

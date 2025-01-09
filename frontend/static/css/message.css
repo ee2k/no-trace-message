@@ -29,14 +29,6 @@ h1 {
     transition: width linear;
 }
 
-.burn-timer {
-    position: fixed;
-    top: 8px;
-    right: 16px;
-    font-size: 0.9rem;
-    color: var(--text-color);
-}
-
 /* Message content styles */
 .message-content {
     margin-top: 1rem;

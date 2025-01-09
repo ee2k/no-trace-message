@@ -14,7 +14,3 @@ Open source Burn after reading message web app without any trace
 ## [Design](burn.md)
 
 ## [Tech Stack](tech_stack.md)
-
-## [License](LICENSE.md)
-
-## [Changelog](CHANGELOG.md)

@@ -16,7 +16,7 @@ class MessageCreator {
         this.images = new Set();
         this.MAX_IMAGES = 1;
         this.MAX_IMAGE_SIZE = 3 * 1024 * 1024; // 3MB
-        this.ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
+        this.ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         this.MAX_MESSAGE_LENGTH = 2000;
         
         this.customTokenBtn = $('#customTokenBtn');
