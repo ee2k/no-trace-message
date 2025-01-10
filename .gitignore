@@ -9,3 +9,4 @@ data/
 nohup.out
 logs/
 /*.sh
+.pid/

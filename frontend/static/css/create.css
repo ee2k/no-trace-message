@@ -36,7 +36,7 @@ header {
 .message-form {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
 #messageContent {
@@ -446,4 +446,15 @@ footer {
     .font-size-control {
         width: 100%;  /* Full width for mobile */
     }
+}
+
+.legal-link {
+    color: var(--accent-color);
+    text-decoration: none;
+}
+
+.legal-text {
+    text-align: center;
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
 }
