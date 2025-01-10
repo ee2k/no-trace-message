@@ -47,15 +47,15 @@ class I18nManager {
   }
 
   t(key) {
-    const keys = key.split('.');
-    let value = this.translations.get(this.currentLocale);
-    
-    for (const k of keys) {
-      value = value?.[k];
-      if (!value) break;
-    }
+    // If no translations loaded for current locale, keep original text
+    const translation = this.translations.get(this.currentLocale);
+    if (!translation) return null;
 
-    return value || key;
+    // Navigate the nested object using the key path
+    const value = key.split('.').reduce((obj, k) => obj && obj[k], translation);
+    
+    // Return null if translation not found (to keep original text)
+    return value || null;
   }
 }
 

@@ -8,7 +8,12 @@ header {
     text-align: center;
     margin-bottom: 1rem;
 }
-
+h1 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
 .subtitle {
     color: var(--text-secondary);
     margin: 0.5rem 0 0.5rem;
@@ -263,49 +268,6 @@ footer {
     font-size: 1rem;
 }
 
-/* For very small screens and mobile devices */
-@media (max-width: 600px) {
-    .subtitle {
-        margin: 0.5rem 0 0.2rem;
-        font-size: 0.8rem;
-    }
-    
-    .features {
-        gap: 0.5rem;
-        font-size: 0.8rem;
-    }
-    
-    .feature-item {
-        gap: 0.2rem;
-    }
-
-    .settings {
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-
-    .font-size-control {
-        width: 100%;  /* Full width for mobile */
-    }
-}
-
-/* For very small screens only */
-@media (max-width: 375px) {
-    .subtitle {
-        margin: 0.5rem 0 0.2rem;
-        font-size: 0.8rem;
-    }
-    
-    .features {
-        gap: 0.5rem;
-        font-size: 0.8rem;
-    }
-    
-    .feature-item {
-        gap: 0.2rem;
-    }
-}
-
 .token-section {
     display: flex;
     flex-direction: column;
@@ -360,13 +322,6 @@ footer {
     position: absolute;
     bottom: 0.5rem;
     right: 0.5rem;
-}
-
-/* Mobile responsive */
-@media (max-width: 600px) {
-    .token-row:last-child textarea {
-        width: 100%;
-    }
 }
 
 .generate-token {
@@ -426,14 +381,61 @@ footer {
     padding: 0.25rem 0;
     margin-bottom: 0.5rem;
 }
-/* Mobile responsive */
-@media (max-width: 600px) {
-    .font-size-control {
-        width: 100%;  /* Full width for mobile */
-    }
-}
 .legal-text {
     text-align: center;
     font-size: 0.8rem;
     margin-bottom: 0.5rem;
+}
+
+/* For very small screens and mobile devices */
+@media (max-width: 600px) {
+    .subtitle {
+        margin: 0.5rem 0 0.2rem;
+        font-size: 0.8rem;
+    }
+    
+    .features {
+        gap: 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .feature-item {
+        gap: 0.2rem;
+    }
+
+    .settings {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .font-size-control {
+        width: 100%;
+    }
+    .token-row:last-child textarea {
+        width: 100%;
+    }
+}
+
+/* For very small screens only */
+@media (max-width: 428px) {
+    .subtitle {
+        margin: 0.5rem 0 0.2rem;
+        font-size: 0.8rem;
+    }
+    
+    .features {
+        gap: 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .feature-item {
+        gap: 0.2rem;
+    }
+    .font-size-control {
+        width: 100%;
+    }
+    .language-selector-container {
+        top: 0.2rem;
+        right: 0.2rem;
+    }
 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="title">Burning Message - Create</title>
+    <title data-i18n="create.title">Burning Message - Create</title>
     <link rel="stylesheet" href="static/css/global.css">
     <link rel="stylesheet" href="static/css/create.css">
     <link rel="icon" type="image/svg+xml" href="static/images/favicon.svg">
@@ -12,18 +12,18 @@
     <div class="container">
         <!-- Header with reduced top margin -->
         <header>
-            <h1 data-i18n="create.title"><svg class="fire-icon"><use href="static/images/fire.svg#icon"></use></svg> Burn after reading</h1>
-            <p class="subtitle" data-i18n="create.subtitle">A secure, anonymous <a href="https://github.com/ee2k/burning-message" target="_blank" class="hyperlink">open-source</a> platform</p>
+            <h1><svg class="fire-icon"><use href="static/images/fire.svg#icon"></use></svg><span data-i18n="create.title">Burn after reading</span></h1>
+            <p class="subtitle" data-i18n="create.subtitle" data-i18n-html="true">A secure, anonymous <a href="https://github.com/ee2k/burning-message" target="_blank" class="hyperlink" data-i18n="create.open-source">open-source platform</a></p>
             
             <div class="features">
                 <div class="feature-item">
-                    <span data-i18n="create.features.noHistory">• No history</span>
+                    • <span data-i18n="create.features.noHistory">No history</span>
                 </div>
                 <div class="feature-item">
-                    <span data-i18n="create.features.noTracking">• No tracking</span>
+                    • <span data-i18n="create.features.noTracking">No tracking</span>
                 </div>
                 <div class="feature-item">
-                    <span data-i18n="create.features.noDatabase">• No database</span>
+                    • <span data-i18n="create.features.noDatabase">No database</span>
                 </div>
             </div>
         </header>
@@ -41,11 +41,7 @@
                             <span class="size-icon large">A</span>
                         </div>
                     </div>
-                    <textarea 
-                        id="messageContent" 
-                        rows="6" 
-                        placeholder=""
-                    ></textarea>
+                    <textarea id="messageContent" data-i18n-placeholder="create.messageInput" rows="6" placeholder="Type your message here..."></textarea>
                     <div class="char-counter"></div>
                 </div>
 
@@ -54,8 +50,8 @@
                         <svg class="upload-icon">
                             <use href="static/images/upload.svg#icon"></use>
                         </svg>
-                        <p>Click or drop image here to upload</p>
-                        <p class="upload-hint">1 image, 3MB max<br>( jpg, png, gif, webp )</p>
+                        <p data-i18n="create.dropZoneText">Click or drop image here to upload</p>
+                        <p class="upload-hint"><span id='dropZoneHint' data-i18n="create.dropZoneHint">1 image, 3MB max</span><br><span id='dropZoneFormat' data-i18n="create.dropZoneFormat">( jpg png gif webp )</span></p>
                         <input type="file" id="fileInput" accept="image/*" hidden>
                     </div>
                     <div class="image-previews" id="imagePreviews">
@@ -65,50 +61,40 @@
 
                 <div class="settings">
                     <div class="setting-item">
-                        <label for="burnTime">Visible:&ensp;<span class="slider-value"></span></label>
+                        <label for="burnTime"><span data-i18n="create.visible">Visible</span>:&ensp;<span class="slider-value"></span></label>
                         <input type="range" id="burnTime" min="0" max="6" value="2" class="slider">
                     </div>
                     <div class="setting-item">
-                        <label for="expiryTime">Validity:&ensp;<span class="slider-value"></span></label>
+                        <label for="expiryTime"><span data-i18n="create.validity">Validity</span>:&ensp;<span class="slider-value"></span></label>
                         <input type="range" id="expiryTime" min="0" max="6" value="2" class="slider">
                     </div>
                 </div>
 
                 <!-- Add custom token section -->
                 <div class="token-section">
-                    <a href="#" class="token-link" id="customTokenBtn">Use access token</a>
+                    <a href="#" class="token-link" id="customTokenBtn" data-i18n="create.useAccessToken">Use access token</a>
                     <div class="token-input-container" id="tokenInputContainer" style="display: none;">
                         <div class="token-row">
-                            <textarea 
-                                id="customToken" 
-                                rows="3"
-                                placeholder="6~70 characters
+                            <textarea id="customToken" rows="3" maxlength="70" data-i18n-placeholder="create.tokenPlaceholder" placeholder="6~70 characters
 
-a memorable line could be good~"
-                                maxlength="70"
-                            ></textarea>
+a memorable line could be good~"></textarea>
                             <button class="generate-token" title="Generate readable token">
-                                <svg class="pencil-icon">
-                                    <use href="static/images/pencil.svg#icon"></use>
-                                </svg>
+                                <svg class="pencil-icon"><use href="static/images/pencil.svg#icon"></use></svg>
                             </button>
                             <div class="char-counter" id="tokenCounter"></div>
                         </div>
                         <div class="token-row">
-                            <textarea 
-                                id="tokenHint" 
-                                rows="3"
-                                placeholder="Optional token hint
+                            <textarea id="tokenHint" rows="3" maxlength="70" data-i18n-placeholder="create.tokenHintPlaceholder" placeholder="Optional token hint
 
-e.g., 'Our favorite coffee shop'"
-                                maxlength="70"
-                            ></textarea>
+e.g., 'Our favorite coffee shop'"></textarea>
                             <div class="char-counter" id="hintCounter"></div>
                         </div>
                     </div>
                 </div>
 
-                <p class="legal-text">By using this service, you agree to our <a href="static/tos.html" target="_blank" class="hyperlink">Terms of Service</a> and <a href="static/privacy.html" target="_blank" class="hyperlink">Privacy Policy</a>.</p>
+                <p class="legal-text" data-i18n="create.legal" data-i18n-html="true">
+                    By using this service, you agree to our <a href="static/i18n/en/tos.html" class="hyperlink" data-i18n-href="tos">Terms of Service</a> and <a href="static/i18n/en/privacy.html" class="hyperlink" data-i18n-href="privacy">Privacy Policy</a>
+                </p>
 
                 <button id="createBtn" class="primary-button">Create Burning Message</button>
             </div>

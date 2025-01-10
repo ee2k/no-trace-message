@@ -1,4 +1,5 @@
-import { i18n } from '../i18n/index.js';
+import { i18n } from '../../i18n/index.js';
+import { $ } from '../utils/dom.js';
 
 export class LanguageSelector {
   constructor(containerId) {
@@ -34,8 +35,8 @@ export class LanguageSelector {
   }
 
   addEventListeners() {
-    const button = this.container.querySelector('.language-button');
-    const menu = this.container.querySelector('.language-menu');
+    const button = $('.language-button', this.container);
+    const menu = $('.language-menu', this.container);
     
     button.addEventListener('click', () => {
       menu.classList.toggle('show');

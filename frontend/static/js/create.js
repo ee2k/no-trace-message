@@ -1,8 +1,8 @@
 import { initSvgIcons } from './global.js';
 import { EXPIRY_TIMES, BURN_TIMES, FONT_SIZES } from './constants.js';
-import { $ } from './utils/dom.js';
+import { $, $$ } from './utils/dom.js';
 import { setupSlider, updateCharCounter, toggleVisibility } from './utils/ui.js';
-import { i18n } from './i18n/index.js';
+import { i18n } from '../i18n/index.js';
 import { LanguageSelector } from './components/languageSelector.js';
 
 class MessageCreator {
@@ -40,17 +40,6 @@ class MessageCreator {
         // Characters chosen for readability (no I,l,0,O etc.)
         this.TOKEN_CHARS = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         this.TOKEN_LENGTH = 8;
-        
-        // Update text content with translations
-        $('#messageContent').placeholder = i18n.t('create.messageInput');
-        $('#customToken').placeholder = i18n.t('create.tokenPlaceholder');
-        $('#tokenHint').placeholder = i18n.t('create.tokenHintPlaceholder');
-        $('#createBtn').textContent = i18n.t('create.createButton');
-        $('.drop-zone p').textContent = i18n.t('create.dropZoneText');
-        $('.upload-hint').textContent = i18n.t('create.dropZoneHint');
-        $('#customTokenBtn').textContent = i18n.t('create.useAccessToken');
-        $('label[for="burnTime"]').firstChild.textContent = i18n.t('create.visible') + ':';
-        $('label[for="expiryTime"]').firstChild.textContent = i18n.t('create.validity') + ':';
         
         this.setupEventListeners();
         this.setupCharCounter();
@@ -120,13 +109,13 @@ class MessageCreator {
     
     setupExpirySlider() {
         const slider = $('#expiryTime');
-        const valueDisplay = slider.parentElement.querySelector('.slider-value');
+        const valueDisplay = $('.slider-value', slider.parentElement);
         setupSlider(slider, valueDisplay, EXPIRY_TIMES);
     }
     
     setupBurnTimeSlider() {
         const slider = $('#burnTime');
-        const valueDisplay = slider.parentElement.querySelector('.slider-value');
+        const valueDisplay = $('.slider-value', slider.parentElement);
         setupSlider(slider, valueDisplay, BURN_TIMES);
     }
     
@@ -170,7 +159,7 @@ class MessageCreator {
     }
     
     setupTokenGenerator() {
-        const generateBtn = document.querySelector('.generate-token');
+        const generateBtn = $('.generate-token');
         generateBtn.addEventListener('click', (e) => {
             e.preventDefault();
             const token = this.generateReadableToken();
@@ -227,7 +216,7 @@ class MessageCreator {
                 </button>
             `;
             
-            preview.querySelector('.remove-btn').addEventListener('click', () => {
+            $('.remove-btn', preview).addEventListener('click', () => {
                 this.images.delete(file);
                 preview.remove();
                 this.fileInput.value = '';  // Reset file input
@@ -371,22 +360,31 @@ class MessageCreator {
     }
 
     updateTranslations() {
-        document.querySelectorAll('[data-i18n]').forEach(element => {
+        $$('[data-i18n]').forEach(element => {
             const key = element.dataset.i18n;
-            element.textContent = i18n.t(key);
+            const translation = i18n.t(key);
+            
+            // Only update if we have a valid translation
+            if (translation) {
+                if (element.dataset.i18nHtml === 'true') {
+                    let translatedHtml = translation;
+                    translatedHtml = translatedHtml.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
+                        const urlTranslation = i18n.t(key);
+                        return urlTranslation || match;
+                    });
+                    element.innerHTML = translatedHtml;
+                } else {
+                    element.textContent = translation;
+                }
+            }
         });
-
-        // Handle placeholders separately
-        const placeholders = {
-            'messageContent': 'create.messageInput',
-            'customToken': 'create.tokenPlaceholder',
-            'tokenHint': 'create.tokenHintPlaceholder'
-        };
-
-        Object.entries(placeholders).forEach(([id, key]) => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.placeholder = i18n.t(key);
+    
+        // Handle placeholders
+        $$('[data-i18n-placeholder]').forEach(element => {
+            const key = element.dataset.i18nPlaceholder;
+            const translation = i18n.t(key);
+            if (translation) {
+                element.placeholder = translation;
             }
         });
     }
