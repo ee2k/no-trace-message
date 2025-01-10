@@ -3,40 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Burning Message - Create</title>
+    <title data-i18n="title">Burning Message - Create</title>
     <link rel="stylesheet" href="static/css/global.css">
     <link rel="stylesheet" href="static/css/create.css">
     <link rel="icon" type="image/svg+xml" href="static/images/favicon.svg">
 </head>
 <body>
     <div class="container">
-        <!-- GitHub link in top right -->
-        <a href="https://github.com/ee2k/burning-message" target="_blank" class="github-corner">
-            <svg class="github-logo icon-primary">
-                <use href="static/images/github-icon.svg#icon"></use>
-            </svg>
-        </a>
-
         <!-- Header with reduced top margin -->
         <header>
-            <h1>Burn after reading</h1>
-            <p class="subtitle">A secure, anonymous open-source platform</p>
+            <h1 data-i18n="create.title"><svg class="fire-icon"><use href="static/images/fire.svg#icon"></use></svg> Burn after reading</h1>
+            <p class="subtitle" data-i18n="create.subtitle">A secure, anonymous <a href="https://github.com/ee2k/burning-message" target="_blank" class="hyperlink">open-source</a> platform</p>
             
             <div class="features">
-                <!-- <div class="feature-item">
-                    <span>• No registration</span>
-                </div> -->
                 <div class="feature-item">
-                    <span>• No history</span>
+                    <span data-i18n="create.features.noHistory">• No history</span>
                 </div>
                 <div class="feature-item">
-                    <span>• No tracking</span>
+                    <span data-i18n="create.features.noTracking">• No tracking</span>
                 </div>
                 <div class="feature-item">
-                    <span>• No database</span>
+                    <span data-i18n="create.features.noDatabase">• No database</span>
                 </div>
             </div>
         </header>
+
+        <div id="languageSelector" class="language-selector-container"></div>
 
         <!-- Message creation form -->
         <main>
@@ -52,14 +44,14 @@
                     <textarea 
                         id="messageContent" 
                         rows="6" 
-                        placeholder="Type your message here..."
+                        placeholder=""
                     ></textarea>
                     <div class="char-counter"></div>
                 </div>
 
                 <div class="image-upload">
                     <div class="drop-zone" id="dropZone">
-                        <svg class="upload-icon" width="48" height="48">
+                        <svg class="upload-icon">
                             <use href="static/images/upload.svg#icon"></use>
                         </svg>
                         <p>Click or drop image here to upload</p>
@@ -116,7 +108,7 @@ e.g., 'Our favorite coffee shop'"
                     </div>
                 </div>
 
-                <p class="legal-text">By using this service, you agree to our <a href="static/tos.html" target="_blank" class="legal-link">Terms of Service</a> and <a href="static/privacy_policy.html" target="_blank" class="legal-link">Privacy Policy</a>.</p>
+                <p class="legal-text">By using this service, you agree to our <a href="static/tos.html" target="_blank" class="hyperlink">Terms of Service</a> and <a href="static/privacy.html" target="_blank" class="hyperlink">Privacy Policy</a>.</p>
 
                 <button id="createBtn" class="primary-button">Create Burning Message</button>
             </div>

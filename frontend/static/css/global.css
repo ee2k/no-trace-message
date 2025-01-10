@@ -12,6 +12,7 @@
     --message-bg-other: #4b5563;
     --message-bg-system: #374151;
     /* Add icon color variables */
+    --icon-red: #FF6666;
     --icon-primary: #ffffffcc;
     --icon-secondary: #a1a1a1;
     --icon-accent: #2563eb;
@@ -66,4 +67,79 @@ button {
 
 button:hover {
     background-color: var(--button-hover);
+}
+.fire-icon {
+    color: var(--icon-red);
+    width: 36px;
+    height: 36px;
+}
+.hyperlink {
+    color: var(--accent-color);
+    text-decoration: none;
+}
+
+.language-selector-container {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+.language-selector {
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-secondary);
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+.language-selector:hover {
+  border-color: var(--accent-color);
+}
+
+.language-button {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  position: relative;
+}
+
+.i18n-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--text-color);
+}
+
+.language-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  display: none;
+  flex-direction: column;
+  min-width: 120px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.language-menu.show {
+  display: flex;
+}
+
+.language-item {
+  padding: 0.5rem 1rem;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.language-item:hover {
+  background: var(--bg-hover);
+}
+
+.language-item.active {
+  color: var(--accent-color);
 }

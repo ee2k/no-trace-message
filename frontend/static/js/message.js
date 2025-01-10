@@ -1,8 +1,14 @@
 import { FONT_SIZES } from './constants.js';
 import { $ } from './utils/dom.js';
 import { updateCharCounter } from './utils/ui.js';
+import { i18n } from './i18n/index.js';
 
 class MessagePage {
+    static async initialize() {
+        await i18n.loadTranslations(i18n.currentLocale);
+        return new MessagePage();
+    }
+    
     constructor() {
         // Get message ID and token from URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -337,4 +343,4 @@ class MessagePage {
 }
 
 // Initialize
-new MessagePage(); 
+MessagePage.initialize(); 

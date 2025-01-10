@@ -2,8 +2,16 @@ import { initSvgIcons } from './global.js';
 import { EXPIRY_TIMES, BURN_TIMES, FONT_SIZES } from './constants.js';
 import { $ } from './utils/dom.js';
 import { setupSlider, updateCharCounter, toggleVisibility } from './utils/ui.js';
+import { i18n } from './i18n/index.js';
+import { LanguageSelector } from './components/languageSelector.js';
 
 class MessageCreator {
+    static async initialize() {
+        await i18n.loadTranslations(i18n.currentLocale);
+        new LanguageSelector('languageSelector');
+        return new MessageCreator();
+    }
+
     constructor() {
         initSvgIcons();
         
@@ -33,6 +41,17 @@ class MessageCreator {
         this.TOKEN_CHARS = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         this.TOKEN_LENGTH = 8;
         
+        // Update text content with translations
+        $('#messageContent').placeholder = i18n.t('create.messageInput');
+        $('#customToken').placeholder = i18n.t('create.tokenPlaceholder');
+        $('#tokenHint').placeholder = i18n.t('create.tokenHintPlaceholder');
+        $('#createBtn').textContent = i18n.t('create.createButton');
+        $('.drop-zone p').textContent = i18n.t('create.dropZoneText');
+        $('.upload-hint').textContent = i18n.t('create.dropZoneHint');
+        $('#customTokenBtn').textContent = i18n.t('create.useAccessToken');
+        $('label[for="burnTime"]').firstChild.textContent = i18n.t('create.visible') + ':';
+        $('label[for="expiryTime"]').firstChild.textContent = i18n.t('create.validity') + ':';
+        
         this.setupEventListeners();
         this.setupCharCounter();
         this.setupExpirySlider();
@@ -43,6 +62,9 @@ class MessageCreator {
         
         // Initialize rate limiting
         this.initRateLimiting();
+        
+        // Update all elements with data-i18n attributes
+        this.updateTranslations();
     }
     
     setupEventListeners() {
@@ -347,9 +369,28 @@ class MessageCreator {
             this.fontSize = index;
         });
     }
+
+    updateTranslations() {
+        document.querySelectorAll('[data-i18n]').forEach(element => {
+            const key = element.dataset.i18n;
+            element.textContent = i18n.t(key);
+        });
+
+        // Handle placeholders separately
+        const placeholders = {
+            'messageContent': 'create.messageInput',
+            'customToken': 'create.tokenPlaceholder',
+            'tokenHint': 'create.tokenHintPlaceholder'
+        };
+
+        Object.entries(placeholders).forEach(([id, key]) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.placeholder = i18n.t(key);
+            }
+        });
+    }
 }
 
-// Initialize when page loads
-document.addEventListener('DOMContentLoaded', () => {
-    new MessageCreator();
-});
+// Initialize
+MessageCreator.initialize();
