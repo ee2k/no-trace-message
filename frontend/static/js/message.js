@@ -18,6 +18,7 @@ class MessagePage {
         this.messageImage = $('.message-image');
         this.lightbox = $('.lightbox');
         this.lightboxImage = $('img', this.lightbox);
+        this.messageContent = $('.message-content');
         
         // Token related elements
         this.serverNotice = $('.server-notice');
@@ -200,22 +201,45 @@ class MessagePage {
         if (remaining > 0) {
             this.animationFrame = requestAnimationFrame(() => this.updateBurnProgress());
         } else {
-            // Clear content first
+            // Start dissolve effect
+            this.startDissolveEffect();
+        }
+    }
+    
+    startDissolveEffect() {
+        // Add dissolve classes
+        this.textContent.classList.add('dissolving-text');
+        this.messageContent.classList.add('dissolving-container');
+        
+        if (this.messageImage) {
+            this.messageImage.classList.add('dissolving-text');
+        }
+        
+        // Add dissolve effect to lightbox if it's open
+        if (this.lightbox && this.lightbox.style.display === 'flex') {
+            this.lightbox.classList.add('dissolving-lightbox');
+            this.lightboxImage?.classList.add('dissolving-text');
+        }
+        
+        // Wait for animation to complete before redirecting
+        setTimeout(() => {
+            // Clear content
             this.textContent.textContent = '';
             this.imageContent.style.display = 'none';
             this.messageImage.src = '';
             this.lightboxImage.src = '';
+            this.lightbox.style.display = 'none';
             
-            // Clear any stored data
+            // Clear stored data
             sessionStorage.removeItem(`msg_token_${this.messageId}`);
             
-            // Clear any references
+            // Clear references
             this.token = null;
             this.messageId = null;
             
-            // Then navigate to not-found
+            // Navigate to not-found
             window.location.href = '/not-found';
-        }
+        }, 500);
     }
     
     openLightbox() {

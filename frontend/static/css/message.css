@@ -244,3 +244,46 @@ h1 {
     transition: opacity 0.3s ease;
     opacity: 0;
 }
+
+@keyframes dissolve-text {
+    0% {
+        opacity: 1;
+        filter: blur(0);
+        transform: scale(1);
+    }
+    100% { 
+        opacity: 0;
+        filter: blur(4px);
+        transform: scale(0.95);
+    }
+}
+
+@keyframes dissolve-container {
+    0% {
+        background-color: var(--bg-secondary);
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+@keyframes dissolve-lightbox {
+    0% { 
+        opacity: 0.9;
+        backdrop-filter: blur(0);
+    }
+    100% { 
+        opacity: 0;
+        backdrop-filter: blur(4px);
+    }
+}
+
+.dissolving-text {
+    animation: dissolve-text 0.5s forwards;
+}
+.dissolving-container {
+    animation: dissolve-container 0.5s forwards;
+}
+.dissolving-lightbox {
+    animation: dissolve-lightbox 0.5s forwards;
+}
