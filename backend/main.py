@@ -11,16 +11,29 @@ from datetime import datetime
 import os
 from typing import List
 from fastapi import HTTPException
+import sys
+import signal
+import traceback
+
+# Get the project root directory
+PROJECT_ROOT = Path(__file__).parent.parent
+LOG_DIR = PROJECT_ROOT / "logs"
+
+# Create logs directory if it doesn't exist
+LOG_DIR.mkdir(exist_ok=True)
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_DIR / "app.log"),
+        logging.StreamHandler(sys.stdout)
+    ]
 )
 logger = logging.getLogger(__name__)
 
 # Get project root directory
-PROJECT_ROOT = Path(__file__).parent.parent.resolve()
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
 
 @asynccontextmanager
@@ -133,6 +146,53 @@ async def health_check():
             "error": str(e),
             "timestamp": datetime.now().isoformat()
         }
+
+# Add request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = datetime.now()
+    try:
+        response = await call_next(request)
+        duration = datetime.now() - start_time
+        logger.info(
+            f"Path: {request.url.path} "
+            f"Method: {request.method} "
+            f"Duration: {duration.total_seconds():.3f}s "
+            f"Status: {response.status_code}"
+        )
+        return response
+    except Exception as e:
+        logger.error(
+            f"Request failed - Path: {request.url.path} "
+            f"Method: {request.method} "
+            f"Error: {str(e)}\n"
+            f"Traceback: {traceback.format_exc()}"
+        )
+        raise
+
+# Global exception handler
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(
+        f"Uncaught exception\n"
+        f"Path: {request.url.path}\n"
+        f"Method: {request.method}\n"
+        f"Error: {str(exc)}\n"
+        f"Traceback: {traceback.format_exc()}"
+    )
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"}
+    )
+
+# Signal handlers
+def signal_handler(signum, frame):
+    sig_name = signal.Signals(signum).name
+    logger.info(f"Received signal {sig_name} ({signum})")
+    sys.exit(0)
+
+signal.signal(signal.SIGTERM, signal_handler)
+signal.signal(signal.SIGINT, signal_handler)
 
 if __name__ == "__main__":
     import uvicorn

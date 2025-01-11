@@ -16,6 +16,21 @@ trap 'handle_error $LINENO' ERR
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BACKEND_DIR="$PROJECT_ROOT/backend"
 
+# Check if virtual environment exists, create if it doesn't
+if [ ! -d "$PROJECT_ROOT/venv" ]; then
+    echo "Creating virtual environment..."
+    python3 -m venv "$PROJECT_ROOT/venv"
+fi
+
+# Activate virtual environment
+source "$PROJECT_ROOT/venv/bin/activate"
+
+# Install requirements if needed
+if [ ! -f "$PROJECT_ROOT/venv/lib/python3*/site-packages/uvicorn" ]; then
+    echo "Installing requirements..."
+    pip install -r "$PROJECT_ROOT/requirements.txt"
+fi
+
 # Check if ENVIRONMENT is set
 if [ -z "$ENVIRONMENT" ]; then
     echo "Error: ENVIRONMENT variable is not set"
@@ -32,12 +47,8 @@ cp "$PROJECT_ROOT/.env.$ENVIRONMENT" "$BACKEND_DIR/.env"
 # Print debug info
 echo "Current directory: $(pwd)"
 echo "Project root: $PROJECT_ROOT"
-
-# Check if backend directory exists
-if [ ! -d "$BACKEND_DIR" ]; then
-    echo "Error: Backend directory not found: $BACKEND_DIR"
-    exit 1
-fi
+echo "Python path: $(which python)"
+echo "Uvicorn path: $(which uvicorn)"
 
 # Change to backend directory
 cd "$BACKEND_DIR"
@@ -48,22 +59,5 @@ if [ ! -f "main.py" ]; then
     exit 1
 fi
 
-# Check if uvicorn is installed
-if ! command -v uvicorn &> /dev/null; then
-    echo "Error: uvicorn is not installed"
-    exit 1
-fi
-
-# Run uvicorn with port check
-PORT=$(echo "$*" | grep -o -- "--port [0-9]*" | cut -d' ' -f2)
-
-if [ -z "$PORT" ]; then
-    echo "Error: Port must be specified (e.g., --port 8000)"
-    exit 1
-fi
-
-if [ "$PORT" = "80" ]; then
-    sudo -E uvicorn main:app --host 0.0.0.0 $@
-else
-    uvicorn main:app --host 0.0.0.0 $@
-fi
+# Start uvicorn (passing through all arguments)
+exec uvicorn main:app "$@"
