@@ -387,27 +387,71 @@ footer {
     margin-bottom: 0.5rem;
 }
 
+.toggle-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.toggle-button:hover {
+    background-color: transparent; /* Override global style */
+    color: var(--accent-color);
+}
+
+.toggle-icon {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.3s ease;
+}
+
+/* When toggled */
+.toggle-button.active {
+    color: var(--accent-color);
+}
+
+.toggle-button.active .toggle-icon {
+    transform: rotate(180deg);
+}
+
+/* Token input container animation */
+#tokenInputContainer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
+    opacity: 0;
+    visibility: hidden;
+}
+
+#tokenInputContainer.show {
+    max-height: 300px;
+    opacity: 1;
+    visibility: visible;
+    transition: max-height 0.3s ease-in, opacity 0.2s ease-in, visibility 0s;
+}
+/* Always put screen size media queries at the end of the file */
 /* For very small screens and mobile devices */
 @media (max-width: 600px) {
     .subtitle {
         margin: 0.5rem 0 0.2rem;
         font-size: 0.8rem;
     }
-    
     .features {
         gap: 0.5rem;
         font-size: 0.8rem;
     }
-    
     .feature-item {
         gap: 0.2rem;
     }
-
     .settings {
         flex-direction: column;
         gap: 1.5rem;
     }
-
     .font-size-control {
         width: 100%;
     }

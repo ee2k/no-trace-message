@@ -1,7 +1,6 @@
 import { FONT_SIZES } from './constants.js';
 import { $ } from './utils/dom.js';
-import { updateCharCounter } from './utils/ui.js';
-import { i18n } from '../i18n/index.js';
+import { i18n } from './utils/i18n.js';
 
 class MessagePage {
     static async initialize() {

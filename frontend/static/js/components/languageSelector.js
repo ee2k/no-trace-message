@@ -1,13 +1,16 @@
-import { i18n } from '../../i18n/index.js';
+import { i18n } from '../utils/i18n.js';
 import { $ } from '../utils/dom.js';
 
 export class LanguageSelector {
   constructor(containerId) {
-    this.container = document.getElementById(containerId);
+    this.container = $(`#${containerId}`);
     this.supportedLanguages = [
       { code: 'en', name: 'English' },
       { code: 'es', name: 'Español' },
-      { code: 'zh', name: '中文' }
+      { code: 'fr', name: 'Français' },
+      { code: 'de', name: 'Deutsch' },
+      { code: 'zh-CN', name: '简体中文' },
+      { code: 'zh-TW', name: '繁體中文' }
     ];
     
     this.render();
@@ -38,14 +41,17 @@ export class LanguageSelector {
     const button = $('.language-button', this.container);
     const menu = $('.language-menu', this.container);
     
-    button.addEventListener('click', () => {
-      menu.classList.toggle('show');
+    button.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (menu.classList.contains('show')) {
+        menu.classList.remove('show');
+      } else {
+        menu.classList.add('show');
+      }
     });
 
-    document.addEventListener('click', (e) => {
-      if (!this.container.contains(e.target)) {
-        menu.classList.remove('show');
-      }
+    document.addEventListener('click', () => {
+      menu.classList.remove('show');
     });
 
     menu.addEventListener('click', (e) => {

@@ -17,7 +17,7 @@ export default {
     validity: 'Validity',
     tokenPlaceholder: '6~70 characters\n\na memorable line could be good~',
     tokenHintPlaceholder: 'Optional token hint\n\ne.g., \'Our favorite coffee shop\'',
-    legal: 'By using this service, you agree to our <a href="{{urls.privacy}}" class="hyperlink" target="_blank">Terms of Service</a> and <a href="{{privacyUrl}}" class="hyperlink" target="_blank">Privacy Policy</a>'
+    legal: 'By using this service, you agree to our <a href="{{urls.tos}}" class="hyperlink" target="_blank">Terms of Service</a> and <a href="{{urls.privacy}}" class="hyperlink" target="_blank">Privacy Policy</a>'
   },
   urls: {
     tos: '/static/i18n/en/tos.html',

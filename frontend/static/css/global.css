@@ -82,6 +82,7 @@ button:hover {
   position: absolute;
   top: 1rem;
   right: 1rem;
+  z-index: 1000;
 }
 
 .language-selector {
@@ -122,10 +123,21 @@ button:hover {
   flex-direction: column;
   min-width: 120px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
 }
 
 .language-menu.show {
   display: flex;
+}
+
+.language-menu.show::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
 }
 
 .language-item {
@@ -134,6 +146,8 @@ button:hover {
   background: none;
   border: none;
   cursor: pointer;
+  position: relative;
+  z-index: 1001;
 }
 
 .language-item:hover {

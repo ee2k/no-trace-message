@@ -2,7 +2,7 @@ import { initSvgIcons } from './global.js';
 import { EXPIRY_TIMES, BURN_TIMES, FONT_SIZES } from './constants.js';
 import { $, $$ } from './utils/dom.js';
 import { setupSlider, updateCharCounter, toggleVisibility } from './utils/ui.js';
-import { i18n } from '../i18n/index.js';
+import { i18n } from './utils/i18n.js';
 import { LanguageSelector } from './components/languageSelector.js';
 
 class MessageCreator {
@@ -53,7 +53,7 @@ class MessageCreator {
         this.initRateLimiting();
         
         // Update all elements with data-i18n attributes
-        this.updateTranslations();
+        i18n.updateTranslations();
     }
     
     setupEventListeners() {
@@ -122,18 +122,29 @@ class MessageCreator {
     setupTokenInput() {
         this.customTokenBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            const isHidden = this.tokenInputContainer.style.display === 'none';
+            const isHidden = !this.tokenInputContainer.classList.contains('show');
             
-            toggleVisibility(this.tokenInputContainer, isHidden);
-            this.customTokenBtn.textContent = isHidden ? 'Do not use token' : 'Use access token';
+            // Toggle button state
+            this.customTokenBtn.classList.toggle('active');
             
+            // Show container before animation
             if (isHidden) {
+                this.tokenInputContainer.style.display = 'block';
+                // Small delay to ensure display: block is applied
                 setTimeout(() => {
-                    this.tokenInputContainer.scrollIntoView({ behavior: 'smooth' });
-                }, 100);
+                    this.tokenInputContainer.classList.add('show');
+                }, 10);
             } else {
+                this.tokenInputContainer.classList.remove('show');
+                // Hide after animation completes
+                setTimeout(() => {
+                    this.tokenInputContainer.style.display = 'none';
+                }, 300); // Match transition duration
+                
                 this.customToken.value = '';
                 this.tokenHint.value = '';
+                this.customToken.dispatchEvent(new Event('input'));
+                this.tokenHint.dispatchEvent(new Event('input'));
             }
         });
 
@@ -356,36 +367,6 @@ class MessageCreator {
         setupSlider(slider, null, FONT_SIZES, (index) => {
             textarea.style.fontSize = FONT_SIZES[index];
             this.fontSize = index;
-        });
-    }
-
-    updateTranslations() {
-        $$('[data-i18n]').forEach(element => {
-            const key = element.dataset.i18n;
-            const translation = i18n.t(key);
-            
-            // Only update if we have a valid translation
-            if (translation) {
-                if (element.dataset.i18nHtml === 'true') {
-                    let translatedHtml = translation;
-                    translatedHtml = translatedHtml.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
-                        const urlTranslation = i18n.t(key);
-                        return urlTranslation || match;
-                    });
-                    element.innerHTML = translatedHtml;
-                } else {
-                    element.textContent = translation;
-                }
-            }
-        });
-    
-        // Handle placeholders
-        $$('[data-i18n-placeholder]').forEach(element => {
-            const key = element.dataset.i18nPlaceholder;
-            const translation = i18n.t(key);
-            if (translation) {
-                element.placeholder = translation;
-            }
         });
     }
 }

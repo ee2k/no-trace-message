@@ -72,7 +72,12 @@
 
                 <!-- Add custom token section -->
                 <div class="token-section">
-                    <a href="#" class="token-link" id="customTokenBtn" data-i18n="create.useAccessToken">Use access token</a>
+                    <button id="customTokenBtn" class="toggle-button">
+                        <svg class="toggle-icon">
+                            <use href="static/images/toggle.svg#icon"></use>
+                        </svg>
+                        <span data-i18n="create.useAccessToken">Use access token</span>
+                    </button>
                     <div class="token-input-container" id="tokenInputContainer" style="display: none;">
                         <div class="token-row">
                             <textarea id="customToken" rows="3" maxlength="70" data-i18n-placeholder="create.tokenPlaceholder" placeholder="6~70 characters
@@ -92,11 +97,9 @@ e.g., 'Our favorite coffee shop'"></textarea>
                     </div>
                 </div>
 
-                <p class="legal-text" data-i18n="create.legal" data-i18n-html="true">
-                    By using this service, you agree to our <a href="static/i18n/en/tos.html" class="hyperlink" data-i18n-href="tos">Terms of Service</a> and <a href="static/i18n/en/privacy.html" class="hyperlink" data-i18n-href="privacy">Privacy Policy</a>
-                </p>
+                <p class="legal-text" data-i18n="create.legal" data-i18n-html="true">By using this service, you agree to our <a href="static/i18n/en/tos.html" class="hyperlink" href="tos">Terms of Service</a> and <a href="static/i18n/en/privacy.html" class="hyperlink" href="privacy">Privacy Policy</a></p>
 
-                <button id="createBtn" class="primary-button">Create Burning Message</button>
+                <button id="createBtn" class="primary-button" data-i18n="create.createButton">Create Burning Message</button>
             </div>
         </main>
     </div>

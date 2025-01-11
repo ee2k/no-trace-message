@@ -17,11 +17,11 @@ export default {
     validity: '有效期',
     tokenPlaceholder: '输入访问令牌\n\n一个容易记住的句子~',
     tokenHintPlaceholder: '可选的令牌提示\n\n例如：\'我们最喜欢的咖啡店\'',
-    legal: '使用本服务即表示您同意我们的<a href="{{tosUrl}}" class="hyperlink" target="_blank">服务条款</a>和<a href="{{privacyUrl}}" class="hyperlink" target="_blank">隐私政策</a>。'
+    legal: '使用本服务即表示您同意我们的<a href="{{tosUrl}}" class="hyperlink" target="_blank">服务条款</a>和<a href="{{privacyUrl}}" class="hyperlink" target="_blank">隐私政策</a>'
   },
   urls: {
-    tos: '/static/i18n/zh/tos.html',
-    privacy: '/static/i18n/zh/privacy.html',
+    tos: '/static/i18n/zh-CN/tos.html',
+    privacy: '/static/i18n/zh-CN/privacy.html',
     opensource: 'https://github.com/ee2k/burning-message'
   }
 }
