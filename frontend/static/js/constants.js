@@ -1,27 +1,17 @@
-export const EXPIRY_TIMES = [
-    '1 min',
-    '10 min',
-    '1 hour',
-    '12 hours',
-    '1 day',
-    '3 days',
-    '1 week'
-];
-
-export const BURN_TIMES = [
-    '0.1 second',
-    '1 second',
-    '3 seconds',
-    '7 seconds',
-    '3 minutes',
-    '10 minutes',
-    'till closed'
-]; 
-
 export const FONT_SIZES = [
     '0.5rem',
     '1rem',
     '2rem',
     '4rem',
     '8rem'
-]; 
+];
+
+export const BURN_TIMES = {
+    0: 0.1,  // 0.1 sec
+    1: 1,    // 1 sec
+    2: 3,    // 3 sec
+    3: 7,    // 7 sec
+    4: 180,  // 3 min
+    5: 600,  // 10 min
+    6: 'never'  // till closed
+};

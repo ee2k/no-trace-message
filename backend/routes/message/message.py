@@ -107,7 +107,7 @@ async def create_message(
             id=message_id,
             text=message,
             images=image_data,
-            burn_time=burn_time,
+            burn_index=burn_index,
             expires_at=expires_at,
             expiry_index=expiry_index,
             token=token.strip() if token else "",
@@ -179,7 +179,7 @@ async def get_message_meta(message_id: str, request: TokenRequest):
             raise HTTPException(status_code=401, detail="Message not found")
 
         return {
-            "burn_time": message.burn_time,
+            "burn_index": message.burn_index,
             "expiry_index": message.expiry_index,
             "token_hint": message.token_hint if message.token else None
         }

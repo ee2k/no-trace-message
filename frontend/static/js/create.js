@@ -1,5 +1,5 @@
 import { initSvgIcons } from './global.js';
-import { EXPIRY_TIMES, BURN_TIMES, FONT_SIZES } from './constants.js';
+import { FONT_SIZES } from './constants.js';
 import { $, $$ } from './utils/dom.js';
 import { setupSlider, updateCharCounter, toggleVisibility } from './utils/ui.js';
 import { i18n } from './utils/i18n.js';
@@ -8,6 +8,7 @@ import { LanguageSelector } from './components/languageSelector.js';
 class MessageCreator {
     static async initialize() {
         await i18n.loadTranslations(i18n.currentLocale);
+        i18n.updateTranslations();
         new LanguageSelector('languageSelector');
         return new MessageCreator();
     }
@@ -51,9 +52,6 @@ class MessageCreator {
         
         // Initialize rate limiting
         this.initRateLimiting();
-        
-        // Update all elements with data-i18n attributes
-        i18n.updateTranslations();
     }
     
     setupEventListeners() {
@@ -110,13 +108,13 @@ class MessageCreator {
     setupExpirySlider() {
         const slider = $('#expiryTime');
         const valueDisplay = $('.slider-value', slider.parentElement);
-        setupSlider(slider, valueDisplay, EXPIRY_TIMES);
+        setupSlider(slider, valueDisplay, i18n.getExpiryTimes());
     }
     
     setupBurnTimeSlider() {
         const slider = $('#burnTime');
         const valueDisplay = $('.slider-value', slider.parentElement);
-        setupSlider(slider, valueDisplay, BURN_TIMES);
+        setupSlider(slider, valueDisplay, i18n.getBurnTimes());
     }
     
     setupTokenInput() {
@@ -191,20 +189,20 @@ class MessageCreator {
     
     handleFiles(files) {
         if (this.images.size >= this.MAX_IMAGES) {
-            alert(`Only ${this.MAX_IMAGES} image allowed. Please remove the existing image first.`);
+            alert(i18n.t('create.validation.maxImages', { count: this.MAX_IMAGES }));
             this.fileInput.value = '';  // Reset file input after alert
             return;
         }
         
         Array.from(files).slice(0, this.MAX_IMAGES - this.images.size).forEach(file => {
             if (!this.ALLOWED_TYPES.includes(file.type)) {
-                alert(`File type ${file.type} not allowed`);
+                alert(i18n.t('create.validation.fileType').replace('{{type}}', file.type));
                 this.fileInput.value = '';  // Reset file input after type error
                 return;
             }
             
             if (file.size > this.MAX_IMAGE_SIZE) {
-                alert(`File size exceeds ${this.MAX_IMAGE_SIZE / 1024 / 1024}MB limit`);
+                alert(i18n.t('create.validation.fileSize', { size: this.MAX_IMAGE_SIZE / 1024 / 1024 }));
                 this.fileInput.value = '';  // Reset file input after size error
                 return;
             }
@@ -257,7 +255,7 @@ class MessageCreator {
     async createMessage() {
         const message = this.messageInput.value.trim();
         if (!message && this.images.size === 0) {
-            alert('Please enter a message or add images');
+            alert(i18n.t('create.validation.emptyMessage'));
             return;
         }
         
@@ -273,7 +271,7 @@ class MessageCreator {
 
         if (this.tokenInputContainer.style.display !== 'none' && customToken) {
             if (customToken.length < this.MIN_TOKEN_LENGTH) {
-                alert(`Password must be at least ${this.MIN_TOKEN_LENGTH} characters`);
+                alert(i18n.t('create.validation.tokenLength', { length: this.MIN_TOKEN_LENGTH }));
                 return;
             }
             formData.append('token', customToken);
@@ -287,6 +285,10 @@ class MessageCreator {
             formData.append(`images`, file);
         });
         
+        for (let pair of formData.entries()) {
+            console.log(pair[0] + ': ' + pair[1]);
+        }
+        
         try {
             const now = Date.now();
             const minute = 60 * 1000;
@@ -296,7 +298,7 @@ class MessageCreator {
             browserRequests = browserRequests.filter(time => (now - time) < minute);
             
             if (browserRequests.length >= 3) {
-                throw new Error('Too many requests. Please wait a little.');
+                throw new Error(i18n.t('create.errors.tooManyRequests'));
             }
             
             // Add new request timestamp
@@ -305,7 +307,7 @@ class MessageCreator {
             
             // Disable button during upload
             this.createBtn.disabled = true;
-            this.createBtn.textContent = 'Creating...';
+            this.createBtn.textContent += '...';
             
             const response = await fetch('/api/message/create', {
                 method: 'POST',
@@ -315,7 +317,7 @@ class MessageCreator {
             if (!response.ok) {
                 const error = await response.json();
                 if (response.status === 429) {
-                    throw new Error('Too many requests from this IP. Please wait a little.');
+                    throw new Error(i18n.t('create.errors.tooManyRequestsFromIp'));
                 }
                 throw new Error(error.detail.message || 'Failed to create message');
             }
@@ -339,11 +341,11 @@ class MessageCreator {
                     const errors = data.detail.errors
                         .map(err => `${err.loc.join('.')}: ${err.msg}`)
                         .join('\n');
-                    alert(`Validation errors:\n${errors}`);
+                    alert(i18n.t('create.errors.validationFailed', { errors }));
                 } else if (data.detail?.message) {
                     alert(data.detail.message);
                 } else {
-                    alert('Failed to create message');
+                    alert(i18n.t('create.errors.createFailed'));
                 }
             }
         } catch (error) {
@@ -356,7 +358,7 @@ class MessageCreator {
             // Other errors: reset button and show error
             this.createBtn.disabled = false;
             console.error('Error creating message:', error);
-            alert('Failed to create message. Please try again.');
+            alert(i18n.t('create.errors.createFailed'));
         }
     }
 

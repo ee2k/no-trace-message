@@ -12,31 +12,25 @@ class Message(BaseModel):
     id: str
     text: str | None = None
     images: list[ImageData] | None = None
-    burn_time: str | float
+    burn_index: int
     expires_at: datetime
     expiry_index: int
     token: str | None = Field(default=None)
     token_hint: str | None = Field(default=None, max_length=70)
-    # is_read: bool = False
     created_at: datetime = Field(default_factory=datetime.now)
     font_size: int | None = None
-    @validator('burn_time')
-    def validate_burn_time(cls, v):
-        if v == 'never':
-            return v
-        try:
-            burn_time = float(v)
-            if burn_time < 0.1:
-                raise ValueError('Burn time must be at least 0.1 second')
-            return str(burn_time)
-        except ValueError:
-            raise ValueError('Invalid burn time format')
 
     @validator('id')
     def validate_id(cls, v):
         # Simple validation for browser requests
         if not re.match(r'^[\w-]{8,32}$', v):
             raise ValueError('Invalid message ID format')
+        return v
+
+    @validator('burn_index')
+    def validate_burn_index(cls, v):
+        if not (0 <= v <= 6):
+            raise ValueError('Burn index must be between 0 and 6')
         return v
 
     @validator('token')
@@ -59,7 +53,8 @@ class Message(BaseModel):
             "id": self.id,
             "token": self.token,
             "token_hint": self.token_hint,
-            "burn_time": self.burn_time,
+            "burn_index": self.burn_index,
+            "expiry_index": self.expiry_index,
             "expires_at": self.expires_at
         }
 
@@ -68,12 +63,9 @@ class Message(BaseModel):
         return {
             "text": self.text,
             "images": self.images,
-            "burn_time": self.burn_time,
+            "burn_index": self.burn_index,
             "font_size": self.font_size
         }
-
-    # def mark_as_read(self) -> None:
-    #     self.is_read = True
 
     def is_expired(self) -> bool:
         """Check if message is expired"""
@@ -81,7 +73,6 @@ class Message(BaseModel):
 
     def should_burn(self) -> bool:
         """Check if message should be burned"""
-        # return self.is_read or self.is_expired()
         return self.is_expired()
 
     async def stream_content(self) -> AsyncGenerator[bytes, None]:
@@ -94,7 +85,7 @@ class Message(BaseModel):
                     "content": img.content
                 } for img in (self.images or [])
             ],
-            "burn_time": self.burn_time,
+            "burn_index": self.burn_index,
             "font_size": self.font_size
         }
         yield json.dumps(content).encode('utf-8')

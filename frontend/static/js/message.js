@@ -1,4 +1,4 @@
-import { FONT_SIZES } from './constants.js';
+import { FONT_SIZES, BURN_TIMES } from './constants.js';
 import { $ } from './utils/dom.js';
 import { i18n } from './utils/i18n.js';
 
@@ -141,7 +141,9 @@ class MessagePage {
             $('.actions').style.display = 'block';
             
             const data = await response.json();
-            this.burnTimeSeconds = data.burn_time === 'never' ? Infinity : parseFloat(data.burn_time);
+            this.burnTimeSeconds = data.burn_index === 6 ? 
+                Infinity : 
+                BURN_TIMES[data.burn_index];
             
             await Promise.all([
                 this.displayText(data.text, data.font_size),
@@ -149,7 +151,7 @@ class MessagePage {
             ]);
 
             // Start burn countdown if not 'never'
-            if (data.burn_time !== 'never') {
+            if (data.burn_index !== 6) {
                 this.startBurnCountdown();
             }
         } catch (error) {

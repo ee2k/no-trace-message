@@ -1,14 +1,28 @@
 import { initSvgIcons } from './global.js';
-import { EXPIRY_TIMES, BURN_TIMES } from './constants.js';
 import { $, $$ } from './utils/dom.js';
+import { i18n } from './utils/i18n.js';
 
 class SuccessPage {
+    static async initialize() {
+        try {
+            await i18n.loadTranslations(i18n.currentLocale);
+            i18n.updateTranslations();
+        } catch (error) {
+            console.warn('Failed to load translations:', error);
+            // Continue anyway since we have English fallback in common.js
+        }
+        return new SuccessPage();
+    }
+
     constructor() {
         initSvgIcons();
         
         // Get message ID from sessionStorage
         this.messageId = sessionStorage.getItem('current_message_id');
-        sessionStorage.removeItem('current_message_id'); // Clean up after use
+        if (!this.messageId) {
+            window.location.href = '/';
+            return;
+        }
         
         // Get token from sessionStorage
         this.token = sessionStorage.getItem(`msg_token_${this.messageId}`);
@@ -22,12 +36,12 @@ class SuccessPage {
         this.messageTokenHint = $('#messageTokenHint');
         this.tokenHintSection = $('#tokenHintSection');
         
-        this.expiryTimes = EXPIRY_TIMES;
-        this.burnTimes = BURN_TIMES;
-        
         this.setupCopyButtons();
         this.setupShareButton();
-        this.loadMessageMeta();
+        this.loadMessageMeta().then(() => {
+            // Only remove from sessionStorage after successful load
+            sessionStorage.removeItem('current_message_id');
+        });
     }
     
     setupCopyButtons() {
@@ -77,21 +91,24 @@ class SuccessPage {
             const data = await response.json();
             
             if (!response.ok) {
-                // Show error message first
-                alert(data.detail?.message || 'Failed to load message metadata');
-                // Then redirect after user acknowledges
-                window.location.href = '/';
-                return;
+                console.error('Server error:', data);
+                if (response.status === 404) {
+                    alert(data.detail?.message || 'Message not found');
+                    window.location.href = '/';
+                    return;
+                }
             }
             
-            // Format burn time nicely
-            const burnTimeText = data.burn_time === 'never' ? 
-                'never' : 
-                `${parseFloat(data.burn_time).toString().replace(/\.0$/, '')} second${parseFloat(data.burn_time) === 1 || parseFloat(data.burn_time) === 0.1 ? '' : 's'}`;
-            this.burnTime.textContent = burnTimeText;
-            
-            // Use index to get label
-            this.expiryTime.textContent = this.expiryTimes[data.expiry_index];
+            // Use i18n for both times
+            const burnTranslation = i18n.t(`times.burn.${data.burn_index}`);
+            if (burnTranslation) {
+                this.burnTime.textContent = burnTranslation;
+            }
+
+            const expiryTranslation = i18n.t(`times.expiry.${data.expiry_index}`);
+            if (expiryTranslation) {
+                this.expiryTime.textContent = expiryTranslation;
+            }
             
             // Update URL and token display
             const baseUrl = `${window.location.origin}/message/${this.messageId}`;
@@ -108,8 +125,7 @@ class SuccessPage {
             }
         } catch (error) {
             console.error('Error loading message metadata:', error);
-            alert(error.message);
-            window.location.href = '/';
+            alert('Failed to load message details. Please try refreshing the page.');
         }
     }
     
@@ -139,6 +155,6 @@ class SuccessPage {
 }
 
 // Initialize when page loads
-document.addEventListener('DOMContentLoaded', () => {
-    new SuccessPage();
+document.addEventListener('DOMContentLoaded', async () => {
+    await SuccessPage.initialize();
 });

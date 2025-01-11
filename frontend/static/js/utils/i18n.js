@@ -39,7 +39,7 @@ class I18nManager {
         const commonModule = await import(`../../i18n/${locale}/common.js`);
         
         // Load page-specific translations based on current page
-        const pageName = window.location.pathname.split('/').pop();
+        const pageName = this.getCurrentPage();
         const pageModule = await import(`../../i18n/${locale}/pages/${pageName}.js`);
         
         // Merge translations
@@ -78,14 +78,14 @@ class I18nManager {
   updateTranslations() {
     $$('[data-i18n]').forEach(element => {
         const key = element.dataset.i18n;
-        const translation = i18n.t(key);
+        const translation = this.t(key);
         
         // Only update if we have a valid translation
         if (translation) {
             if (element.dataset.i18nHtml === 'true') {
                 let translatedHtml = translation;
                 translatedHtml = translatedHtml.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
-                    const urlTranslation = i18n.t(key);
+                    const urlTranslation = this.t(key);
                     return urlTranslation || match;
                 });
                 element.innerHTML = translatedHtml;
@@ -98,11 +98,23 @@ class I18nManager {
     // Handle placeholders
     $$('[data-i18n-placeholder]').forEach(element => {
         const key = element.dataset.i18nPlaceholder;
-        const translation = i18n.t(key);
+        const translation = this.t(key);
         if (translation) {
             element.placeholder = translation;
         }
     });
+  }
+
+  getExpiryTimes() {
+    return Array.from({ length: 7 }, (_, i) => this.t(`times.expiry.${i}`));
+  }
+
+  getBurnTimes() {
+    return Array.from({ length: 7 }, (_, i) => this.t(`times.burn.${i}`));
+  }
+
+  getCurrentPage() {
+    return window.location.pathname.split('/')[1];
   }
 }
 

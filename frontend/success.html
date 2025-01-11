@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Message Created - Burning Message</title>
+    <title data-i18n="success.title">Message Created - Burning Message</title>
     <link rel="stylesheet" href="static/css/global.css">
     <link rel="stylesheet" href="static/css/success.css">
     <link rel="icon" type="image/svg+xml" href="static/images/favicon.svg">
@@ -16,18 +16,18 @@
                     <svg class="checkmark-icon icon-success">
                         <use href="static/images/checkmark.svg#icon"></use>
                     </svg>
-                    <h2>Message created!</h2>
+                    <h2 data-i18n="success.header">Message created!</h2>
                 </div>
                 <p class="message-timing">
-                    Visible for&ensp;<span id="burnTime"></span><br>
-                    <span class="divider">or</span><br>
-                    Expires without reading in&ensp;<span id="expiryTime" class="relative-time"></span>
+                    <span data-i18n="success.timing.visibleFor">Visible for</span>&ensp;<span id="burnTime"></span><br>
+                    <span class="divider" data-i18n="success.timing.or">or</span><br>
+                    <span data-i18n="success.timing.expiresIn">Expires without reading in</span>&ensp;<span id="expiryTime" class="relative-time"></span>
                 </p>
             </div>
 
             <div class="share-section">
                 <div class="url-container">
-                    <p>Share this link :</p>
+                    <p data-i18n="success.share.link">Share this link :</p>
                     <div class="url-box">
                         <span id="messageUrl"></span>
                         <div class="button-group">
@@ -35,37 +35,37 @@
                                 <svg class="copy-icon">
                                     <use href="static/images/copy.svg#icon"></use>
                                 </svg>
-                                <span>Copy</span>
+                                <span data-i18n="success.share.copy">Copy</span>
                             </button>
                             <button class="share-btn" style="display: none;">
                                 <svg class="share-icon">
                                     <use href="static/images/share.svg#icon"></use>
                                 </svg>
-                                <span>Share</span>
+                                <span data-i18n="success.share.share">Share</span>
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <div id="tokenSection" class="token-section" style="display: none;">
-                    <p>Please pass the one-time token securely :</p>
+                    <p data-i18n="success.token.instruction">Please pass the one-time token securely :</p>
                     <div class="token-box">
                         <span id="messageToken">your-custom-token</span>
                         <button class="copy-btn" data-clipboard="messageToken">
                             <svg class="copy-icon">
                                 <use href="static/images/copy.svg#icon"></use>
                             </svg>
-                            <span>Copy</span>
+                            <span data-i18n="success.share.copy">Copy</span>
                         </button>
                     </div>
                     <div id="tokenHintSection" class="token-hint" style="display: none;">
-                        <p>Token hint:<span id="messageTokenHint"></span></p>
+                        <p><span data-i18n="success.token.hint">Token hint:</span><span id="messageTokenHint"></span></p>
                     </div>
                 </div>
             </div>
 
             <div class="actions">
-                <a href="/" class="button primary">Create Another Message</a>
+                <a href="/" class="button primary" data-i18n="success.actions.createAnother">Create Another Message</a>
             </div>
         </main>
     </div>
