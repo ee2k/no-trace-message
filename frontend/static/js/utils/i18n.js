@@ -21,10 +21,10 @@ class I18nManager {
         // Map regions to supported variants
         const regionMap = {
             'CN': 'zh-CN',
-            'SG': 'zh-CN', // Singapore uses Simplified
+            'SG': 'zh-CN',
             'TW': 'zh-TW',
-            'HK': 'zh-TW', // Hong Kong uses Traditional
-            'MO': 'zh-TW'  // Macau uses Traditional
+            'HK': 'zh-TW',
+            'MO': 'zh-TW'
         };
         return regionMap[region] || 'zh-CN';
     }
