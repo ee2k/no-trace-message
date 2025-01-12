@@ -35,7 +35,6 @@ export default {
       SERVER_ERROR: 'Server error. Please try again later.',
       createFailed: 'Failed to create message. Please try again.',
       networkError: 'Network error. Please try again later.',
-      validationFailed: 'Validation failed:\n{{errors}}'
     }
   },
   urls: {

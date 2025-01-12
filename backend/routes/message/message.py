@@ -55,16 +55,19 @@ FONT_SIZES = [
 class ErrorCodes(str, Enum):
     def _generate_next_value_(name, start, count, last_values):
         return name
-
+    # create
     INVALID_EXPIRY = auto()
     INVALID_BURN = auto()
     INVALID_FONT = auto()
     MAX_IMAGES_EXCEEDED = auto()
     INVALID_FILE_TYPE = auto()
     FILE_TOO_LARGE = auto()
+    # message, meta, check
     MESSAGE_NOT_FOUND = auto()
+    # message
     INVALID_TOKEN = auto()
     TOO_MANY_ATTEMPTS = auto()
+    # create, message, meta, check
     SERVER_ERROR = auto()
 
 @router.post("/create", response_model=dict)

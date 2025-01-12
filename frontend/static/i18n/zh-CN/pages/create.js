@@ -14,9 +14,9 @@ export default {
     useAccessToken: '使用访问令牌',
     visible: '可见',
     validity: '有效期',
-    tokenPlaceholder: '输入访问令牌\n\n可以是你们共同知道的信息~',
+    tokenPlaceholder: '6~70个字符\n\n可以是你们共同知道的信息~',
     tokenHintPlaceholder: '可选的令牌提示\n\n例如：\'我们最喜欢的咖啡店\'',
-    legal: '使用本服务即表示您同意我们的<a href="{{tosUrl}}" class="hyperlink" target="_blank">服务条款</a>和<a href="{{privacyUrl}}" class="hyperlink" target="_blank">隐私政策</a>',
+    legal: '使用本服务即表示您同意我们的<a href="{{urls.tos}}" class="hyperlink" target="_blank">服务条款</a>和<a href="{{urls.privacy}}" class="hyperlink" target="_blank">隐私政策</a>',
     validation: {
       emptyMessage: '请输入消息或添加图片',
       tokenLength: '密码长度至少需要 {{length}} 个字符',
@@ -25,8 +25,15 @@ export default {
       fileSize: '文件大小超过 {{size}}MB 限制'
     },
     errors: {
+      INVALID_EXPIRY: '选择的有效期无效',
+      INVALID_BURN: '选择的阅读时间无效',
+      INVALID_FONT: '选择的字体大小无效',
+      MAX_IMAGES_EXCEEDED: '只能上传1张图片',
+      INVALID_FILE_TYPE: '不支持的文件类型',
+      FILE_TOO_LARGE: '文件大小超过3MB限制',
+      TOO_MANY_ATTEMPTS: '请求过于频繁，请等待 {{minutes}} 分钟',
+      SERVER_ERROR: '服务器错误，请稍后重试',
       createFailed: '创建消息失败，请重试',
-      tooManyRequests: '请求过于频繁，请稍后再试',
       networkError: '网络错误，请稍后重试'
     }
   },

@@ -4,7 +4,7 @@ from pathlib import Path
 import sys
 
 # Get the backend directory (root of the program)
-BACKEND_ROOT = Path(sys.path[0])
+BACKEND_ROOT = Path(__file__).parent.parent
 PROJECT_ROOT = BACKEND_ROOT.parent
 
 class Statistics:

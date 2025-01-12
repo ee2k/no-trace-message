@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /message/
+Allow: /$
+Allow: /create$
+Allow: /static/

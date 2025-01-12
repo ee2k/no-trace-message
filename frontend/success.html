@@ -32,15 +32,17 @@
                         <span id="messageUrl"></span>
                         <div class="button-group">
                             <button class="copy-btn" data-clipboard="messageUrl">
-                                <svg class="copy-icon">
-                                    <use href="static/images/copy.svg#icon"></use>
-                                </svg>
-                                <span data-i18n="success.share.copy">Copy</span>
+                                <div class="btn-content">
+                                    <svg class="copy-icon"><use href="static/images/copy.svg#icon"></use></svg>
+                                    <span data-i18n="success.share.copy">Copy</span>
+                                </div>
+                                <div class="btn-content-copied" style="display: none;">
+                                    <svg class="copy-icon"><use href="static/images/checkmark.svg#icon"></use></svg>
+                                    <span data-i18n="success.share.copied">Copied!</span>
+                                </div>
                             </button>
                             <button class="share-btn" style="display: none;">
-                                <svg class="share-icon">
-                                    <use href="static/images/share.svg#icon"></use>
-                                </svg>
+                                <svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg>
                                 <span data-i18n="success.share.share">Share</span>
                             </button>
                         </div>
@@ -64,12 +66,11 @@
                 </div>
             </div>
 
-            <div class="actions">
-                <a href="/" class="button primary" data-i18n="success.actions.createAnother">Create Another Message</a>
-            </div>
+            <div class="actions"><a href="/" class="button primary" data-i18n="success.actions.createAnother">Create Another Message</a></div>
+            
+            <div class="notice-box" data-i18n="success.notice">The platform doesn't scan or store any content, but plan to implement CSAM auto detection in future updates.</div>
         </main>
     </div>
-
     <script type="module" src="static/js/success.js"></script>
 </body>
 </html> 

@@ -10,6 +10,7 @@ export default {
     share: {
       link: "Share this link :",
       copy: "Copy",
+      copied: "Copied!",
       share: "Share"
     },
     token: {
@@ -18,6 +19,7 @@ export default {
     },
     actions: {
       createAnother: "Create Another Message"
-    }
+    },
+    notice: "The platform doesn't scan or store any content, but plan to implement CSAM auto detection in future updates."
   }
 }

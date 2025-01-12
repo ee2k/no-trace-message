@@ -8,16 +8,18 @@ export default {
       expiresIn: "未讀自動銷毀時間"
     },
     share: {
-      link: "分享連結 :",
+      link: "分享連結：",
       copy: "複製",
+      copied: "已複製！",
       share: "分享"
     },
     token: {
-      instruction: "請安全傳遞一次性令牌 :",
-      hint: "令牌提示："
+      instruction: "請安全地傳遞一次性權杖：",
+      hint: "權杖提示："
     },
     actions: {
       createAnother: "建立另一條訊息"
-    }
+    },
+    notice: "平台不會掃描或儲存任何內容，但計劃在未來更新中實現CSAM自動檢測。"
   }
 }

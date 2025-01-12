@@ -53,20 +53,17 @@ class SuccessPage {
                 try {
                     await navigator.clipboard.writeText(text);
                     
-                    // Update button appearance
-                    const originalContent = button.innerHTML;
-                    button.innerHTML = `
-                        <svg class="copy-icon">
-                            <use href="static/images/checkmark.svg#icon"></use>
-                        </svg>
-                        <span>Copied!</span>
-                    `;
-                    button.classList.add('copied');
+                    const normalContent = $('.btn-content', button);
+                    const copiedContent = $('.btn-content-copied', button);
+                    
+                    // Show copied state
+                    normalContent.style.display = 'none';
+                    copiedContent.style.display = 'flex';
                     
                     // Revert after 2 seconds
                     setTimeout(() => {
-                        button.innerHTML = originalContent;
-                        button.classList.remove('copied');
+                        normalContent.style.display = 'flex';
+                        copiedContent.style.display = 'none';
                     }, 2000);
                     
                 } catch (err) {

@@ -330,11 +330,7 @@ class MessageCreator {
                 throw new Error(i18n.t('create.errors.createFailed'));
             }
 
-            console.log('Server response:', {
-                status: response.status,
-                statusText: response.statusText,
-                data: data
-            });
+            console.log('Server response:', { status: response.status, statusText: response.statusText, data: data });
             
             if (data.id) {  // Make sure we have a valid message ID
                 // Only store data and redirect on success
