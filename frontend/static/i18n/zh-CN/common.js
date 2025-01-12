@@ -1,6 +1,6 @@
 export default {
   common: {
-    title: '阅后即焚'
+    header: '阅后即焚'
   },
   times: {
     expiry: {

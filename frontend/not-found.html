@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Message Not Found - Burning Message</title>
+    <title data-i18n="not_found.title">Message Not Found - Burning Message</title>
     <base href="/">
     <link rel="stylesheet" href="static/css/global.css">
     <link rel="stylesheet" href="static/css/not-found.css">
@@ -11,19 +11,21 @@
 </head>
 <body>
     <div class="container">
+        <div id="languageSelector" class="language-selector-container"></div>
         <main>
-            <h1><svg class="fire-icon"><use href="static/images/fire.svg#icon"></use></svg> Burn after reading</h1>
+            <h1><svg class="fire-icon"><use href="static/images/fire.svg#icon"></use></svg><span data-i18n="common.header">Burn after reading</span></h1>
             <div class="not-found-message">
                 <div class="not-found-header">
                     <span class="icon">🔍</span>
-                    <h2>Message not found</h2>
+                    <h2 data-i18n="not_found.header">Message not found</h2>
                 </div>
-                <p>Message doesn't exist or auto-deleted</p>
+                <p data-i18n="not_found.message">Message doesn't exist or auto-deleted</p>
                 <div class="actions">
-                    <a href="/" class="button primary">Create New Message</a>
+                    <a href="/" class="button primary" data-i18n="not_found.createNew">Create New Message</a>
                 </div>
             </div>
         </main>
     </div>
+    <script type="module" src="static/js/not-found.js"></script>
 </body>
 </html>

@@ -1,10 +1,13 @@
 import { FONT_SIZES, BURN_TIMES } from './constants.js';
 import { $ } from './utils/dom.js';
 import { i18n } from './utils/i18n.js';
+import { LanguageSelector } from './components/languageSelector.js';
 
 class MessagePage {
     static async initialize() {
         await i18n.loadTranslations(i18n.currentLocale);
+        i18n.updateTranslations();
+        new LanguageSelector('languageSelector');
         return new MessagePage();
     }
     
@@ -119,17 +122,26 @@ class MessagePage {
 
             if (!response.ok) {
                 const error = await response.json();
-                if (response.status === 429) {
-                    const minutes = Math.ceil(error.detail.wait_time / 60);
-                    this.showError(`Too many failed attempts. Please wait ${minutes} minutes before trying again.`);
-                } else if (response.status === 401 || response.status === 404) {
-                    // Keep token form visible, hide other content on failed attempt
-                    this.showError('Wrong token. Please try again.');
-                    $('.actions').style.display = 'none';
-                    $('.message-content').style.display = 'none';
-                    $('.burn-progress').style.display = 'none';
+                // Handle case where detail might be a string that looks like an object
+                if (typeof error.detail === 'string' && error.detail.startsWith('{')) {
+                    try {
+                        error.detail = JSON.parse(error.detail);
+                    } catch (e) {
+                        console.error('Error parsing detail:', e);
+                    }
+                }
+                
+                if (error.detail?.code) {
+                    this.showError(error);
+                    
+                    if (error.detail.code === 'INVALID_TOKEN') {
+                        // Keep token form visible, hide other content on failed attempt
+                        $('.actions').style.display = 'none';
+                        $('.message-content').style.display = 'none';
+                        $('.burn-progress').style.display = 'none';
+                    }
                 } else {
-                    this.showError('Network error. Please try again later.');
+                    this.showError({ detail: { code: 'SERVER_ERROR' } });
                 }
                 return;
             }
@@ -323,10 +335,21 @@ class MessagePage {
         }
     }
 
-    showError(message) {
+    showError(error) {
+        let message;
+        if (error.detail?.code) {
+            if (error.detail.code === 'TOO_MANY_ATTEMPTS') {
+                const minutes = Math.ceil(error.detail.wait_time / 60);
+                message = i18n.t('message.errors.TOO_MANY_ATTEMPTS', { minutes });
+            } else {
+                message = i18n.t(`message.errors.${error.detail.code}`);
+            }
+        } else {
+            message = i18n.t('message.networkError');
+        }
+        
         const errorMessage = $('.error-message');
         
-        // If already showing an error, fade out first
         if (errorMessage.style.display === 'block') {
             errorMessage.style.opacity = '0';
             setTimeout(() => {
@@ -344,4 +367,4 @@ class MessagePage {
 }
 
 // Initialize
-MessagePage.initialize(); 
+MessagePage.initialize();

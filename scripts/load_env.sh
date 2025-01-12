@@ -59,5 +59,9 @@ if [ ! -f "main.py" ]; then
     exit 1
 fi
 
-# Start uvicorn (passing through all arguments)
-exec uvicorn main:app "$@"
+# Start uvicorn with hot reload in development
+if [ "$ENVIRONMENT" = "development" ]; then
+    exec uvicorn main:app --reload "$@"
+else
+    exec uvicorn main:app "$@"
+fi

@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from routes.api import api_router
-from routes.pages import router
+# from routes.pages import router
 from fastapi.responses import JSONResponse
 from pathlib import Path
 from middleware.rate_limit import RateLimiter
@@ -34,7 +34,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Get project root directory
-FRONTEND_DIR = PROJECT_ROOT / "frontend"
+# FRONTEND_DIR = PROJECT_ROOT / "frontend"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI):
     logger.info("Application starting up...")
     try:
         # Startup: Initialize resources
-        FRONTEND_DIR.exists() or logger.error("Frontend directory not found!")
+        # FRONTEND_DIR.exists() or logger.error("Frontend directory not found!")
         from services.message_store import MessageStore
         await MessageStore().initialize()
         logger.info("Application startup complete")
@@ -82,7 +82,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(api_router)
-app.include_router(router)
+# app.include_router(router)
 
 # Add rate limiting with browser and IP limits
 app.add_middleware(
@@ -121,7 +121,7 @@ async def internal_error_handler(request: Request, exc: Exception):
 async def http_exception_handler(request: Request, exc: HTTPException):
     return JSONResponse(
         status_code=exc.status_code,
-        content={"detail": str(exc.detail)}
+        content={"detail": exc.detail}
     )
 
 # Health check endpoint
@@ -201,10 +201,9 @@ if __name__ == "__main__":
     # Get configuration from environment variables
     host = os.getenv("HOST", "127.0.0.1")
     port = int(os.getenv("PORT", "8000"))
-    workers = int(os.getenv("WORKERS", "1"))
     log_level = os.getenv("LOG_LEVEL", "info")
     
-    logger.info(f"Starting server - Host: {host}, Port: {port}, Workers: {workers}")
+    logger.info(f"Starting server - Host: {host}, Port: {port}")
     
     # Don't run with these settings directly
     # Use external uvicorn command instead
@@ -212,7 +211,6 @@ if __name__ == "__main__":
         "main:app",
         host=host,
         port=port,
-        workers=workers,
         proxy_headers=True,
         forwarded_allow_ips="*",
         log_level=log_level

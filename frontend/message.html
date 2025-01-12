@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Burning Message</title>
+    <title data-i18n="message.title">Burn after reading</title>
     <base href="/">
     <link rel="stylesheet" href="static/css/global.css">
     <link rel="stylesheet" href="static/css/message.css">
@@ -11,32 +11,27 @@
 </head>
 <body>
     <div class="container">
+        <div id="languageSelector" class="language-selector-container"></div>
+        
         <main>
-            <h1><svg class="fire-icon"><use href="static/images/fire.svg#icon"></use></svg>Burn after reading</h1>
-            <!-- Progress bar for burn countdown -->
+            <h1><svg class="fire-icon"><use href="static/images/fire.svg#icon"></use></svg><span data-i18n="common.header">Burn after reading</span></h1>
+            
             <div class="burn-progress" style="display: none;">
                 <div class="progress-bar"></div>
             </div>
 
-            <!-- Token form (hidden by default) -->
             <div class="token-form" style="display: none;">
-                <p>An access token is required:</p>
+                <p data-i18n="message.tokenRequired">Access token required:</p>
                 <div class="token-row">
-                    <textarea 
-                        id="tokenInput" 
-                        rows="3"
-                        placeholder="Enter access token"
-                        maxlength="70"
-                    ></textarea>
+                    <textarea id="tokenInput" rows="3" data-i18n-placeholder="message.tokenPlaceholder" maxlength="70"></textarea>
                 </div>
                 <div id="tokenHintSection" class="token-hint" style="display: none;">
-                    <p>Token hint: <span id="messageTokenHint"></span></p>
+                    <p><span data-i18n="message.tokenHint">Token hint:</span><span id="messageTokenHint"></span></p>
                 </div>
-                <button id="submitToken" class="button primary">Submit</button>
+                <button id="submitToken" class="button primary" data-i18n="message.submitToken">OK</button>
                 <p class="error-message" style="display: none;"></p>
             </div>
 
-            <!-- Server deletion notice -->
             <div class="server-notice"></div>
 
             <!-- Message content (hidden by default) -->
@@ -70,7 +65,7 @@
 
             <!-- Create new button (hidden by default) -->
             <div class="actions" style="display: none;">
-                <a href="/" class="button primary">Create New Message</a>
+                <a href="/" class="button primary" data-i18n="message.createNew">Create New Message</a>
             </div>
         </main>
     </div>

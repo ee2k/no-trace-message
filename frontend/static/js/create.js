@@ -1,7 +1,7 @@
-import { initSvgIcons } from './global.js';
+// import { initSvgIcons } from './global.js';
 import { FONT_SIZES } from './constants.js';
-import { $, $$ } from './utils/dom.js';
-import { setupSlider, updateCharCounter, toggleVisibility } from './utils/ui.js';
+import { $ } from './utils/dom.js';
+import { setupSlider, updateCharCounter } from './utils/ui.js';
 import { i18n } from './utils/i18n.js';
 import { LanguageSelector } from './components/languageSelector.js';
 
@@ -14,7 +14,7 @@ class MessageCreator {
     }
 
     constructor() {
-        initSvgIcons();
+        // initSvgIcons();
         
         this.messageInput = $('#messageContent');
         this.dropZone = $('#dropZone');
@@ -202,7 +202,7 @@ class MessageCreator {
             }
             
             if (file.size > this.MAX_IMAGE_SIZE) {
-                alert(i18n.t('create.validation.fileSize', { size: this.MAX_IMAGE_SIZE / 1024 / 1024 }));
+                alert(i18n.t('create.validation.fileSize').replace('{{size}}', this.MAX_IMAGE_SIZE / 1024 / 1024));
                 this.fileInput.value = '';  // Reset file input after size error
                 return;
             }
@@ -314,22 +314,29 @@ class MessageCreator {
                 body: formData
             });
             
+            const data = await response.json();
+            
             if (!response.ok) {
-                const error = await response.json();
                 if (response.status === 429) {
-                    throw new Error(i18n.t('create.errors.tooManyRequestsFromIp'));
+                    const minutes = Math.ceil(data.detail?.wait_time / 60) || 1;
+                    throw new Error(i18n.t('create.errors.TOO_MANY_ATTEMPTS', { minutes }));
                 }
-                throw new Error(error.detail.message || 'Failed to create message');
+                
+                // Handle error codes from backend
+                if (data.detail?.code) {
+                    throw new Error(i18n.t(`create.errors.${data.detail.code}`));
+                }
+                
+                throw new Error(i18n.t('create.errors.createFailed'));
             }
 
-            const data = await response.json();
             console.log('Server response:', {
                 status: response.status,
                 statusText: response.statusText,
                 data: data
             });
             
-            if (response.ok && data.id) {  // Make sure we have a valid message ID
+            if (data.id) {  // Make sure we have a valid message ID
                 // Only store data and redirect on success
                 if (customToken) {
                     sessionStorage.setItem(`msg_token_${data.id}`, customToken);
@@ -337,28 +344,17 @@ class MessageCreator {
                 sessionStorage.setItem('current_message_id', data.id);
                 window.location.href = '/success';
             } else {
-                if (data.detail?.errors) {
-                    const errors = data.detail.errors
-                        .map(err => `${err.loc.join('.')}: ${err.msg}`)
-                        .join('\n');
-                    alert(i18n.t('create.errors.validationFailed', { errors }));
-                } else if (data.detail?.message) {
-                    alert(data.detail.message);
-                } else {
-                    alert(i18n.t('create.errors.createFailed'));
-                }
+                throw new Error(i18n.t('create.errors.createFailed'));
             }
         } catch (error) {
-            // Rate limit errors: just show alert, keep button enabled
-            if (error.message.includes('Too many')) {
-                alert(error.message);
-                return;
-            }
-            
-            // Other errors: reset button and show error
-            this.createBtn.disabled = false;
             console.error('Error creating message:', error);
-            alert(i18n.t('create.errors.createFailed'));
+            
+            // Reset button state
+            this.createBtn.disabled = false;
+            this.createBtn.textContent = i18n.t('create.createButton');
+            
+            // Show error message
+            alert(error.message);
         }
     }
 
