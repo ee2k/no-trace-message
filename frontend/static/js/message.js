@@ -122,23 +122,23 @@ class MessagePage {
 
             if (!response.ok) {
                 const error = await response.json();
-                // Handle case where detail might be a string that looks like an object
-                if (typeof error.detail === 'string' && error.detail.startsWith('{')) {
-                    try {
-                        error.detail = JSON.parse(error.detail);
-                    } catch (e) {
-                        console.error('Error parsing detail:', e);
-                    }
-                }
                 
                 if (error.detail?.code) {
                     this.showError(error);
                     
-                    if (error.detail.code === 'INVALID_TOKEN') {
-                        // Keep token form visible, hide other content on failed attempt
-                        $('.actions').style.display = 'none';
-                        $('.message-content').style.display = 'none';
-                        $('.burn-progress').style.display = 'none';
+                    // Handle specific status codes
+                    switch (response.status) {
+                        case 404:
+                            window.location.href = '/not-found';
+                            return;
+                        case 400:
+                            if (error.detail.code === 'INVALID_TOKEN') {
+                                // Keep token form visible, hide other content
+                                $('.actions').style.display = 'none';
+                                $('.message-content').style.display = 'none';
+                                $('.burn-progress').style.display = 'none';
+                            }
+                            break;
                     }
                 } else {
                     this.showError({ detail: { code: 'SERVER_ERROR' } });
@@ -168,7 +168,7 @@ class MessagePage {
             }
         } catch (error) {
             console.error('Error loading message:', error);
-            this.showError('Network error. Please try again later.');
+            this.showError({ detail: { code: 'SERVER_ERROR' } });
         }
     }
     
@@ -345,7 +345,7 @@ class MessagePage {
                 message = i18n.t(`message.errors.${error.detail.code}`);
             }
         } else {
-            message = i18n.t('message.networkError');
+            message = i18n.t('message.errors.SERVER_ERROR');
         }
         
         const errorMessage = $('.error-message');

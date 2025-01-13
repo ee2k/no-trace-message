@@ -2,6 +2,7 @@ from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from datetime import datetime, timedelta
 from collections import defaultdict
+from utils.error_codes import ErrorCodes, CODE, STATUS_CODES
 
 class RateLimiter(BaseHTTPMiddleware):
     def __init__(self, app, browser_limit=3, ip_limit=10, window_size=60):
@@ -30,14 +31,7 @@ class RateLimiter(BaseHTTPMiddleware):
         if len(self.ip_requests[client_ip]) >= self.ip_limit:
             oldest = self.ip_requests[client_ip][0]
             wait_time = (oldest + timedelta(seconds=self.window_size) - now).seconds
-            raise HTTPException(
-                status_code=429,
-                detail={
-                    "message": "Rate limit exceeded",
-                    "wait_time": wait_time,
-                    "type": "ip_limit"
-                }
-            )
+            raise HTTPException(status_code=STATUS_CODES[ErrorCodes.TOO_MANY_REQUESTS], detail={CODE: ErrorCodes.TOO_MANY_ATTEMPTS.value, "wait_time": wait_time})
             
         # Add new request
         self.ip_requests[client_ip].append(now)

@@ -314,15 +314,21 @@ class MessageCreator {
                 body: formData
             });
             
-            const data = await response.json();
+            let data;
+            try {
+                data = await response.json();
+            } catch (parseError) {
+                throw new Error(i18n.t('create.errors.networkError'));
+            }
             
             if (!response.ok) {
+                // Rate limiting (429)
                 if (response.status === 429) {
                     const minutes = Math.ceil(data.detail?.wait_time / 60) || 1;
-                    throw new Error(i18n.t('create.errors.TOO_MANY_ATTEMPTS', { minutes }));
+                    throw new Error(i18n.t('create.errors.TOO_MANY_REQUESTS', { minutes }));
                 }
                 
-                // Handle error codes from backend
+                // Handle error codes from backend (400, 500)
                 if (data.detail?.code) {
                     throw new Error(i18n.t(`create.errors.${data.detail.code}`));
                 }
@@ -344,13 +350,9 @@ class MessageCreator {
             }
         } catch (error) {
             console.error('Error creating message:', error);
-            
-            // Reset button state
             this.createBtn.disabled = false;
             this.createBtn.textContent = i18n.t('create.createButton');
-            
-            // Show error message
-            alert(error.message);
+            alert(error.message || i18n.t('create.errors.networkError'));
         }
     }
 

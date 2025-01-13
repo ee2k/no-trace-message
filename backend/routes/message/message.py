@@ -9,14 +9,12 @@ import traceback
 from pydantic import BaseModel
 import logging
 from fastapi.responses import StreamingResponse
-from enum import Enum, auto
+from utils.error_codes import ErrorCodes, CODE, STATUS_CODES
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 message_store = MessageStore()
-
-CODE = "code"  # Define it here at module level
 
 class TokenRequest(BaseModel):
     token: str = ''
@@ -51,25 +49,6 @@ FONT_SIZES = [
     4
 ]
 
-# Define error codes
-class ErrorCodes(str, Enum):
-    def _generate_next_value_(name, start, count, last_values):
-        return name
-    # create
-    INVALID_EXPIRY = auto()
-    INVALID_BURN = auto()
-    INVALID_FONT = auto()
-    MAX_IMAGES_EXCEEDED = auto()
-    INVALID_FILE_TYPE = auto()
-    FILE_TOO_LARGE = auto()
-    # message, meta, check
-    MESSAGE_NOT_FOUND = auto()
-    # message
-    INVALID_TOKEN = auto()
-    TOO_MANY_ATTEMPTS = auto()
-    # create, message, meta, check
-    SERVER_ERROR = auto()
-
 @router.post("/create", response_model=dict)
 async def create_message(
     message: str = Form(""),
@@ -83,24 +62,42 @@ async def create_message(
     try:
         # Validate indices
         if not (0 <= expiry_index < len(EXPIRY_TIMES)):
-            raise HTTPException(status_code=400, detail={CODE: ErrorCodes.INVALID_EXPIRY.value})
+            raise HTTPException(
+                status_code=STATUS_CODES[ErrorCodes.INVALID_EXPIRY],
+                detail={CODE: ErrorCodes.INVALID_EXPIRY.value}
+            )
         if not (0 <= burn_index < len(BURN_TIMES)):
-            raise HTTPException(status_code=400, detail={CODE: ErrorCodes.INVALID_BURN.value})
+            raise HTTPException(
+                status_code=STATUS_CODES[ErrorCodes.INVALID_BURN],
+                detail={CODE: ErrorCodes.INVALID_BURN.value}
+            )
         if font_size is not None and not (0 <= font_size < 5):
-            raise HTTPException(status_code=400, detail={CODE: ErrorCodes.INVALID_FONT.value})
+            raise HTTPException(
+                status_code=STATUS_CODES[ErrorCodes.INVALID_FONT],
+                detail={CODE: ErrorCodes.INVALID_FONT.value}
+            )
 
         # Validate images
         if images:
             if len(images) > 1:
-                raise HTTPException(status_code=400, detail={CODE: ErrorCodes.MAX_IMAGES_EXCEEDED.value})
+                raise HTTPException(
+                    status_code=STATUS_CODES[ErrorCodes.MAX_IMAGES_EXCEEDED],
+                    detail={CODE: ErrorCodes.MAX_IMAGES_EXCEEDED.value}
+                )
             
             for img in images:
                 if not img.content_type.startswith('image/'):
-                    raise HTTPException(status_code=400, detail={CODE: ErrorCodes.INVALID_FILE_TYPE.value})
+                    raise HTTPException(
+                        status_code=STATUS_CODES[ErrorCodes.INVALID_FILE_TYPE],
+                        detail={CODE: ErrorCodes.INVALID_FILE_TYPE.value}
+                    )
                 
                 content = await img.read()
                 if len(content) > 3 * 1024 * 1024:  # 3MB
-                    raise HTTPException(status_code=400, detail={CODE: ErrorCodes.FILE_TOO_LARGE.value})
+                    raise HTTPException(
+                        status_code=STATUS_CODES[ErrorCodes.FILE_TOO_LARGE],
+                        detail={CODE: ErrorCodes.FILE_TOO_LARGE.value}
+                    )
                 await img.seek(0)
 
         # Generate message ID with collision checking
@@ -144,7 +141,10 @@ async def create_message(
     except Exception as e:
         logger.error(f"Error creating message: {str(e)}")
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail={CODE: ErrorCodes.SERVER_ERROR.value})
+        raise HTTPException(
+            status_code=STATUS_CODES[ErrorCodes.SERVER_ERROR],
+            detail={CODE: ErrorCodes.SERVER_ERROR.value}
+        )
 
 @router.post("/{message_id}")
 async def get_message(message_id: str, request: TokenRequest, client: Request):
@@ -153,19 +153,25 @@ async def get_message(message_id: str, request: TokenRequest, client: Request):
         check_result = await message_store.check_token_attempts(message_id, client.client.host)
         if not check_result["allowed"]:
             raise HTTPException(
-                status_code=400,
+                status_code=STATUS_CODES[ErrorCodes.TOO_MANY_ATTEMPTS],
                 detail={CODE: ErrorCodes.TOO_MANY_ATTEMPTS.value, "wait_time": check_result["wait_time"]}
             )
         
         # Get message and check existence
         message = await message_store.check_message(message_id)
         if not message:
-            raise HTTPException(status_code=400, detail={CODE: ErrorCodes.MESSAGE_NOT_FOUND.value})
+            raise HTTPException(
+                status_code=STATUS_CODES[ErrorCodes.MESSAGE_NOT_FOUND],
+                detail={CODE: ErrorCodes.MESSAGE_NOT_FOUND.value}
+            )
             
         # Validate token
         if not message.check_token(request.token):
             await message_store.record_failed_attempt(message_id, client.client.host)
-            raise HTTPException(status_code=400, detail={CODE: ErrorCodes.INVALID_TOKEN.value})
+            raise HTTPException(
+                status_code=STATUS_CODES[ErrorCodes.INVALID_TOKEN],
+                detail={CODE: ErrorCodes.INVALID_TOKEN.value}
+            )
 
         return StreamingResponse(
             message_store.stream_and_delete_message(message_id),
@@ -175,7 +181,10 @@ async def get_message(message_id: str, request: TokenRequest, client: Request):
         raise
     except Exception as e:
         logger.error(f"Error retrieving message: {str(e)}")
-        raise HTTPException(status_code=500, detail={CODE: ErrorCodes.SERVER_ERROR.value})
+        raise HTTPException(
+            status_code=STATUS_CODES[ErrorCodes.SERVER_ERROR],
+            detail={CODE: ErrorCodes.SERVER_ERROR.value}
+        )
 
 @router.post("/{message_id}/meta")
 async def get_message_meta(message_id: str, request: TokenRequest):

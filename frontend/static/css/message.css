@@ -7,13 +7,6 @@ h1 {
     justify-content: center;
     gap: 0.5rem;
 }
-
-.container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 1rem 2rem;
-}
-
 .burn-progress {
     position: fixed;
     top: 0;

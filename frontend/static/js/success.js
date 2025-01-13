@@ -76,7 +76,6 @@ class SuccessPage {
     async loadMessageMeta() {
         try {
             const token = sessionStorage.getItem(`msg_token_${this.messageId}`);
-            
             const response = await fetch(`/api/message/${this.messageId}/meta`, {
                 method: 'POST',
                 headers: {
@@ -89,11 +88,21 @@ class SuccessPage {
             
             if (!response.ok) {
                 console.error('Server error:', data);
-                if (response.status === 404) {
-                    alert(data.detail?.message || 'Message not found');
-                    window.location.href = '/';
-                    return;
+                
+                // Handle specific status codes
+                switch (response.status) {
+                    case 404:
+                        window.location.href = '/not-found';
+                        return;
+                    case 400:
+                        if (data.detail?.code) {
+                            alert(i18n.t(`message.errors.${data.detail.code}`));
+                        }
+                        break;
+                    default:
+                        alert(i18n.t('message.errors.SERVER_ERROR'));
                 }
+                return;
             }
             
             // Use i18n for both times
@@ -122,7 +131,7 @@ class SuccessPage {
             }
         } catch (error) {
             console.error('Error loading message metadata:', error);
-            alert('Failed to load message details. Please try refreshing the page.');
+            alert(i18n.t('message.errors.SERVER_ERROR'));
         }
     }
     
