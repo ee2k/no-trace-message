@@ -1,13 +1,11 @@
 import { FONT_SIZES, BURN_TIMES } from './constants.js';
 import { $ } from './utils/dom.js';
 import { i18n } from './utils/i18n.js';
-import { LanguageSelector } from './components/languageSelector.js';
 
 class MessagePage {
     static async initialize() {
         await i18n.loadTranslations(i18n.currentLocale);
         i18n.updateTranslations();
-        new LanguageSelector('languageSelector');
         return new MessagePage();
     }
     

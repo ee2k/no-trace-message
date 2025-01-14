@@ -68,7 +68,6 @@ button {
     font-size: 1rem;
     transition: background-color 0.2s;
 }
-
 button:hover {
     background-color: var(--button-hover);
 }
@@ -80,84 +79,4 @@ button:hover {
 .hyperlink {
     color: var(--accent-color);
     text-decoration: none;
-}
-
-.language-selector-container {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  z-index: 1000;
-}
-
-.language-selector {
-  padding: 0.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background: var(--bg-secondary);
-  color: var(--text-color);
-  cursor: pointer;
-}
-
-.language-selector:hover {
-  border-color: var(--accent-color);
-}
-
-.language-button {
-  background: none;
-  border: none;
-  padding: 0.5rem;
-  cursor: pointer;
-  position: relative;
-}
-
-.i18n-icon {
-  width: 24px;
-  height: 24px;
-  color: var(--text-color);
-}
-
-.language-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  display: none;
-  flex-direction: column;
-  min-width: 120px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
-}
-
-.language-menu.show {
-  display: flex;
-}
-
-.language-menu.show::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: -1;
-}
-
-.language-item {
-  padding: 0.5rem 1rem;
-  text-align: left;
-  background: none;
-  border: none;
-  cursor: pointer;
-  position: relative;
-  z-index: 1001;
-}
-
-.language-item:hover {
-  background: var(--bg-hover);
-}
-
-.language-item.active {
-  color: var(--accent-color);
 }
