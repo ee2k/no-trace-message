@@ -322,13 +322,7 @@ class MessageCreator {
             }
             
             if (!response.ok) {
-                // Rate limiting (429)
-                if (response.status === 429) {
-                    const minutes = Math.ceil(data.detail?.wait_time / 60) || 1;
-                    throw new Error(i18n.t('create.errors.TOO_MANY_REQUESTS', { minutes }));
-                }
-                
-                // Handle error codes from backend (400, 500)
+                // Handle error codes from backend (including rate limiting)
                 if (data.detail?.code) {
                     throw new Error(i18n.t(`create.errors.${data.detail.code}`));
                 }

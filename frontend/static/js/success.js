@@ -148,9 +148,10 @@ class SuccessPage {
         // Share handler
         shareBtn.addEventListener('click', async () => {
             try {
+                const title = i18n.t('common.header');
                 await navigator.share({
-                    title: 'Burn after reading',
-                    text: '',
+                    title: title,
+                    text: title,
                     url: this.messageUrl.textContent
                 });
             } catch (err) {

@@ -339,8 +339,8 @@ class MessagePage {
         let message;
         if (error.detail?.code) {
             if (error.detail.code === 'TOO_MANY_ATTEMPTS') {
-                const minutes = Math.ceil(error.detail.wait_time / 60);
-                message = i18n.t('message.errors.TOO_MANY_ATTEMPTS', { minutes });
+                // const minutes = Math.ceil(error.detail.wait_time / 60);
+                message = i18n.t('message.errors.TOO_MANY_ATTEMPTS');
             } else {
                 message = i18n.t(`message.errors.${error.detail.code}`);
             }

@@ -31,7 +31,7 @@ export default {
       MAX_IMAGES_EXCEEDED: 'È consentita una sola immagine',
       INVALID_FILE_TYPE: 'Tipo di file non supportato',
       FILE_TOO_LARGE: 'La dimensione del file supera il limite di 3MB',
-      TOO_MANY_ATTEMPTS: 'Troppe richieste. Attendi {{minutes}} minuti',
+      TOO_MANY_ATTEMPTS: 'Troppe richieste. Attendi un momento',
       SERVER_ERROR: 'Errore del server. Riprova più tardi',
       createFailed: 'Impossibile creare il messaggio. Riprova',
       networkError: 'Errore di rete. Riprova più tardi'

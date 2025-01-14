@@ -31,7 +31,7 @@ export default {
       MAX_IMAGES_EXCEEDED: '只能上传1张图片',
       INVALID_FILE_TYPE: '不支持的文件类型',
       FILE_TOO_LARGE: '文件大小超过3MB限制',
-      TOO_MANY_ATTEMPTS: '请求过于频繁，请等待 {{minutes}} 分钟',
+      TOO_MANY_ATTEMPTS: '请求过于频繁，请稍等片刻',
       SERVER_ERROR: '服务器错误，请稍后重试',
       createFailed: '创建消息失败，请重试',
       networkError: '网络错误，请稍后重试'

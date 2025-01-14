@@ -154,7 +154,7 @@ async def get_message(message_id: str, request: TokenRequest, client: Request):
         if not check_result["allowed"]:
             raise HTTPException(
                 status_code=STATUS_CODES[ErrorCodes.TOO_MANY_ATTEMPTS],
-                detail={CODE: ErrorCodes.TOO_MANY_ATTEMPTS.value, "wait_time": check_result["wait_time"]}
+                detail={CODE: ErrorCodes.TOO_MANY_ATTEMPTS.value}
             )
         
         # Get message and check existence

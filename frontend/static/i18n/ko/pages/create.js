@@ -31,7 +31,7 @@ export default {
       MAX_IMAGES_EXCEEDED: '이미지는 1개만 허용됩니다',
       INVALID_FILE_TYPE: '지원되지 않는 파일 형식입니다',
       FILE_TOO_LARGE: '파일 크기가 3MB 제한을 초과했습니다',
-      TOO_MANY_ATTEMPTS: '요청이 너무 많습니다. {{minutes}}분 후에 다시 시도해 주세요',
+      TOO_MANY_ATTEMPTS: '요청이 너무 많습니다. 잠시만 기다려 주세요',
       SERVER_ERROR: '서버 오류가 발생했습니다. 나중에 다시 시도해 주세요',
       createFailed: '메시지 생성에 실패했습니다. 다시 시도해 주세요',
       networkError: '네트워크 오류가 발생했습니다. 나중에 다시 시도해 주세요'

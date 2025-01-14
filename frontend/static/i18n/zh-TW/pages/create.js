@@ -31,7 +31,7 @@ export default {
       MAX_IMAGES_EXCEEDED: '只能上傳1張圖片',
       INVALID_FILE_TYPE: '不支援的檔案類型',
       FILE_TOO_LARGE: '檔案大小超過3MB限制',
-      TOO_MANY_ATTEMPTS: '請求過於頻繁，請等待 {{minutes}} 分鐘',
+      TOO_MANY_ATTEMPTS: '請求過於頻繁，請稍等片刻',
       SERVER_ERROR: '伺服器錯誤，請稍後重試',
       createFailed: '建立訊息失敗，請重試',
       networkError: '網路錯誤，請稍後重試'
