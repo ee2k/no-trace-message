@@ -1,6 +1,6 @@
 export default {
   create: {
-    subtitle: 'Una piattaforma <a href="{{urls.opensource}}" class="hyperlink" target="_blank">open source</a> sicura e anonima',
+    subtitle: 'Una piattaforma <a href="{{global.opensource}}" class="hyperlink" target="_blank">open source</a> sicura e anonima',
     features: {
       noHistory: 'Nessuna cronologia',
       noTracking: 'Nessun tracciamento',
@@ -39,7 +39,6 @@ export default {
   },
   urls: {
     tos: '/static/i18n/it/tos.html',
-    privacy: '/static/i18n/it/privacy.html',
-    opensource: 'https://github.com/ee2k/burning-message'
+    privacy: '/static/i18n/it/privacy.html'
   }
-} 
+}

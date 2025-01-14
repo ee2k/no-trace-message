@@ -1,6 +1,6 @@
 export default {
   create: {
-    subtitle: '一個安全、匿名的<a href="{{urls.opensource}}" class="hyperlink" target="_blank">開源平台</a>',
+    subtitle: '一個安全、匿名的<a href="{{global.opensource}}" class="hyperlink" target="_blank">開源平台</a>',
     features: {
       noHistory: '無歷史記錄',
       noTracking: '無追蹤',
@@ -39,7 +39,6 @@ export default {
   },
   urls: {
     tos: '/static/i18n/zh-TW/tos.html',
-    privacy: '/static/i18n/zh-TW/privacy.html',
-    opensource: 'https://github.com/ee2k/burning-message'
+    privacy: '/static/i18n/zh-TW/privacy.html'
   }
 }

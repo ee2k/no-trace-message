@@ -23,8 +23,9 @@ LOG_DIR = PROJECT_ROOT / "logs"
 LOG_DIR.mkdir(exist_ok=True)
 
 # Configure logging
+log_level = os.getenv("LOG_LEVEL", "info").upper()
 logging.basicConfig(
-    level=logging.INFO,
+    level=getattr(logging, log_level),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.FileHandler(LOG_DIR / "app.log"),
@@ -71,6 +72,13 @@ def get_cors_origins() -> List[str]:
     origins = os.getenv("CORS_ORIGINS", "http://localhost")
     return [origin.strip() for origin in origins.split(",")]
 
+# always put RateLimiter before CORSMiddleware and routers
+app.add_middleware(
+    RateLimiter,
+    ip_limit=3,        # 3 requests per minute per IP
+    window_size=60     # 1 minute window
+)
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -83,14 +91,6 @@ app.add_middleware(
 # Include routers
 app.include_router(api_router)
 # app.include_router(router)
-
-# Add rate limiting with browser and IP limits
-app.add_middleware(
-    RateLimiter,
-    browser_limit=3,    # 3 requests per minute per browser
-    ip_limit=10,        # 10 requests per minute per IP
-    window_size=60      # 1 minute window
-)
 
 # Security headers middleware
 @app.middleware("http")

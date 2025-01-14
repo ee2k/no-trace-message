@@ -1,6 +1,6 @@
 export default {
   create: {
-    subtitle: 'A secure, anonymous <a href="{{urls.opensource}}" class="hyperlink" target="_blank">open-source platform</a>',
+    subtitle: 'A secure, anonymous <a href="{{global.opensource}}" class="hyperlink" target="_blank">open-source platform</a>',
     features: {
       noHistory: 'No history',
       noTracking: 'No tracking',
@@ -35,11 +35,11 @@ export default {
       SERVER_ERROR: 'Server error. Please try again later.',
       createFailed: 'Failed to create message. Please try again.',
       networkError: 'Network error. Please try again later.',
+      tooManyRequests: 'Too many requests. Please wait a while.'
     }
   },
   urls: {
     tos: '/static/i18n/en/tos.html',
-    privacy: '/static/i18n/en/privacy.html',
-    opensource: 'https://github.com/ee2k/burning-message'
+    privacy: '/static/i18n/en/privacy.html'
   }
 }

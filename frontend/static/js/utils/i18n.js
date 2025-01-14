@@ -35,6 +35,9 @@ class I18nManager {
   async loadTranslations(locale) {
     if (!this.translations.has(locale)) {
       try {
+        // Load global translations
+        const globalModule = await import(`../../i18n/global.js`);
+        
         // Load common translations
         const commonModule = await import(`../../i18n/${locale}/common.js`);
         
@@ -44,6 +47,7 @@ class I18nManager {
         
         // Merge translations
         this.translations.set(locale, {
+          ...globalModule.default,
           ...commonModule.default,
           ...pageModule.default
         });
