@@ -14,7 +14,7 @@
 - added notes of CSAM detection plan
 
 ### Fixed
-- rate limiting bug
+- fixed rate limiting bug
 
 ### Changed
 - UI improvements
