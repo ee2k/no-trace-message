@@ -29,3 +29,8 @@
 
 ### Fixed
 - Fixed bug where message was not deleted after retrieval
+
+## [1.2.2] - <2025-01-15>
+
+### Changed
+- Changed message retrieval mechanism, from server side rendering all content to just minimal metadata, and then fetching the content in another request, to prevent from leaking message content in history
