@@ -13,11 +13,6 @@
 - added message dissolve effect
 - added notes of CSAM detection plan
 
-- added how to set level=logging.DEBUG to .env file
-- added get real ip address
-- added rate limiting seem not working
-- added development/staging/production
-
 ### Fixed
 - rate limiting bug
 
