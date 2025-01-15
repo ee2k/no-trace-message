@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Request
-from fastapi.responses import RedirectResponse, HTMLResponse
+from fastapi.responses import RedirectResponse, HTMLResponse, StreamingResponse
 from pathlib import Path
 import json
 from routes.message.message import message_store
 import logging
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +57,7 @@ async def message_page(message_id: str, request: Request):
             "token_hint": message.token_hint if message.token else None
         }
         
-        # If no token required, include full message content
+        # If no token required, include full message content and stream it
         if not message.token:
             message_data = await message_store.get_message(message_id, "")
             if not message_data:
@@ -79,12 +80,22 @@ async def message_page(message_id: str, request: Request):
             
         # Inject metadata into template
         content_script = f"""<script> window.messageData = {json.dumps(metadata)}; </script>"""
-
         modified_template = template.replace(
             '</head>',
             f'{content_script}</head>'
         )
-        return HTMLResponse(modified_template)
+
+        async def template_generator():
+            yield modified_template.encode('utf-8')
+            if not message.token:
+                # Small delay to ensure client receives the content
+                await asyncio.sleep(0.1)
+                await message_store.delete_message(message_id)
+
+        return StreamingResponse(
+            template_generator(),
+            media_type="text/html"
+        )
             
     except Exception as e:
         logger.error(f"Error serving message page: {str(e)}")
