@@ -24,3 +24,8 @@
 ### Changed
 
 - Message retrieval changed from static HTML load and dynamic message content API load to dynamic server side rendering, 2 requests simplified into 1 request
+
+## [1.2.1] - <2025-01-15>
+
+### Fixed
+- Fixed bug where message was not deleted after retrieval
