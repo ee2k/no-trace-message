@@ -22,7 +22,7 @@ class MessagePage {
                     this.showTokenHint(window.messageData.token_hint);
                 }
             } else {
-                this.displayContent(window.messageData);
+                this.loadMessage();
             }
         } else {
             window.location.href = '/not-found';

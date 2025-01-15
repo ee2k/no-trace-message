@@ -51,33 +51,12 @@ async def message_page(message_id: str, request: Request):
         with open(FRONTEND_DIR / "message.html") as f:
             template = f.read()
 
-        # Prepare metadata
+        # Only include minimal metadata, no sensitive content
         metadata = {
             "needs_token": bool(message.token),
             "token_hint": message.token_hint if message.token else None
         }
-        
-        # If no token required, include full message content and stream it
-        if not message.token:
-            message_data = await message_store.get_message(message_id, "")
-            if not message_data:
-                return RedirectResponse(url="/not-found")
-                
-            images = []
-            if message_data.images:
-                for img in message_data.images:
-                    images.append({
-                        'content': img.content,
-                        'type': img.type
-                    })
-                    
-            metadata.update({
-                "text": message_data.text,
-                "font_size": message_data.font_size,
-                "burn_index": message_data.burn_index,
-                "images": images
-            })
-            
+
         # Inject metadata into template
         content_script = f"""<script> window.messageData = {json.dumps(metadata)}; </script>"""
         modified_template = template.replace(
@@ -85,17 +64,7 @@ async def message_page(message_id: str, request: Request):
             f'{content_script}</head>'
         )
 
-        async def template_generator():
-            yield modified_template.encode('utf-8')
-            if not message.token:
-                # Small delay to ensure client receives the content
-                await asyncio.sleep(0.1)
-                await message_store.delete_message(message_id)
-
-        return StreamingResponse(
-            template_generator(),
-            media_type="text/html"
-        )
+        return HTMLResponse(modified_template)
             
     except Exception as e:
         logger.error(f"Error serving message page: {str(e)}")
