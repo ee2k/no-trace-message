@@ -10,11 +10,69 @@ class MessagePage {
     }
     
     constructor() {
-        // Get message ID and token from URL
-        const urlParams = new URLSearchParams(window.location.search);
+        // Initialize properties
         this.messageId = window.location.pathname.split('/').pop();
-        this.token = null;
+        this.initializeElements();
         
+        // Handle pre-loaded data
+        if (window.messageData) {
+            if (window.messageData.needs_token) {
+                this.showTokenForm();
+                if (window.messageData.token_hint) {
+                    this.showTokenHint(window.messageData.token_hint);
+                }
+            } else {
+                this.displayContent(window.messageData);
+            }
+        } else {
+            window.location.href = '/not-found';
+        }
+        
+        this.setupEventListeners();
+    }
+
+    showTokenForm() {
+        this.tokenForm.style.display = 'block';
+        // Clear any existing token
+        sessionStorage.removeItem(`msg_token_${this.messageId}`);
+        this.tokenInput.value = '';
+    }
+
+    showTokenHint(hint) {
+        const hintSection = $('#tokenHintSection');
+        const hintSpan = $('#messageTokenHint');
+        hintSpan.textContent = ` ${hint}`;
+        hintSection.style.display = 'block';
+    }
+
+    async submitToken() {
+        const token = this.tokenInput.value.trim();
+        if (!token || token.length > this.MAX_TOKEN_LENGTH) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/message/${this.messageId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                this.showError(error);
+                return;
+            }
+
+            const data = await response.json();
+            this.tokenForm.style.display = 'none';
+            this.displayContent(data);
+        } catch (error) {
+            this.showError({ detail: { code: 'SERVER_ERROR' } });
+        }
+    }
+
+    initializeElements() {
         // Elements
         this.progressBar = $('.progress-bar');
         this.textSkeleton = $('.text-skeleton');
@@ -42,9 +100,6 @@ class MessagePage {
         this.burnTimeSeconds = 0;
         this.startTime = null;
         this.animationFrame = null;
-        
-        this.setupEventListeners();
-        this.checkToken();
     }
     
     setupEventListeners() {
@@ -147,7 +202,6 @@ class MessagePage {
             // Show content and create button on successful token validation
             this.tokenForm.style.display = 'none';
             $('.message-content').style.display = 'block';
-            $('.burn-progress').style.display = 'block';
             $('.actions').style.display = 'block';
             
             const data = await response.json();
@@ -204,6 +258,7 @@ class MessagePage {
     }
     
     startBurnCountdown() {
+        $('.burn-progress').style.display = 'block';
         this.startTime = Date.now();
         this.updateBurnProgress();
     }
@@ -269,70 +324,6 @@ class MessagePage {
         document.body.style.overflow = '';
     }
     
-    async checkToken() {
-        const token = sessionStorage.getItem(`msg_token_${this.messageId}`);
-        const metadata = await this.loadMessageMeta();
-        
-        if (!metadata) {
-            return;
-        }
-
-        // Control visibility of elements
-        const createNewBtn = $('.actions');
-        const messageContent = $('.message-content');
-        const burnProgress = $('.burn-progress');
-
-        // Hide content and progress by default
-        messageContent.style.display = 'none';
-        burnProgress.style.display = 'none';
-        createNewBtn.style.display = 'none';
-
-        if (metadata.needs_token) {
-            // Show token form, hide other content
-            this.tokenForm.style.display = 'block';
-            // Clear any existing token from sessionStorage on page load
-            sessionStorage.removeItem(`msg_token_${this.messageId}`);
-            // Clear token input value
-            this.tokenInput.value = '';
-        } else {
-            // No token needed
-            createNewBtn.style.display = 'block';
-            this.loadMessage();
-        }
-    }
-
-    async loadMessageMeta() {
-        try {
-            const response = await fetch(`/api/message/${this.messageId}/check`, {
-                method: 'GET'
-            });
-            
-            if (!response.ok) {
-                if (response.status === 404) {
-                    window.location.href = '/not-found';
-                    return null;
-                }
-                throw new Error('Failed to check message');
-            }
-            
-            const data = await response.json();
-            
-            // Show hint if available
-            if (data.needs_token && data.token_hint) {
-                const hintSection = $('#tokenHintSection');
-                const hintSpan = $('#messageTokenHint');
-                hintSpan.textContent = ` ${data.token_hint}`;
-                hintSection.style.display = 'block';
-            }
-
-            return data;
-        } catch (error) {
-            console.error('Error checking message:', error);
-            window.location.href = '/not-found';
-            return null;
-        }
-    }
-
     showError(error) {
         let message;
         if (error.detail?.code) {
@@ -360,6 +351,24 @@ class MessagePage {
             setTimeout(() => {
                 errorMessage.style.opacity = '1';
             }, 10);
+        }
+    }
+
+    displayContent(data) {
+        $('.message-content').style.display = 'block';
+        $('.actions').style.display = 'block';
+        
+        this.burnTimeSeconds = data.burn_index === 6 ? 
+            Infinity : 
+            BURN_TIMES[data.burn_index];
+        
+        Promise.all([
+            this.displayText(data.text, data.font_size),
+            this.displayImage(data.images?.[0])
+        ]);
+
+        if (data.burn_index !== 6) {
+            this.startBurnCountdown();
         }
     }
 }

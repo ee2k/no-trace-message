@@ -149,15 +149,7 @@ async def create_message(
 @router.post("/{message_id}")
 async def get_message(message_id: str, request: TokenRequest, client: Request):
     try:
-        # Check rate limiting first
-        check_result = await message_store.check_token_attempts(message_id, client.client.host)
-        if not check_result["allowed"]:
-            raise HTTPException(
-                status_code=STATUS_CODES[ErrorCodes.TOO_MANY_ATTEMPTS],
-                detail={CODE: ErrorCodes.TOO_MANY_ATTEMPTS.value}
-            )
-        
-        # Get message and check existence
+        # Check if message exists
         message = await message_store.check_message(message_id)
         if not message:
             raise HTTPException(
@@ -165,14 +157,25 @@ async def get_message(message_id: str, request: TokenRequest, client: Request):
                 detail={CODE: ErrorCodes.MESSAGE_NOT_FOUND.value}
             )
             
-        # Validate token
-        if not message.check_token(request.token):
-            await message_store.record_failed_attempt(message_id, client.client.host)
-            raise HTTPException(
-                status_code=STATUS_CODES[ErrorCodes.INVALID_TOKEN],
-                detail={CODE: ErrorCodes.INVALID_TOKEN.value}
-            )
+        # If message requires token, validate it
+        if message.token:
+            # Check rate limiting
+            check_result = await message_store.check_token_attempts(message_id, client.client.host)
+            if not check_result["allowed"]:
+                raise HTTPException(
+                    status_code=STATUS_CODES[ErrorCodes.TOO_MANY_ATTEMPTS],
+                    detail={CODE: ErrorCodes.TOO_MANY_ATTEMPTS.value}
+                )
+            
+            # Validate token
+            if not message.check_token(request.token):
+                await message_store.record_failed_attempt(message_id, client.client.host)
+                raise HTTPException(
+                    status_code=STATUS_CODES[ErrorCodes.INVALID_TOKEN],
+                    detail={CODE: ErrorCodes.INVALID_TOKEN.value}
+                )
 
+        # Return message content
         return StreamingResponse(
             message_store.stream_and_delete_message(message_id),
             media_type="application/json"
@@ -202,27 +205,4 @@ async def get_message_meta(message_id: str, request: TokenRequest):
         raise
     except Exception as e:
         logger.error(f"Error getting message metadata: {str(e)}")
-        raise HTTPException(status_code=500, detail={CODE: ErrorCodes.SERVER_ERROR.value})
-
-@router.get("/{message_id}/check")
-async def check_message(message_id: str):
-    """Check if message exists and if it needs a token"""
-    try:
-        message = await message_store.check_message(message_id)
-        if not message:
-            raise HTTPException(status_code=400, detail={CODE: ErrorCodes.MESSAGE_NOT_FOUND.value})
-
-        # Check expiry
-        if message.is_expired():
-            await message_store.delete_message(message_id)
-            raise HTTPException(status_code=400, detail={CODE: ErrorCodes.MESSAGE_NOT_FOUND.value})
-
-        return {
-            "needs_token": bool(message.token),
-            "token_hint": message.token_hint
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error checking message {message_id}: {str(e)}")
         raise HTTPException(status_code=500, detail={CODE: ErrorCodes.SERVER_ERROR.value})

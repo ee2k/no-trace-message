@@ -1,11 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from models.enums import APITags
 from routes.message.message import router as message_router
 from services.statistics import Statistics
-# import os
-
-# API_PREFIX = "/api" if os.getenv("ENVIRONMENT") == "development" else ""
-# api_router = APIRouter(prefix=API_PREFIX)
 
 api_router = APIRouter()
 

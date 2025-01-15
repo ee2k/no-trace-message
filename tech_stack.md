@@ -58,36 +58,91 @@ pip3 install -r requirements.txt
 }
 ```
 
-## Uvicorn setup
-```bash
-# Basic with port
-uvicorn main:app --port 80
-
-# Development mode with auto-reload, sudo is required to bind to port 80
-sudo uvicorn main:app --reload --port 80
-
-# Production settings
-uvicorn main:app \
-    --host 0.0.0.0 \
-    --port 80 \
-    --workers 4 \
-    --proxy-headers \
-    --forwarded-allow-ips='*'
-
-# With SSL/HTTPS
-uvicorn main:app \
-    --ssl-keyfile=./key.pem \
-    --ssl-certfile=./cert.pem
-```
-
 # Deployment
 ```bash
 # Development
-ENVIRONMENT=development ./scripts/load_env.sh --reload
+./scripts/start.sh
+development
 
 # Staging
-nohup bash -c 'ENVIRONMENT=staging ./scripts/load_env.sh --workers 4 --port 8000' > ./logs/app.log 2>&1 &
+./scripts/start.sh
+staging
 
 # Production
-# TODO:
+./scripts/start.sh
+production
+```
+
+# Nginx configuration
+```text
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    # Define log format
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                     '$status $body_bytes_sent "$http_referer" '
+                     '"$http_user_agent" "$http_x_forwarded_for"';
+
+    # Enable access log
+    access_log  /usr/local/var/log/nginx/access.log  main;
+    error_log   /usr/local/var/log/nginx/error.log;
+
+    sendfile        on;
+    #tcp_nopush     on;
+
+    #keepalive_timeout  0;
+    keepalive_timeout  65;
+
+    gzip  on;
+
+    server {
+        listen       80;
+        server_name  localhost;
+
+        # Root directory for static files - adjust path to your local project
+        root /Users/asdf/Documents/GitHub/burning-message/frontend;
+
+        # Add index directive
+        index index.html;
+
+        # Static assets - no rewriting
+        location /static/ {
+            #expires 1h;
+            #add_header Cache-Control "public, no-transform";
+            
+            error_log /usr/local/var/log/nginx/static_error.log debug;
+            access_log /usr/local/var/log/nginx/static_access.log main;
+            
+            try_files $uri $uri/ =404;
+        }
+
+        # API requests - no rewriting
+        location ~ ^/(api|message)/ {
+            proxy_pass http://127.0.0.1:8000;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # Root redirect
+        location = / {
+            return 301 /create;
+        }
+
+        # Remove .html and .htm suffix for all other paths
+        location / {
+            if ($request_uri ~ ^/(.*)\.(html|htm)$) {
+                return 301 /$1;
+            }
+            try_files $uri $uri.html $uri.htm $uri/ =404;
+        }
+    }
+
+    include servers/*;
+}
 ```

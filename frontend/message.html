@@ -3,8 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
-    <meta name="googlebot" content="noindex, nofollow">
     <!-- Prevent social media previews -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="Private Message">
@@ -19,18 +17,12 @@
         <main>
             <h1><svg class="fire-icon"><use href="static/images/fire.svg#icon"></use></svg><span data-i18n="common.header">Burn after reading</span></h1>
             
-            <div class="burn-progress" style="display: none;">
-                <div class="progress-bar"></div>
-            </div>
+            <div class="burn-progress" style="display: none;"><div class="progress-bar"></div></div>
 
             <div class="token-form" style="display: none;">
                 <p data-i18n="message.tokenRequired">Access token required:</p>
-                <div class="token-row">
-                    <textarea id="tokenInput" rows="3" data-i18n-placeholder="message.tokenPlaceholder" maxlength="70"></textarea>
-                </div>
-                <div id="tokenHintSection" class="token-hint" style="display: none;">
-                    <p><span data-i18n="message.tokenHint">Token hint:</span><span id="messageTokenHint"></span></p>
-                </div>
+                <div class="token-row"><textarea id="tokenInput" rows="3" data-i18n-placeholder="message.tokenPlaceholder" maxlength="70"></textarea></div>
+                <div id="tokenHintSection" class="token-hint" style="display: none;"><p><span data-i18n="message.tokenHint">Token hint:</span><span id="messageTokenHint"></span></p></div>
                 <button id="submitToken" class="button primary" data-i18n="message.submitToken">OK</button>
                 <p class="error-message" style="display: none;"></p>
             </div>
@@ -39,37 +31,24 @@
 
             <!-- Message content (hidden by default) -->
             <div class="message-content" style="display: none;">
-                <!-- Text skeleton -->
                 <div class="text-skeleton">
                     <div class="skeleton-line"></div>
                     <div class="skeleton-line"></div>
                     <div class="skeleton-line"></div>
                 </div>
-                
                 <!-- Actual text content (hidden initially) -->
                 <div class="text-content" style="display: none;"></div>
-
-                <!-- Image skeleton -->
-                <div class="image-skeleton">
-                    <div class="skeleton-img"></div>
-                </div>
+                <div class="image-skeleton"><div class="skeleton-img"></div></div>
 
                 <!-- Actual image (hidden initially) -->
-                <div class="image-content" style="display: none;">
-                    <img src="" alt="Message image" class="message-image">
-                </div>
+                <div class="image-content" style="display: none;"><img src="" alt="Message image" class="message-image"></div>
             </div>
 
             <!-- Lightbox for image -->
-            <div class="lightbox" style="display: none;">
-                <button class="close-lightbox">&times;</button>
-                <img src="" alt="Enlarged image">
-            </div>
+            <div class="lightbox" style="display: none;"><button class="close-lightbox">&times;</button><img src="" alt="Enlarged image"></div>
 
             <!-- Create new button (hidden by default) -->
-            <div class="actions" style="display: none;">
-                <a href="/" class="button primary" data-i18n="message.createNew">Create New Message</a>
-            </div>
+            <div class="actions" style="display: none;"><a href="/" class="button primary" data-i18n="message.createNew">Create New Message</a></div>
         </main>
     </div>
 
