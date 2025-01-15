@@ -18,3 +18,9 @@
 
 ### Changed
 - UI improvements
+
+## [1.2.0] - <2025-01-15>
+
+### Changed
+
+- Message retrieval changed from static HTML load and dynamic message content API load to dynamic server side rendering, 2 requests simplified into 1 request
