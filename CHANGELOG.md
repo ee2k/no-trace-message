@@ -34,3 +34,11 @@
 
 ### Changed
 - Changed message retrieval mechanism, from server side rendering all content to just minimal metadata, and then fetching the content in another request, to prevent from leaking message content in history
+
+## [1.2.3] - 2025-01-16
+
+### Changed
+- Changed message loading mechanism from writing content inside html into loading it with 1 request (instead of 2 requests) for message without token
+
+### Fixed
+- Fixed some missing i18n texts
