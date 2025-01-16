@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from routes.api import api_router
-from routes.pages import router as pages_router
 from fastapi.responses import JSONResponse
 from pathlib import Path
 from middleware.rate_limit import RateLimiter
@@ -90,7 +89,7 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(pages_router)
+# app.include_router(pages_router)
 app.include_router(api_router, prefix="/api")
 
 # Security headers middleware

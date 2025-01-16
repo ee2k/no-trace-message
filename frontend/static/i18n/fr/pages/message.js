@@ -1,5 +1,6 @@
 export default {
   message: {
+    title: 'Message à Lecture Unique',
     createNew: 'Créer un nouveau message',
     tokenRequired: 'Jeton d\'accès requis :',
     networkError: 'Erreur réseau. Veuillez réessayer plus tard',

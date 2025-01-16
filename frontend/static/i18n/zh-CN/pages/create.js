@@ -1,5 +1,6 @@
 export default {
   create: {
+    title: 'Burning Message - 创建',
     subtitle: '一个安全、匿名的<a href="{{global.opensource}}" class="hyperlink" target="_blank">开源平台</a>',
     features: {
       noHistory: '无历史记录',

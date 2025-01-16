@@ -157,7 +157,7 @@ async def get_message(message_id: str, request: TokenRequest, client: Request):
                 detail={CODE: ErrorCodes.MESSAGE_NOT_FOUND.value}
             )
             
-        # If message requires token, validate it
+        # If message requires token
         if message.token:
             # Check rate limiting
             check_result = await message_store.check_token_attempts(message_id, client.client.host)
@@ -167,19 +167,35 @@ async def get_message(message_id: str, request: TokenRequest, client: Request):
                     detail={CODE: ErrorCodes.TOO_MANY_ATTEMPTS.value}
                 )
             
-            # Validate token
-            if not message.check_token(request.token):
-                await message_store.record_failed_attempt(message_id, client.client.host)
-                raise HTTPException(
-                    status_code=STATUS_CODES[ErrorCodes.INVALID_TOKEN],
-                    detail={CODE: ErrorCodes.INVALID_TOKEN.value}
+            # If token provided, validate it
+            if request.token:
+                if not message.check_token(request.token):
+                    await message_store.record_failed_attempt(message_id, client.client.host)
+                    raise HTTPException(
+                        status_code=STATUS_CODES[ErrorCodes.INVALID_TOKEN],
+                        detail={CODE: ErrorCodes.INVALID_TOKEN.value}
+                    )
+                # Return full message content if token valid
+                return StreamingResponse(
+                    message_store.stream_and_delete_message(message_id),
+                    media_type="application/json"
                 )
+            
+            # Return metadata if token required but not provided
+            return {
+                "needs_token": True,
+                "token_hint": message.token_hint
+            }
 
-        # Return message content
+        # No token required - return full content immediately
+        content = message.to_dict()
+        content["needs_token"] = False
+        content["token_hint"] = None
         return StreamingResponse(
             message_store.stream_and_delete_message(message_id),
             media_type="application/json"
         )
+
     except HTTPException:
         raise
     except Exception as e:

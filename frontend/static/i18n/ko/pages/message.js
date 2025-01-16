@@ -1,5 +1,6 @@
 export default {
   message: {
+    title: '읽고 파기되는 메시지',
     createNew: '새 메시지 생성',
     tokenRequired: '액세스 토큰이 필요합니다:',
     networkError: '네트워크 오류가 발생했습니다. 나중에 다시 시도해 주세요',

@@ -1,5 +1,6 @@
 export default {
   message: {
+    title: '閱後即焚訊息',
     createNew: '建立新訊息',
     tokenRequired: '需要存取權杖：',
     networkError: '網路錯誤，請稍後重試',

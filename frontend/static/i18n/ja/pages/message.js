@@ -1,5 +1,6 @@
 export default {
   message: {
+    title: '閲覧後に消去されるメッセージ',
     createNew: '新しいメッセージを作成',
     tokenRequired: 'アクセストークンが必要です：',
     networkError: 'ネットワークエラーが発生しました。後でもう一度お試しください',

@@ -1,5 +1,6 @@
 export default {
   message: {
+    title: 'Burn After Reading Message',
     createNew: 'Create New Message',
     tokenRequired: 'Access token required:',
     networkError: 'Network error. Please try again later.',

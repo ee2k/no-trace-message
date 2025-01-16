@@ -1,5 +1,6 @@
 export default {
   message: {
+    title: 'Nachricht zum einmaligen Lesen',
     createNew: 'Neue Nachricht erstellen',
     tokenRequired: 'Zugangstoken erforderlich:',
     networkError: 'Netzwerkfehler. Bitte versuchen Sie es später erneut',

@@ -101,7 +101,7 @@ http {
         server_name  localhost;
 
         # Root directory for static files - adjust path to your local project
-        root /Users/asdf/Documents/GitHub/burning-message/frontend;
+        root /Path/to/burning-message/frontend;
 
         # Add index directive
         index index.html;
@@ -118,7 +118,7 @@ http {
         }
 
         # API requests - no rewriting
-        location ~ ^/(api|message)/ {
+        location /api/ {
             proxy_pass http://127.0.0.1:8000;
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
@@ -127,6 +127,11 @@ http {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # Message URLs
+        location /message/ {
+            try_files $uri /message.html;
         }
 
         # Root redirect

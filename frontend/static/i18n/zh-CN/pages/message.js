@@ -1,5 +1,6 @@
 export default {
   message: {
+    title: '阅后即焚信息',
     createNew: '创建新消息',
     tokenRequired: '需要访问令牌：',
     networkError: '网络错误，请稍后重试',

@@ -14,20 +14,8 @@ class MessagePage {
         this.messageId = window.location.pathname.split('/').pop();
         this.initializeElements();
         
-        // Handle pre-loaded data
-        if (window.messageData) {
-            if (window.messageData.needs_token) {
-                this.showTokenForm();
-                if (window.messageData.token_hint) {
-                    this.showTokenHint(window.messageData.token_hint);
-                }
-            } else {
-                this.loadMessage();
-            }
-        } else {
-            window.location.href = '/not-found';
-        }
-        
+        this.loadMessage();
+
         this.setupEventListeners();
     }
 
@@ -179,19 +167,16 @@ class MessagePage {
                 if (error.detail?.code) {
                     this.showError(error);
                     
-                    // Handle specific status codes
-                    switch (response.status) {
-                        case 404:
-                            window.location.href = '/not-found';
-                            return;
-                        case 400:
-                            if (error.detail.code === 'INVALID_TOKEN') {
-                                // Keep token form visible, hide other content
-                                $('.actions').style.display = 'none';
-                                $('.message-content').style.display = 'none';
-                                $('.burn-progress').style.display = 'none';
-                            }
-                            break;
+                    if (response.status === 404) {
+                        window.location.href = '/not-found';
+                        return;
+                    }
+                    
+                    if (response.status === 400 && error.detail.code === 'INVALID_TOKEN') {
+                        // Keep token form visible, hide other content
+                        $('.actions').style.display = 'none';
+                        $('.message-content').style.display = 'none';
+                        $('.burn-progress').style.display = 'none';
                     }
                 } else {
                     this.showError({ detail: { code: 'SERVER_ERROR' } });
@@ -199,25 +184,20 @@ class MessagePage {
                 return;
             }
             
-            // Show content and create button on successful token validation
-            this.tokenForm.style.display = 'none';
-            $('.message-content').style.display = 'block';
-            $('.actions').style.display = 'block';
-            
             const data = await response.json();
-            this.burnTimeSeconds = data.burn_index === 6 ? 
-                Infinity : 
-                BURN_TIMES[data.burn_index];
-            
-            await Promise.all([
-                this.displayText(data.text, data.font_size),
-                this.displayImage(data.images?.[0])
-            ]);
 
-            // Start burn countdown if not 'never'
-            if (data.burn_index !== 6) {
-                this.startBurnCountdown();
+            if (data.needs_token) {
+                // Show token form and hint if available
+                this.showTokenForm();
+                if (data.token_hint) {
+                    this.showTokenHint(data.token_hint);
+                }
+                return;
             }
+
+            // No token needed or valid token provided - display content
+            this.displayContent(data);
+            
         } catch (error) {
             console.error('Error loading message:', error);
             this.showError({ detail: { code: 'SERVER_ERROR' } });
@@ -355,6 +335,7 @@ class MessagePage {
     }
 
     displayContent(data) {
+        this.tokenForm.style.display = 'none';
         $('.message-content').style.display = 'block';
         $('.actions').style.display = 'block';
         

@@ -1,5 +1,6 @@
 export default {
   message: {
+    title: 'Messaggio Autodistruggente',
     createNew: 'Crea nuovo messaggio',
     tokenRequired: 'Token di accesso richiesto:',
     networkError: 'Errore di rete. Riprova più tardi',

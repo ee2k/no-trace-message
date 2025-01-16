@@ -99,3 +99,13 @@ class Message(BaseModel):
         if not self.token:
             return True
         return self.token == token
+
+    def to_dict(self) -> dict:
+        """Convert message to dictionary for response"""
+        return {
+            "text": self.text,
+            "images": self.images,
+            "burn_index": self.burn_index,
+            "expiry_index": self.expiry_index,
+            "font_size": self.font_size
+        }

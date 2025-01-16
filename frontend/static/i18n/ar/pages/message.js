@@ -1,5 +1,6 @@
 export default {
   message: {
+    title: 'رسالة للقراءة مرة واحدة',
     createNew: 'إنشاء رسالة جديدة',
     tokenRequired: 'رمز الوصول مطلوب:',
     networkError: 'خطأ في الشبكة. الرجاء المحاولة لاحقاً',
