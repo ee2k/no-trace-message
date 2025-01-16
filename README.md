@@ -2,7 +2,7 @@
 
 Open source Burn after reading message web app without any trace
 
-## Objectives
+## Burning Message Objectives
 
 - Building an anonymous burn after reading message sharing Web app
 - Messages stay in server's RAM temporarily, deleted once read or expires
@@ -11,6 +11,6 @@ Open source Burn after reading message web app without any trace
 - No history
 - No user tracking
 
-## [Design](burn.md)
+## [Burning Message Design](burn.md)
 
 ## [Tech Stack](tech_stack.md)

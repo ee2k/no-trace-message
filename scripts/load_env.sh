@@ -42,7 +42,7 @@ if [ ! -f "$PROJECT_ROOT/.env.$ENVIRONMENT" ]; then
     echo "Error: .env.$ENVIRONMENT file not found"
     exit 1
 fi
-cp "$PROJECT_ROOT/.env.$ENVIRONMENT" "$BACKEND_DIR/.env"
+cp "$PROJECT_ROOT/env/.env.$ENVIRONMENT" "$BACKEND_DIR/.env"
 
 # Print debug info
 echo "Current directory: $(pwd)"

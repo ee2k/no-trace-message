@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoTrace Chat - Private Room</title>
+    <link rel="stylesheet" href="static/css/chat/global.css">
+    <link rel="stylesheet" href="static/css/chat/chat.css">
+    <script type="module" src="static/js/chat.js"></script>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Header with room info -->
+        <header class="chat-header">
+            <div class="room-info">
+                <span id="roomId">Private Chatroom, how many people</span><br>
+                <span id="roomStatus"></span>
+            </div>
+            <div class="actions">
+                <button id="shareBtn">Share Room Link</button>
+                <div class="menu-container">
+                    <button id="menuBtn" class="icon-button">
+                        <svg class="menu-icon icon-primary" width="24" height="24">
+                            <use href="static/images/nav_menu.svg#icon"></use>
+                        </svg>
+                    </button>
+                    <div class="menu-dropdown" hidden>
+                        <button class="menu-item" id="muteBtn">
+                            <span>Mute</span>
+                        </button>
+                        <button class="menu-item" id="clearHistoryBtn">
+                            <span>Clear History</span>
+                        </button>
+                        <button class="menu-item" id="leaveBtn">
+                            <span>Leave Room</span>
+                        </button>
+                        <button class="menu-item danger" id="deleteRoomBtn">
+                            <span>Delete Room</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main chat area -->
+        <main class="chat-area">
+            <div id="messages" class="messages">
+                <!-- Messages will be inserted here -->
+            </div>
+        </main>
+
+        <!-- Input area -->
+        <footer class="chat-footer">
+            <div class="chat-input">
+                <button id="plusBtn" class="plus-button">
+                    <svg class="plus-icon icon-primary">
+                        <use href="static/images/plus.svg#icon"></use>
+                    </svg>
+                </button>
+                <textarea id="messageInput" placeholder="Type a message..." rows="1"></textarea>
+                <button id="sendBtn">
+                    <svg class="send-icon icon-primary">
+                        <use href="static/images/send.svg#icon"></use>
+                    </svg>
+                </button>
+            </div>
+            <div id="plusMenu" class="plus-menu">
+                <button class="plus-menu-item">
+                    <svg class="menu-icon icon-primary">
+                        <use href="static/images/emoji.svg#icon"></use>
+                    </svg>
+                    <span>Emoji</span>
+                </button>
+                <button class="plus-menu-item">
+                    <svg class="menu-icon icon-primary">
+                        <use href="static/images/album.svg#icon"></use>
+                    </svg>
+                    <span>Album</span>
+                </button>
+                <button class="plus-menu-item">
+                    <svg class="menu-icon icon-primary">
+                        <use href="static/images/fire.svg#icon"></use>
+                    </svg>
+                    <span>Burn</span>
+                </button>
+                <button class="plus-menu-item">
+                    <svg class="menu-icon icon-primary">
+                        <use href="static/images/invisible.svg#icon"></use>
+                    </svg>
+                    <span>Invisible</span>
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Share Dialog -->
+    <div class="share-dialog" id="shareDialog" hidden>
+        <h3>Share Private Chat</h3>
+        <div class="share-options">
+            <div class="share-link">
+                <input type="text" id="shareUrl" readonly>
+                <button id="copyLinkBtn">Copy Link</button>
+            </div>
+            <div class="share-code">
+                <input type="text" id="shareCode" readonly>
+                <button id="copyCodeBtn">Copy Code</button>
+            </div>
+        </div>
+        <p class="note">Links and codes expire in 1 hour if unused</p>
+        <button class="close-btn" id="closeShareDialog">Close</button>
+    </div>
+</body>
+</html>
