@@ -2,7 +2,37 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 from .participant import Participant
 from .message import Message
-import secrets
+from pydantic import BaseModel
+
+class CreateRoomRequest(BaseModel):
+    username: str
+
+class CreateRoomResponse(BaseModel):
+    room_id: str
+    token: str
+
+class RoomValidationRequest(BaseModel):
+    room_id: str
+    token: str
+
+class RoomValidationResponse(BaseModel):
+    status: str
+
+class RoomStatusResponse(BaseModel):
+    status: str
+
+class InviteResponse(BaseModel):
+    token: str
+
+class JoinResponse(BaseModel):
+    status: str
+
+class LeaveResponse(BaseModel):
+    status: str
+
+class DeleteResponse(BaseModel):
+    status: str
+
 class PrivateRoom:
     def __init__(
         self,

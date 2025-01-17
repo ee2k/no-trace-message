@@ -21,50 +21,47 @@
         </header>
 
         <main class="content">
-            <!-- Custom ID Section -->
-            <div class="id-section">
-                <button id="customIDBtn" class="toggle-button">
-                    <svg class="toggle-icon">
-                        <use href="static/images/toggle.svg#icon"></use>
-                    </svg>
-                    <span data-i18n="create.useCustomID">Use custom ID</span>
-                </button>
-                <div class="id-input-container" id="idInputContainer" style="display: none;">
-                    <div class="id-row">
-                        <textarea id="customID" rows="3" maxlength="70" data-i18n-placeholder="create.idPlaceholder" placeholder="8~70 characters"></textarea>
-                        <div class="char-counter" id="idCounter"></div>
+            <div class="room-form">
+                <!-- Custom ID Section -->
+                <div class="code-section">
+                    <button id="customIDBtn" class="toggle-button">
+                        <svg class="toggle-icon"><use href="static/images/toggle.svg#icon"></use></svg>
+                        <span data-i18n="create.useCustomID">Use custom ID</span>
+                    </button>
+                    <div class="id-input-container" id="idInputContainer" style="display: none;">
+                        <div class="code-row">
+                            <textarea id="customID" rows="3" maxlength="70" data-i18n-placeholder="create.idPlaceholder" placeholder="70 chars max"></textarea>
+                            <div class="char-counter" id="idCounter"></div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Token Section -->
-            <div class="token-section">
-                <button id="customTokenBtn" class="toggle-button">
-                    <svg class="toggle-icon">
-                        <use href="static/images/toggle.svg#icon"></use>
-                    </svg>
-                    <span>Use access token</span>
-                </button>
-                <div class="token-input-container" id="tokenInputContainer" style="display: none;">
-                    <div class="token-row">
-                        <textarea id="customToken" rows="3" maxlength="70" placeholder="6~70 characters"></textarea>
-                        <div class="char-counter" id="tokenCounter"></div>
+                <!-- Token Section -->
+                <div class="code-section">
+                    <button id="customTokenBtn" class="toggle-button">
+                        <svg class="toggle-icon"><use href="static/images/toggle.svg#icon"></use></svg>
+                        <span>Use access token</span>
+                    </button>
+                    <div class="token-input-container" id="tokenInputContainer" style="display: none;">
+                        <div class="code-row">
+                            <textarea id="customToken" rows="3" maxlength="70" placeholder="70 chars max"></textarea>
+                            <div class="char-counter" id="tokenCounter"></div>
+                        </div>
+                        <div class="code-row">
+                            <textarea id="tokenHint" rows="3" maxlength="70" placeholder="Optional token hint"></textarea>
+                            <div class="char-counter" id="hintCounter"></div>
+                        </div>
                     </div>
-                    <div class="token-row">
-                        <textarea id="tokenHint" rows="3" maxlength="70" placeholder="Optional token hint"></textarea>
-                        <div class="char-counter" id="hintCounter"></div>
+                </div>
+                <!-- Chat Form -->
+                <div class="chat-form">
+                    <div class="input-group">
+                        <input type="text" id="username" maxlength="35" placeholder="Nickname (Click icon to auto create)">
+                        <button id="generateUsername" class="icon-button" data-svg="static/images/pencil.svg" data-svg-class="pencil-icon icon-primary"></button>
                     </div>
                 </div>
-            </div>
-            <!-- Chat Form -->
-            <div class="chat-form">
-                <div class="input-group">
-                    <input type="text" id="username" placeholder="Nickname (Click icon to auto create)">
-                    <button id="generateUsername" class="icon-button" data-svg="static/images/pencil.svg" data-svg-class="pencil-icon icon-primary"></button>
-                </div>
-                <div class="button-group">
-                    <button id="createBtn">Create Private Room</button>
-                </div>
+                <p class="legal-text" data-i18n="create.legal" data-i18n-html="true">By using this service, you agree to our <a href="static/i18n/en/tos.html" class="hyperlink" href="tos">Terms of Service</a> and <a href="static/i18n/en/privacy.html" class="hyperlink" href="privacy">Privacy Policy</a></p>
+                <button id="createBtn" class="primary-button" data-i18n="create.createButton">Create Private Room</button>
             </div>
 
         </main>
