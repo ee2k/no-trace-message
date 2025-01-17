@@ -264,19 +264,6 @@ footer {
     gap: 1rem;
 }
 
-.token-link {
-    color: var(--accent-color);
-    cursor: pointer;
-    text-decoration: none;
-    font-size: 1rem;
-    width: fit-content;
-    display: inline-block;
-}
-
-.token-link:hover {
-    text-decoration: underline;
-}
-
 .token-input-container {
     display: flex;
     flex-direction: column;

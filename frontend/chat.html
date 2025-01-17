@@ -6,7 +6,7 @@
     <title>NoTrace Chat - Private Room</title>
     <link rel="stylesheet" href="static/css/chat/global.css">
     <link rel="stylesheet" href="static/css/chat/chat.css">
-    <script type="module" src="static/js/chat.js"></script>
+    <script type="module" src="static/js/chat/chat.js"></script>
 </head>
 <body>
     <div class="chat-container">
@@ -24,7 +24,7 @@
                             <use href="static/images/nav_menu.svg#icon"></use>
                         </svg>
                     </button>
-                    <div class="menu-dropdown" hidden>
+                    <div id="menuDropdown" class="menu-dropdown" hidden>
                         <button class="menu-item" id="muteBtn">
                             <span>Mute</span>
                         </button>
@@ -67,27 +67,9 @@
             <div id="plusMenu" class="plus-menu">
                 <button class="plus-menu-item">
                     <svg class="menu-icon icon-primary">
-                        <use href="static/images/emoji.svg#icon"></use>
-                    </svg>
-                    <span>Emoji</span>
-                </button>
-                <button class="plus-menu-item">
-                    <svg class="menu-icon icon-primary">
                         <use href="static/images/album.svg#icon"></use>
                     </svg>
                     <span>Album</span>
-                </button>
-                <button class="plus-menu-item">
-                    <svg class="menu-icon icon-primary">
-                        <use href="static/images/fire.svg#icon"></use>
-                    </svg>
-                    <span>Burn</span>
-                </button>
-                <button class="plus-menu-item">
-                    <svg class="menu-icon icon-primary">
-                        <use href="static/images/invisible.svg#icon"></use>
-                    </svg>
-                    <span>Invisible</span>
                 </button>
             </div>
         </footer>

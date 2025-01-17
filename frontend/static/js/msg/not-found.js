@@ -1,4 +1,4 @@
-import { i18n } from './utils/i18n.js';
+import { i18n } from '../utils/i18n.js';
 
 class NotFoundPage {
     static async initialize() {

@@ -32,10 +32,50 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('username').value = username;
     });
 
-    // Handle room creation
+    // Setup custom ID section
+    const customIDBtn = document.getElementById('customIDBtn');
+    const idInputContainer = document.getElementById('idInputContainer');
+    const customID = document.getElementById('customID');
+    const idCounter = document.getElementById('idCounter');
+
+    customIDBtn.addEventListener('click', () => {
+        customIDBtn.classList.toggle('active');
+        idInputContainer.style.display = idInputContainer.style.display === 'none' ? 'block' : 'none';
+    });
+
+    // Setup custom token section
+    const customTokenBtn = document.getElementById('customTokenBtn');
+    const tokenInputContainer = document.getElementById('tokenInputContainer');
+    const customToken = document.getElementById('customToken');
+    const tokenHint = document.getElementById('tokenHint');
+    const tokenCounter = document.getElementById('tokenCounter');
+    const hintCounter = document.getElementById('hintCounter');
+
+    customTokenBtn.addEventListener('click', () => {
+        customTokenBtn.classList.toggle('active');
+        tokenInputContainer.style.display = tokenInputContainer.style.display === 'none' ? 'block' : 'none';
+    });
+
+    // Setup character counters
+    function setupCounter(textarea, counter, maxLength) {
+        counter.textContent = maxLength;
+        textarea.addEventListener('input', () => {
+            const remaining = maxLength - textarea.value.length;
+            counter.textContent = remaining;
+        });
+    }
+
+    setupCounter(customID, idCounter, 70);
+    setupCounter(customToken, tokenCounter, 70);
+    setupCounter(tokenHint, hintCounter, 70);
+
+    // Modify the existing room creation handler
     document.getElementById('createBtn').addEventListener('click', async () => {
         const usernameInput = document.getElementById('username');
         const username = usernameInput.value.trim();
+        const customRoomId = customID.value.trim();
+        const token = customToken.value.trim();
+        const hint = tokenHint.value.trim();
         
         if (!username) {
             usernameInput.classList.add('input-error');
@@ -52,13 +92,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ username })
+                body: JSON.stringify({ 
+                    username,
+                    custom_id: customRoomId || undefined,
+                    token: token || undefined,
+                    token_hint: hint || undefined
+                })
             });
 
             if (!response.ok) throw new Error('Failed to create room');
 
             const data = await response.json();
-            // Redirect to chat room with auto-show share parameter
             window.location.href = `/chat?room=${data.room_id}&token=${data.token}&show_share=true`;
         } catch (error) {
             console.error('Error creating room:', error);

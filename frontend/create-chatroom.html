@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NoTrace Chat - Create a private room</title>
-    <link rel="stylesheet" href="static/css/chat/global.css">
+    <link rel="stylesheet" href="static/css/global.css">
     <link rel="stylesheet" href="static/css/chat/create-chatroom.css">
 </head>
 <body>
     <div class="container">
         <header>
             <h1><span data-i18n="common.header">NoTrace Chat</span></h1>
+            <p class="subtitle" data-i18n="create.slogan">Take our privacy back</p>
             <p class="subtitle" data-i18n="create.subtitle" data-i18n-html="true">A secure, anonymous <a href="" target="_blank" class="hyperlink" data-i18n="create.open-source">open-source platform</a></p>
             <div class="features">
                 <div class="feature-item">•<span data-i18n="create.features.noHistory">No history</span></div>
@@ -20,17 +21,52 @@
         </header>
 
         <main class="content">
-            <section class="right-side">
-                <div class="chat-form">
-                    <div class="input-group">
-                        <input type="text" id="username" placeholder="Nickname (Click icon to auto create)">
-                        <button id="generateUsername" class="icon-button" data-svg="static/images/pencil.svg" data-svg-class="pencil-icon icon-primary"></button>
-                    </div>
-                    <div class="button-group">
-                        <button id="createBtn">Create Private Room</button>
+            <!-- Custom ID Section -->
+            <div class="id-section">
+                <button id="customIDBtn" class="toggle-button">
+                    <svg class="toggle-icon">
+                        <use href="static/images/toggle.svg#icon"></use>
+                    </svg>
+                    <span data-i18n="create.useCustomID">Use custom ID</span>
+                </button>
+                <div class="id-input-container" id="idInputContainer" style="display: none;">
+                    <div class="id-row">
+                        <textarea id="customID" rows="3" maxlength="70" data-i18n-placeholder="create.idPlaceholder" placeholder="8~70 characters"></textarea>
+                        <div class="char-counter" id="idCounter"></div>
                     </div>
                 </div>
-            </section>
+            </div>
+
+            <!-- Token Section -->
+            <div class="token-section">
+                <button id="customTokenBtn" class="toggle-button">
+                    <svg class="toggle-icon">
+                        <use href="static/images/toggle.svg#icon"></use>
+                    </svg>
+                    <span>Use access token</span>
+                </button>
+                <div class="token-input-container" id="tokenInputContainer" style="display: none;">
+                    <div class="token-row">
+                        <textarea id="customToken" rows="3" maxlength="70" placeholder="6~70 characters"></textarea>
+                        <div class="char-counter" id="tokenCounter"></div>
+                    </div>
+                    <div class="token-row">
+                        <textarea id="tokenHint" rows="3" maxlength="70" placeholder="Optional token hint"></textarea>
+                        <div class="char-counter" id="hintCounter"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Chat Form -->
+            <div class="chat-form">
+                <div class="input-group">
+                    <input type="text" id="username" placeholder="Nickname (Click icon to auto create)">
+                    <button id="generateUsername" class="icon-button" data-svg="static/images/pencil.svg" data-svg-class="pencil-icon icon-primary"></button>
+                </div>
+                <div class="button-group">
+                    <button id="createBtn">Create Private Room</button>
+                </div>
+            </div>
+
         </main>
     </div>
     <script type="module" src="static/js/chat/create-chatroom.js"></script>

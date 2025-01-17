@@ -3,19 +3,22 @@
 
 ## Objectives
 
-- To build a Web based anonymous chat app without user trace
-- Chats will be stored in the RAM of the server temporarily, once chats end, records deleted from RAM
+- To build a Web based anonymous chat app without trace
+- Chats will be stored in server's RAM temporarily, once chats end, records deleted from RAM
+- No registration
+- No message history
+- No tracking
 - No database
-- No user registration
-- No user message history
-- No user tracking
+- Inactivity self-destruction
 
-## [Design](design.md)
-
-## [Tech Stack](tech_stack.md)
-
-- Python (FastAPI)
-- HTML
-- CSS
-- JavaScript
+## Tech Stack
 - WebSocket
+- WebRTC
+
+## Design
+
+http://domain/chatroom/chatroom_id
+then input token
+
+chatroom_id min 8 characters
+token min 6 characters
