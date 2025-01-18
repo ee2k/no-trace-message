@@ -27,20 +27,24 @@ h1 {
     gap: 0.5rem;
     color: var(--text-secondary);
 }
+.header-hr {
+    border: none;
+    height: 0.1rem;
+    background-color: var(--bg-secondary);
+    margin: 1rem auto;
+    width: 90%;
+}
 .room-form {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
 }
-.chat-form {
+.nickname-form {
     width: 100%;
-    min-width: 450px;
-    background-color: var(--input-bg);
-    padding: 1.5rem;
-    border-radius: 8px;
+    max-width: 50%;
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
 }
 
 input {
@@ -48,7 +52,7 @@ input {
     padding: 0.8rem;
     border: 1px solid var(--border-color);
     border-radius: 4px;
-    background-color: var(--bg-color);
+    background-color: var(--input-bg);
     color: var(--text-color);
     font-size: 1rem;
 }
@@ -76,7 +80,7 @@ footer {
 
 .input-group {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.3rem;
 }
 
 .icon-button {
@@ -140,7 +144,7 @@ footer {
     width: 100%;
     padding: 0.75rem 1rem;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 0.5rem;
     background: var(--bg-secondary);
     color: var(--text-primary);
     font-size: 1rem;
@@ -222,7 +226,7 @@ footer {
 
 .toggle-button:hover {
     background-color: transparent; /* Override global style */
-    color: var(--accent-color);
+    /* color: var(--accent-color); */
 }
 
 .toggle-icon {
@@ -278,26 +282,32 @@ footer {
     font-size: 0.8rem;
 }
 /* Section spacing */
-.code-section,
-.chat-form {
+.code-section {
     width: 100%;
     margin: 0 auto;
 }
 
-/* Media query for mobile responsiveness */
+/* Always put screen size media queries at the end of the file */
+/* For very small screens and mobile devices */
 @media (max-width: 600px) {
-    .content {
-        padding: 1rem;
-    }
-
-    .code-section,
-    .chat-form {
+    .nickname-form {
         max-width: 100%;
     }
+}
 
-    .code-section + .code-section,
-    .code-section + .chat-form,
-    .chat-form + .code-section {
-        margin-top: 1.5rem;
+/* For very small screens only */
+@media (max-width: 428px) {
+    .subtitle {
+        margin: 0.5rem 0 0.2rem;
+        font-size: 0.8rem;
+    }
+    
+    .features {
+        gap: 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .feature-item {
+        gap: 0.2rem;
     }
 }

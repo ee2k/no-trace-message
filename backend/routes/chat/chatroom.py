@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException
-from models.chat.private_room import CreateRoomRequest, CreateRoomResponse, RoomValidationRequest, RoomValidationResponse, RoomStatusResponse, InviteResponse, JoinResponse, LeaveResponse, DeleteResponse
-from services.chat.room_manager import PrivateRoomManager
+from backend.models.chat.chatroom import CreateRoomRequest, CreateRoomResponse, RoomValidationRequest, RoomValidationResponse, RoomStatusResponse, InviteResponse, JoinResponse, LeaveResponse, DeleteResponse
+from backend.services.chat.chatroom_manager import ChatroomManager
 
 router = APIRouter()
-private_room_manager = PrivateRoomManager()
+private_room_manager = ChatroomManager()
 
 @router.post("/create", response_model=CreateRoomResponse)
 async def create_private_room(request: CreateRoomRequest):

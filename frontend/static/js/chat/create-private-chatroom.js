@@ -1,37 +1,13 @@
 import { initSvgIcons } from '../global.js';
 import { $ } from '../utils/dom.js';
+import { loadComponent } from '../utils/components.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Load header component
+    await loadComponent('headerComponent', '/header');
+    
     // Initialize global features
     initSvgIcons();
-    
-    // Initialize page-specific features
-    document.getElementById('username').addEventListener('input', (e) => {
-        e.target.classList.remove('input-error');
-    });
-
-    const generateUsername = document.getElementById('generateUsername');
-
-    // Generate random username
-    generateUsername.addEventListener('click', () => {
-        const adjectives = [
-            'Happy', 'Lucky', 'Sunny', 'Clever', 'Swift', 'Gloomy', 'Boring', 'Sleepy', 'Grumpy', 'Lazy', 'Dreamy', 'Silly', 'Witty', 'Clumsy', 'Brave', 'Shy', 'Wild', 'Calm', 'Quiet', 'Loud', 'Gentle', 'Bold', 'Wise', 'Fancy', 'Neat', 'Smart', 'Crazy', 'Smartass'
-        ];
-        
-        const nouns = [
-            // Zodiac animals
-            'Rat', 'Ox', 'Tiger', 'Rabbit', 'Dragon', 'Snake', 'Horse', 'Goat','Monkey', 'Rooster','Dog','Pig',
-            // Regular animals
-            'Cat','Panda', 'Eagle', 'Dolphin', 'Fox', 'Wolf','Whale', 'Turtle', 'Giraffe', 'Lion', 'Bear','Penguin', 'Koala', 'Elephant', 'Zebra', 'Deer','Jellyfish','Kangaroo','Crane','Mantis','Pigeon','Seal','Viper','Tigeress','Vulture',
-            // Rare/Exotic animals
-            'Phoenix', 'Unicorn', 'Griffin', 'Pegasus','Narwhal', 'Axolotl', 'Pangolin', 'Platypus','Sloth', 'Otter', 'Raccoon', 'RedPanda',
-            // Plant
-            'Tree', 'Sequoia', 'Rose', 'Lily', 'Daisy', 'Sunflower', 'Tulip', 'Orchid', 'Daffodil', 'Iris', 'Hyacinth', 'Dahlia', 'Poppy', 'Marigold', 'Poppy',
-        ];
-        
-        const username = `${adjectives[Math.floor(Math.random() * adjectives.length)]} ${nouns[Math.floor(Math.random() * nouns.length)]}`;
-        document.getElementById('username').value = username;
-    });
 
     // Setup custom ID section
     const customIDBtn = $('#customIDBtn');
@@ -108,29 +84,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Modify the existing room creation handler
     document.getElementById('createBtn').addEventListener('click', async () => {
-        const usernameInput = document.getElementById('username');
-        const username = usernameInput.value.trim();
         const customRoomId = customID.value.trim();
         const token = customToken.value.trim();
         const hint = tokenHint.value.trim();
-        
-        if (!username) {
-            usernameInput.classList.add('input-error');
-            usernameInput.focus();
-            setTimeout(() => {
-                usernameInput.classList.remove('input-error');
-            }, 400);
-            return;
-        }
 
         try {
-            const response = await fetch('/api/private/create', {
+            const response = await fetch('/api/chat/private_room/create', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ 
-                    username,
+                body: JSON.stringify({
                     custom_id: customRoomId || undefined,
                     token: token || undefined,
                     token_hint: hint || undefined

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoTrace Chat - Create a private room</title>
+    <base href="/">
+    <link rel="stylesheet" href="static/css/global.css">
+    <link rel="stylesheet" href="static/css/chat/create-private-chatroom.css">
+</head>
+<body>
+    <div class="container">
+        <div id="headerComponent"></div>
+        <main class="content">
+            <div class="room-form">
+                <!-- Custom ID Section -->
+                <div class="code-section">
+                    <button id="customIDBtn" class="toggle-button">
+                        <svg class="toggle-icon"><use href="static/images/toggle.svg#icon"></use></svg>
+                        <span data-i18n="create.useCustomID">Use custom Chatroom ID</span>
+                    </button>
+                    <div class="id-input-container" id="idInputContainer" style="display: none;">
+                        <div class="code-row">
+                            <textarea id="customID" rows="3" maxlength="70" data-i18n-placeholder="create.idPlaceholder" placeholder="70 chars max"></textarea>
+                            <div class="char-counter" id="idCounter"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Token Section -->
+                <div class="code-section">
+                    <button id="customTokenBtn" class="toggle-button">
+                        <svg class="toggle-icon"><use href="static/images/toggle.svg#icon"></use></svg>
+                        <span>Use access token</span>
+                    </button>
+                    <div class="token-input-container" id="tokenInputContainer" style="display: none;">
+                        <div class="code-row">
+                            <textarea id="customToken" rows="3" maxlength="70" placeholder="70 chars max"></textarea>
+                            <div class="char-counter" id="tokenCounter"></div>
+                        </div>
+                        <div class="code-row">
+                            <textarea id="tokenHint" rows="3" maxlength="70" placeholder="Optional token hint"></textarea>
+                            <div class="char-counter" id="hintCounter"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="legal-text" data-i18n="create.legal" data-i18n-html="true">By using this service, you agree to our <a href="static/i18n/en/tos.html" class="hyperlink" href="tos">Terms of Service</a> and <a href="static/i18n/en/privacy.html" class="hyperlink" href="privacy">Privacy Policy</a></p>
+                <button id="createBtn" class="primary-button" data-i18n="create.createButton">Create Private Chatroom</button>
+            </div>
+
+        </main>
+    </div>
+    <script type="module" src="static/js/chat/create-private-chatroom.js"></script>
+</body>
+</html>

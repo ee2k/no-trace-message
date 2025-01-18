@@ -5,7 +5,9 @@ from .message import Message
 from pydantic import BaseModel
 
 class CreateRoomRequest(BaseModel):
-    username: str
+    room_id: str
+    room_token: str
+    room_token_hint: str
 
 class CreateRoomResponse(BaseModel):
     room_id: str
@@ -41,7 +43,7 @@ class PrivateRoom:
         lifetime_minutes: int = 60
     ):
         self.id: str = room_id
-        self.created_at: datetime = datetime.utcnow()
+        self.created_at: datetime = datetime.UTC()
         self.expires_at: datetime = self.created_at + timedelta(minutes=lifetime_minutes)
         self.max_participants: int = max_participants
         self.participants: Dict[str, Participant] = {}
@@ -67,7 +69,7 @@ class PrivateRoom:
         self.messages.append(message)
 
     def is_expired(self) -> bool:
-        return datetime.utcnow() > self.expires_at
+        return datetime.UTC() > self.expires_at
 
     def to_dict(self) -> dict:
         return {

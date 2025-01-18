@@ -268,7 +268,7 @@ footer {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    padding: 0.5rem;
+    padding: 0.1rem;
 }
 
 .token-row {
@@ -379,7 +379,7 @@ footer {
 
 .toggle-button:hover {
     background-color: transparent; /* Override global style */
-    color: var(--accent-color);
+    /* color: var(--accent-color); */
 }
 
 .toggle-icon {

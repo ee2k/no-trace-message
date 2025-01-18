@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NoTrace Chat - Create a private room</title>
+    <base href="/">
     <link rel="stylesheet" href="static/css/global.css">
-    <link rel="stylesheet" href="static/css/chat/create-chatroom.css">
+    <link rel="stylesheet" href="static/css/chat/join-private-chatroom.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1><span data-i18n="common.header">NoTrace Chat</span></h1>
+            <h1><svg class="fire-icon"><use href="static/images/fire.svg#icon"></use></svg><span data-i18n="common.header">NoTrace Chat</span></h1>
             <p class="subtitle" data-i18n="create.slogan">Take our privacy back</p>
             <p class="subtitle" data-i18n="create.subtitle" data-i18n-html="true">A secure, anonymous <a href="" target="_blank" class="hyperlink" data-i18n="create.open-source">open-source platform</a></p>
             <div class="features">
@@ -18,6 +19,7 @@
                 <div class="feature-item">•<span data-i18n="create.features.noTracking">No tracking</span></div>
                 <div class="feature-item">•<span data-i18n="create.features.noDatabase">No database</span></div>
             </div>
+            <hr class="header-hr">
         </header>
 
         <main class="content">
@@ -26,7 +28,7 @@
                 <div class="code-section">
                     <button id="customIDBtn" class="toggle-button">
                         <svg class="toggle-icon"><use href="static/images/toggle.svg#icon"></use></svg>
-                        <span data-i18n="create.useCustomID">Use custom ID</span>
+                        <span data-i18n="create.useCustomID">Use custom Chatroom ID</span>
                     </button>
                     <div class="id-input-container" id="idInputContainer" style="display: none;">
                         <div class="code-row">
@@ -54,18 +56,18 @@
                     </div>
                 </div>
                 <!-- Chat Form -->
-                <div class="chat-form">
+                <div class="nickname-form">
                     <div class="input-group">
                         <input type="text" id="username" maxlength="35" placeholder="Nickname (Click icon to auto create)">
                         <button id="generateUsername" class="icon-button" data-svg="static/images/pencil.svg" data-svg-class="pencil-icon icon-primary"></button>
                     </div>
                 </div>
                 <p class="legal-text" data-i18n="create.legal" data-i18n-html="true">By using this service, you agree to our <a href="static/i18n/en/tos.html" class="hyperlink" href="tos">Terms of Service</a> and <a href="static/i18n/en/privacy.html" class="hyperlink" href="privacy">Privacy Policy</a></p>
-                <button id="createBtn" class="primary-button" data-i18n="create.createButton">Create Private Room</button>
+                <button id="createBtn" class="primary-button" data-i18n="create.createButton">Join Private Room</button>
             </div>
 
         </main>
     </div>
-    <script type="module" src="static/js/chat/create-chatroom.js"></script>
+    <script type="module" src="static/js/chat/join-private-chatroom.js"></script>
 </body>
 </html>

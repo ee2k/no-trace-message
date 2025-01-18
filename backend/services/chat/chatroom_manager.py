@@ -1,4 +1,4 @@
-from models.chat.private_room import PrivateRoom
+from backend.models.chat.chatroom import PrivateRoom
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, Optional
@@ -27,7 +27,7 @@ class MemoryLimitError(RoomError):
     """Memory limit reached"""
     pass
 
-class PrivateRoomManager:
+class ChatroomManager:
     def __init__(self):
         # Store all rooms in memory using a dictionary
         self._rooms: Dict[str, PrivateRoom] = {}

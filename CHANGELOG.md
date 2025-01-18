@@ -42,3 +42,11 @@
 
 ### Fixed
 - Fixed some missing i18n texts
+
+## [2.0.0] - 2025-01
+
+### Added
+- Added NoTrace Chat
+
+### Changed
+- Renamed Burning Message to NoTrace Message
