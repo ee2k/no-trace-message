@@ -1,10 +1,9 @@
-from backend.models.chat.chatroom import PrivateRoom
-from dataclasses import dataclass
-from datetime import datetime
+from models.chat.chatroom import PrivateRoom
+from datetime import datetime, UTC
 from typing import Dict, Optional
 import secrets
 import string
-from api.models.message import Message, MessageType
+from models.chat.message import Message, MessageType
 from sys import getsizeof
 
 class RoomError(Exception):
@@ -29,35 +28,57 @@ class MemoryLimitError(RoomError):
 
 class ChatroomManager:
     def __init__(self):
-        # Store all rooms in memory using a dictionary
         self._rooms: Dict[str, PrivateRoom] = {}
         self._id_chars = string.ascii_letters + string.digits
-        self._max_collision_attempts = 10  # Prevent infinite loop
-        self._max_rooms = 10000  # Maximum number of rooms
-        self._max_messages_per_room = 1000  # Message limit
-        self._max_message_size_bytes = 3 * 1024 * 1024  # 3MB per message (for images)
-        self._max_participants_per_room = 6  # Maximum number of participants
-        self._max_pictures_per_room = 10  # Maximum number of pictures per room
-        self._max_message_chars = 2000  # Maximum characters per text message
-    
-    def create_private_room(self) -> PrivateRoom:
-        """Create a private chat room with memory checks"""
+        self._max_collision_attempts = 3
+        self._max_rooms = 10000
+        self._min_room_id_length = 1
+        self._max_room_id_length = 70
+        self._max_message_chars = 2000
+
+    async def create_private_room(self, room_id: Optional[str] = None) -> PrivateRoom:
+        """Create a private chat room with optional custom ID"""
         if len(self._rooms) >= self._max_rooms:
             raise MemoryError("Maximum room limit reached")
+            
+        # Validate custom room ID if provided
+        if room_id:
+            if len(room_id) < self._min_room_id_length or len(room_id) > self._max_room_id_length:
+                raise ValueError(f"Room ID must be between {self._min_room_id_length} and {self._max_room_id_length} characters")
+                
+            # Check for newlines or control characters
+            if any(ord(c) < 32 for c in room_id):
+                raise ValueError("Room ID cannot contain newlines or control characters")
+                
+            if room_id in self._rooms:
+                raise ValueError("Room ID already exists")
+                
+            room = PrivateRoom(
+                room_id=room_id
+            )
+            self._rooms[room_id] = room
+            return room
+            
+        # Generate random room ID if not provided
         attempts = 0
-        
         while attempts < self._max_collision_attempts:
-            room_id = ''.join(secrets.choice(self._id_chars) for _ in range(8))
-            if room_id not in self._rooms:
+            generated_id = secrets.token_urlsafe(12)
+            if generated_id not in self._rooms:
                 room = PrivateRoom(
-                    room_id=room_id,
-                    created_at=datetime.utcnow(),
+                    room_id=generated_id
                 )
-                self._rooms[room_id] = room
+                self._rooms[generated_id] = room
                 return room
             attempts += 1
             
-        raise RuntimeError("Failed to generate unique room ID after multiple attempts")
+        raise RuntimeError("Failed to generate unique room ID")
+
+    def validate_room_token(self, room_id: str, token: str) -> bool:
+        """Validate room token"""
+        room = self.get_private_room(room_id)
+        if not room:
+            return False
+        return room.room_token == token
 
     def generate_private_room_token(self, room_id: str, expiry_minutes: int = 60) -> str:
         """Generate a one-time token for room access"""
@@ -65,9 +86,8 @@ class ChatroomManager:
         if not room:
             raise ValueError("Room not found")
             
-        token = secrets.token_urlsafe(32)
-        expiry = datetime.utcnow().timestamp() + (expiry_minutes * 60)
-        room.tokens[token] = expiry
+        token = secrets.token_urlsafe(8)
+        room.room_tokens.append(token)
         
         return token
 
@@ -78,7 +98,7 @@ class ChatroomManager:
             return False
             
         expiry = room.tokens[token]
-        if datetime.utcnow().timestamp() > expiry:
+        if datetime.now(UTC).timestamp() > expiry:
             del room.tokens[token]
             return False
             
@@ -95,7 +115,7 @@ class ChatroomManager:
             return False
             
         room.participants[username] = connection_id
-        room.last_activity = datetime.utcnow()
+        room.last_activity = datetime.now(UTC)
         return True
 
     def remove_private_room_participant(self, room_id: str, username: str) -> bool:
@@ -105,14 +125,14 @@ class ChatroomManager:
             return False
             
         del room.participants[username]
-        room.last_activity = datetime.utcnow()
+        room.last_activity = datetime.now(UTC)
         return True
 
     def update_private_room_activity(self, room_id: str) -> None:
         """Update room's last activity timestamp"""
         room = self.get_private_room(room_id)
         if room:
-            room.last_activity = datetime.utcnow()
+            room.last_activity = datetime.now(UTC)
 
     def get_private_room(self, room_id: str) -> PrivateRoom:
         """Get room by ID with error handling"""
@@ -132,7 +152,7 @@ class ChatroomManager:
 
     def cleanup_inactive_rooms(self) -> None:
         """Remove expired rooms from memory"""
-        current_time = datetime.utcnow()
+        current_time = datetime.now(UTC)
         expired_rooms = [
             room_id for room_id, room in self._rooms.items()
             if room.is_expired()
@@ -165,11 +185,11 @@ class ChatroomManager:
             raise MemoryLimitError("Maximum message count reached")
             
         # Check message size based on type
-        if message.type == MessageType.TEXT:
+        if message.type == MessageType.text.value:
             if len(message.content.encode('utf-8')) > (self._max_message_chars * 4):  # 4 bytes per char worst case
                 raise MemoryLimitError("Text message too long")
-        elif message.type == MessageType.IMAGE:
-            if len(message.content) > self._max_message_size_bytes:
+        elif message.type == MessageType.image.value:
+            if len(message.content) > self._max_image_size_bytes:
                 raise MemoryLimitError("Image size exceeds limit")
         
         room.messages.append(message)

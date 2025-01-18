@@ -1,16 +1,18 @@
+import { $ } from './dom.js';
+
 export async function loadComponent(elementId, componentPath) {
     try {
         // Load HTML
-        const htmlResponse = await fetch(`${componentPath}.html`);
+        const htmlResponse = await fetch(`${componentPath}`);
         if (!htmlResponse.ok) throw new Error(`Failed to load component: ${componentPath}`);
         const html = await htmlResponse.text();
         
         // Load CSS
-        const cssPath = `${componentPath.replace('/header', '/static/css/components/header')}.css`;
+        const cssPath = `${componentPath.replace(componentPath, '/static/css' + componentPath)}.css`;
         await loadCSS(cssPath);
         
         // Insert HTML
-        document.getElementById(elementId).innerHTML = html;
+        $('#' + elementId).innerHTML = html;
         
         // Re-initialize SVG icons if needed
         if (window.initSvgIcons) {
@@ -29,7 +31,7 @@ export async function loadComponent(elementId, componentPath) {
 function loadCSS(path) {
     return new Promise((resolve, reject) => {
         // Check if CSS is already loaded
-        if (document.querySelector(`link[href="${path}"]`)) {
+        if ($(`link[href="${path}"]`)) {
             resolve();
             return;
         }

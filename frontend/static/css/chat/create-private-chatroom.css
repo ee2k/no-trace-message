@@ -48,6 +48,23 @@ footer {
     margin-top: 0.6rem;  /* Add top margin to hint textarea */
 }
 
+.code-row input.custom-input {
+    width: 100%;
+    padding: 0.75rem 3rem 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-family: inherit;
+    height: auto;
+}
+
+.code-row input.custom-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
 .code-row textarea {
     width: 100%;
     padding: 0.75rem 1rem;
@@ -58,7 +75,12 @@ footer {
     font-size: 1rem;
     font-family: inherit;
     resize: none;
-    height: auto;  /* Let rows control height */
+    height: auto;
+}
+
+.code-row textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
 }
 
 .code-row:last-child textarea {
@@ -203,17 +225,5 @@ footer {
 
 /* For very small screens only */
 @media (max-width: 428px) {
-    .subtitle {
-        margin: 0.5rem 0 0.2rem;
-        font-size: 0.8rem;
-    }
-    
-    .features {
-        gap: 0.5rem;
-        font-size: 0.8rem;
-    }
-    
-    .feature-item {
-        gap: 0.2rem;
-    }
+
 }

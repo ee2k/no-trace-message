@@ -1,21 +1,22 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Dict, List, Optional
 from .participant import Participant
 from .message import Message
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class CreateRoomRequest(BaseModel):
-    room_id: str
-    room_token: str
-    room_token_hint: str
+    room_id: Optional[str] = Field(None, description="Custom Chatroom ID")
+    room_token: Optional[str] = Field(None, description="Access Token")
+    room_token_hint: Optional[str] = None
 
 class CreateRoomResponse(BaseModel):
     room_id: str
-    token: str
+    room_token: Optional[str] = None
+    room_token_hint: Optional[str] = None
 
 class RoomValidationRequest(BaseModel):
     room_id: str
-    token: str
+    room_token: str
 
 class RoomValidationResponse(BaseModel):
     status: str
@@ -42,16 +43,14 @@ class PrivateRoom:
         max_participants: int = 6,
         lifetime_minutes: int = 60
     ):
-        self.id: str = room_id
-        self.created_at: datetime = datetime.UTC()
+        self.room_id: str = room_id
+        self.created_at: datetime = datetime.now(UTC)
         self.expires_at: datetime = self.created_at + timedelta(minutes=lifetime_minutes)
         self.max_participants: int = max_participants
         self.participants: Dict[str, Participant] = {}
         self.messages: List[Message] = []
-        self.tokens: Dict[str, datetime] = {}  # token -> expiry
-        self.creator_token: Optional[str] = None
-        self.room_number: Optional[str] = None  # Format: XXXXXX
-        self.room_token: Optional[str] = None   # Format: XXXX
+        self.room_token: Optional[str] = None
+        self.room_token_hint: Optional[str] = None
 
     def add_participant(self, participant: Participant) -> bool:
         if len(self.participants) >= self.max_participants:
@@ -69,7 +68,7 @@ class PrivateRoom:
         self.messages.append(message)
 
     def is_expired(self) -> bool:
-        return datetime.UTC() > self.expires_at
+        return datetime.now(UTC) > self.expires_at
 
     def to_dict(self) -> dict:
         return {

@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field, validator
+from enum import Enum
 from datetime import datetime
 import re
 from typing import AsyncGenerator

@@ -7,6 +7,7 @@
     <base href="/">
     <link rel="stylesheet" href="static/css/global.css">
     <link rel="stylesheet" href="static/css/chat/create-private-chatroom.css">
+    <link rel="icon" type="image/svg+xml" href="static/images/favicon.svg">
 </head>
 <body>
     <div class="container">
@@ -21,7 +22,7 @@
                     </button>
                     <div class="id-input-container" id="idInputContainer" style="display: none;">
                         <div class="code-row">
-                            <textarea id="customID" rows="3" maxlength="70" data-i18n-placeholder="create.idPlaceholder" placeholder="70 chars max"></textarea>
+                            <input type="text" id="customID" maxlength="70" data-i18n-placeholder="create.idPlaceholder" placeholder="eg, 'jane join me in this chat'" class="custom-input">
                             <div class="char-counter" id="idCounter"></div>
                         </div>
                     </div>

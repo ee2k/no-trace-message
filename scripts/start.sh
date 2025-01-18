@@ -28,9 +28,12 @@ validate_env() {
     esac
 }
 
+# Get project root directory
+PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
 # Create logs and pid directories if they don't exist
-mkdir -p logs
-mkdir -p .pid
+mkdir -p "$PROJECT_ROOT/logs"
+mkdir -p "$PROJECT_ROOT/.pid"
 
 # Check if port is in use
 if lsof -i :8000 > /dev/null 2>&1; then
@@ -38,14 +41,22 @@ if lsof -i :8000 > /dev/null 2>&1; then
 fi
 
 # Check if already running
-if [ -f .pid/uvicorn.pid ]; then
-    pid=$(cat .pid/uvicorn.pid)
+if [ -f "$PROJECT_ROOT/.pid/uvicorn.pid" ]; then
+    pid=$(cat "$PROJECT_ROOT/.pid/uvicorn.pid")
     if ps -p $pid > /dev/null 2>&1; then
         error_exit "Server is already running with PID: $pid"
     else
         # Remove stale PID file
-        rm .pid/uvicorn.pid
+        rm "$PROJECT_ROOT/.pid/uvicorn.pid"
     fi
+fi
+
+# Check Python version
+REQUIRED_PYTHON="Python 3.11.7"
+CURRENT_PYTHON=$(python3 --version)
+
+if [ "$CURRENT_PYTHON" != "$REQUIRED_PYTHON" ]; then
+    error_exit "Wrong Python version. Required: $REQUIRED_PYTHON, Found: $CURRENT_PYTHON"
 fi
 
 # Prompt for environment selection
@@ -59,9 +70,9 @@ fi
 # Export the environment variable so it's available to load_env.sh
 export ENVIRONMENT
 
-# Start the server explicitly without sudo
-nohup ./scripts/load_env.sh --port 8000 > ./logs/app.log 2>&1 & 
+# Start the server using the virtual environment Python
+nohup bash "$PROJECT_ROOT/scripts/load_env.sh" --port 8000 > "$PROJECT_ROOT/logs/app.log" 2>&1 & 
 
 # Save the PID
-echo $! > .pid/uvicorn.pid
+echo $! > "$PROJECT_ROOT/.pid/uvicorn.pid"
 success_msg "Server started with PID: $!" 

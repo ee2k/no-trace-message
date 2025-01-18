@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
 from models.enums import APITags
 from routes.message.message import router as message_router
-from backend.routes.chat.chatroom import router as private_room_router
+from routes.chat.chatroom import router as private_room_router
 from services.statistics import Statistics
 
 api_router = APIRouter()

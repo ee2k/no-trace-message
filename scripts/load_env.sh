@@ -19,14 +19,21 @@ BACKEND_DIR="$PROJECT_ROOT/backend"
 # Check if virtual environment exists, create if it doesn't
 if [ ! -d "$PROJECT_ROOT/venv" ]; then
     echo "Creating virtual environment..."
-    python3 -m venv "$PROJECT_ROOT/venv"
+    python3.11 -m venv "$PROJECT_ROOT/venv"
 fi
 
 # Activate virtual environment
 source "$PROJECT_ROOT/venv/bin/activate"
 
+# Verify Python version after activation
+PYTHON_VERSION=$(python3 --version)
+if [[ "$PYTHON_VERSION" != "Python 3.11.7" ]]; then
+    echo "Error: Wrong Python version after venv activation. Found: $PYTHON_VERSION"
+    exit 1
+fi
+
 # Install requirements if needed
-if [ ! -f "$PROJECT_ROOT/venv/lib/python3*/site-packages/uvicorn" ]; then
+if [ ! -f "$PROJECT_ROOT/venv/lib/python3.11/site-packages/uvicorn" ]; then
     echo "Installing requirements..."
     pip install -r "$PROJECT_ROOT/requirements.txt"
 fi
@@ -38,7 +45,7 @@ if [ -z "$ENVIRONMENT" ]; then
 fi
 
 # Copy environment file to backend directory
-if [ ! -f "$PROJECT_ROOT/.env.$ENVIRONMENT" ]; then
+if [ ! -f "$PROJECT_ROOT/env/.env.$ENVIRONMENT" ]; then
     echo "Error: .env.$ENVIRONMENT file not found"
     exit 1
 fi
@@ -48,6 +55,7 @@ cp "$PROJECT_ROOT/env/.env.$ENVIRONMENT" "$BACKEND_DIR/.env"
 echo "Current directory: $(pwd)"
 echo "Project root: $PROJECT_ROOT"
 echo "Python path: $(which python)"
+echo "Python version: $(python --version)"
 echo "Uvicorn path: $(which uvicorn)"
 
 # Change to backend directory
@@ -61,7 +69,7 @@ fi
 
 # Start uvicorn with hot reload in development
 if [ "$ENVIRONMENT" = "development" ]; then
-    exec uvicorn main:app --reload "$@"
+    exec uvicorn main:app --reload --host 0.0.0.0 --port "${1:-8000}" "$@"
 else
-    exec uvicorn main:app "$@"
+    exec uvicorn main:app --host 0.0.0.0 --port "${1:-8000}" "$@"
 fi

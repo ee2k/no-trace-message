@@ -4,7 +4,7 @@ import { loadComponent } from '../utils/components.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Load header component
-    await loadComponent('headerComponent', '/header');
+    await loadComponent('headerComponent', '/components/header');
     
     // Initialize global features
     initSvgIcons();
@@ -25,15 +25,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Show container before animation
         if (isHidden) {
             idInputContainer.style.display = 'block';
-            // Small delay to ensure display: block is applied
             setTimeout(() => {
                 idInputContainer.classList.add('show');
             }, 10);
         } else {
             idInputContainer.classList.remove('show');
-            // Hide after animation completes
             setTimeout(() => {
                 idInputContainer.style.display = 'none';
+                customID.value = ''; // Clear the textarea when folded
+                idCounter.textContent = 70; // Reset character counter
             }, 300);
         }
     });
@@ -56,15 +56,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Show container before animation
         if (isHidden) {
             tokenInputContainer.style.display = 'block';
-            // Small delay to ensure display: block is applied
             setTimeout(() => {
                 tokenInputContainer.classList.add('show');
             }, 10);
         } else {
             tokenInputContainer.classList.remove('show');
-            // Hide after animation completes
             setTimeout(() => {
                 tokenInputContainer.style.display = 'none';
+                customToken.value = ''; // Clear the textarea when folded
+                tokenCounter.textContent = 70; // Reset character counter
+                tokenHint.value = ''; // Clear token hint
+                hintCounter.textContent = 70; // Reset hint counter
             }, 300);
         }
     });
@@ -88,6 +90,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         const token = customToken.value.trim();
         const hint = tokenHint.value.trim();
 
+        // Check if the user has chosen to use custom chatroom ID or token
+        const isCustomIDActive = customIDBtn.classList.contains('active');
+        const isCustomTokenActive = customTokenBtn.classList.contains('active');
+
+        // Validation checks only if the corresponding toggle is active
+        if (isCustomIDActive && !customRoomId) {
+            alert('Please enter at least 1 char for Custom Chatroom ID.');
+            return;
+        }
+
+        if (isCustomTokenActive && !token) {
+            alert('Please enter at least 1 char for Access Token.');
+            return;
+        }
+
         try {
             const response = await fetch('/api/chat/private_room/create', {
                 method: 'POST',
@@ -95,9 +112,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    custom_id: customRoomId || undefined,
-                    token: token || undefined,
-                    token_hint: hint || undefined
+                    room_id: customRoomId || undefined,
+                    room_token: token || undefined,
+                    room_token_hint: hint || undefined
                 })
             });
 

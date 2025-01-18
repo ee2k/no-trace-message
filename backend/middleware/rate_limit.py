@@ -2,7 +2,8 @@ from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from datetime import datetime, timedelta
 from collections import defaultdict
-from utils.error_codes import ErrorCodes, CODE, STATUS_CODES
+from utils.msg_error_codes import ErrorCodes, STATUS_CODES
+from utils.constants import CODE
 import logging
 import os
 from dotenv import load_dotenv

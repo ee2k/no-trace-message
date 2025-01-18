@@ -36,4 +36,21 @@ h1 {
     background-color: var(--bg-secondary);
     margin: 1rem auto;
     width: 90%;
-} 
+}
+
+/* For very small screens*/
+@media (max-width: 428px) {
+    .subtitle {
+        margin: 0.5rem 0 0.2rem;
+        font-size: 0.8rem;
+    }
+    
+    .features {
+        gap: 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .feature-item {
+        gap: 0.2rem;
+    }
+}

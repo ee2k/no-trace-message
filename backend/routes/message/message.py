@@ -9,7 +9,8 @@ import traceback
 from pydantic import BaseModel
 import logging
 from fastapi.responses import StreamingResponse
-from utils.error_codes import ErrorCodes, CODE, STATUS_CODES
+from utils.msg_error_codes import ErrorCodes, STATUS_CODES
+from utils.constants import CODE
 
 logger = logging.getLogger(__name__)
 
