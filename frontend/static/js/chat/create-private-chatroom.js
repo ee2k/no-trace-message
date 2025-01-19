@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupCounter(tokenHint, hintCounter, 70);
 
     // Modify the existing room creation handler
-    document.getElementById('createBtn').addEventListener('click', async () => {
+    $('#createBtn').addEventListener('click', async () => {
         const customRoomId = customID.value.trim();
         const token = customToken.value.trim();
         const hint = tokenHint.value.trim();
@@ -121,7 +121,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!response.ok) throw new Error('Failed to create room');
 
             const data = await response.json();
-            window.location.href = `/private-chatroom-created`;
+            // Store data in sessionStorage before redirect
+            sessionStorage.setItem('current_room_id', data.room_id);
+            if (data.room_token) {
+                sessionStorage.setItem(`room_token_${data.room_id}`, data.room_token);
+            }
+            if (data.room_token_hint) {
+                sessionStorage.setItem(`room_token_hint_${data.room_id}`, data.room_token_hint);
+            }
+            window.location.href = '/private-chatroom-created';
         } catch (error) {
             console.error('Error creating room:', error);
             alert('Failed to create room. Please try again.');

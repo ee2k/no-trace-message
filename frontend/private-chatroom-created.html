@@ -44,7 +44,7 @@
                 <!-- Basic Link Section -->
                 <div class="share-section">
                     <h3>Basic Room Link</h3>
-                    <p class="hint-text">Share link and token separately for better security</p>
+                    <p class="hint-text">Share link and token separately</p>
                     <div class="url-box">
                         <span id="basicLink"></span>
                         <div class="button-group">
@@ -61,16 +61,22 @@
                             </button>
                         </div>
                     </div>
-                    <div class="token-box">
+                    <div class="token-box" style="display: none;">
+                        <p class="hint-text">Share token separately for better security</p>
                         <span id="roomToken"></span>
-                        <button class="copy-btn" data-clipboard="roomToken" title="Copy">
-                            <div class="btn-content">
-                                <svg class="copy-icon"><use href="static/images/copy.svg#icon"></use></svg>
-                            </div>
-                            <div class="btn-content-copied" style="display: none;">
-                                <svg class="copy-icon"><use href="static/images/checkmark.svg#icon"></use></svg>
-                            </div>
-                        </button>
+                        <div class="button-group">
+                            <button class="copy-btn" data-clipboard="roomToken" title="Copy">
+                                <div class="btn-content">
+                                    <svg class="copy-icon"><use href="static/images/copy.svg#icon"></use></svg>
+                                </div>
+                                <div class="btn-content-copied" style="display: none;">
+                                    <svg class="copy-icon"><use href="static/images/checkmark.svg#icon"></use></svg>
+                                </div>
+                            </button>
+                            <button class="share-btn" style="display: none;" title="Share">
+                                <svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg>
+                            </button>
+                        </div>
                     </div>
                     <div id="tokenHintSection" class="token-hint" style="display: none;">
                         <p>Token hint: <span id="tokenHint"></span></p>
@@ -79,40 +85,53 @@
 
                 <!-- Separate Info Section -->
                 <div class="share-section">
-                    <h3>Separate Information (Most Secure)</h3>
+                    <h3>Separate Info (Most Secure)</h3>
                     <p class="hint-text">Share each piece of information separately</p>
                     <div class="url-box">
                         <span id="baseLink"></span>
-                        <button class="copy-btn" data-clipboard="baseLink" title="Copy">
-                            <div class="btn-content">
-                                <svg class="copy-icon"><use href="static/images/copy.svg#icon"></use></svg>
-                            </div>
-                            <div class="btn-content-copied" style="display: none;">
-                                <svg class="copy-icon"><use href="static/images/checkmark.svg#icon"></use></svg>
-                            </div>
-                        </button>
+                        <div class="button-group">
+                            <button class="copy-btn" data-clipboard="baseLink" title="Copy">
+                                <div class="btn-content">
+                                    <svg class="copy-icon"><use href="static/images/copy.svg#icon"></use></svg>
+                                </div>
+                                <div class="btn-content-copied" style="display: none;">
+                                    <svg class="copy-icon"><use href="static/images/checkmark.svg#icon"></use></svg>
+                                </div>
+                            </button>
+                            <button class="share-btn" style="display: none;" title="Share">
+                                <svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg>
+                            </button>
+                        </div>
                     </div>
                     <div class="token-box">
                         <span id="roomId"></span>
-                        <button class="copy-btn" data-clipboard="roomId" title="Copy">
-                            <div class="btn-content">
-                                <svg class="copy-icon"><use href="static/images/copy.svg#icon"></use></svg>
-                            </div>
-                            <div class="btn-content-copied" style="display: none;">
-                                <svg class="copy-icon"><use href="static/images/checkmark.svg#icon"></use></svg>
-                            </div>
-                        </button>
+                        <div class="button-group">
+                            <button class="copy-btn" data-clipboard="roomId" title="Copy">
+                                <div class="btn-content">
+                                    <svg class="copy-icon"><use href="static/images/copy.svg#icon"></use></svg>
+                                </div>
+                                <div class="btn-content-copied" style="display: none;">
+                                    <svg class="copy-icon"><use href="static/images/checkmark.svg#icon"></use></svg>
+                                </div>
+                            </button>
+                            <button class="share-btn" style="display: none;" title="Share">
+                                <svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg>
+                            </button>
+                        </div>
                     </div>
-                    <div class="token-box">
+                    <div class="token-box" style="display: none;">
                         <span id="separateToken"></span>
-                        <button class="copy-btn" data-clipboard="separateToken" title="Copy">
-                            <div class="btn-content">
-                                <svg class="copy-icon"><use href="static/images/copy.svg#icon"></use></svg>
-                            </div>
-                            <div class="btn-content-copied" style="display: none;">
-                                <svg class="copy-icon"><use href="static/images/checkmark.svg#icon"></use></svg>
-                            </div>
-                        </button>
+                        <div class="button-group">
+                            <button class="copy-btn" data-clipboard="separateToken" title="Copy">
+                                <div class="btn-content"><svg class="copy-icon"><use href="static/images/copy.svg#icon"></use></svg></div>
+                                <div class="btn-content-copied" style="display: none;">
+                                    <svg class="copy-icon"><use href="static/images/checkmark.svg#icon"></use></svg>
+                                </div>
+                            </button>
+                            <button class="share-btn" style="display: none;" title="Share">
+                                <svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
 

@@ -5,28 +5,44 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize global features
     initSvgIcons();
 
-    // Get room details from URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const roomId = urlParams.get('room');
-    const token = urlParams.get('token');
-    const tokenHint = urlParams.get('hint');
+    // Get room details from sessionStorage
+    const roomId = sessionStorage.getItem('current_room_id');
+    if (!roomId) {
+        alert('Room ID not found');
+        return;
+    }
+
+    const token = sessionStorage.getItem(`room_token_${roomId}`);
+    const tokenHint = sessionStorage.getItem(`room_token_hint_${roomId}`);
 
     // Base URL for the chat application
     const baseUrl = window.location.origin;
     
     // Set up all the links and information
-    const fullLink = `${baseUrl}/join-chatroom/${roomId}?token=${token}`;
-    const basicLink = `${baseUrl}/join-chatroom/${roomId}`;
+    const fullLink = token 
+        ? `${baseUrl}/join-private-chatroom/${roomId}?token=${token}`
+        : `${baseUrl}/join-private-chatroom/${roomId}`;
+    const basicLink = `${baseUrl}/join-private-chatroom/${roomId}`;
+    const baseLink = `${baseUrl}/join-private-chatroom`;
     
     // Populate spans
     $('#fullLink').textContent = fullLink;
     $('#basicLink').textContent = basicLink;
-    $('#roomToken').textContent = token;
-    $('#baseLink').textContent = `${baseUrl}/join-chatroom`;
+    $('#baseLink').textContent = baseLink;
     $('#roomId').textContent = roomId;
-    $('#separateToken').textContent = token;
 
-    // Show/hide token hint section based on whether it exists
+    // Handle token-related elements
+    const tokenBox = $('.token-box');
+    const separateTokenBox = $('.token-box:last-child');
+    
+    if (token) {
+        $('#roomToken').textContent = token;
+        $('#separateToken').textContent = token;
+        tokenBox.style.display = 'flex';
+        separateTokenBox.style.display = 'flex';
+    }
+
+    // Show/hide token hint section
     const tokenHintSection = $('#tokenHintSection');
     if (tokenHint) {
         $('#tokenHint').textContent = tokenHint;
@@ -88,4 +104,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     $('#joinBtn').addEventListener('click', () => {
         window.location.href = `/chat?room=${roomId}&token=${token}`;
     });
+
+    // Clean up sessionStorage after successful load
+    sessionStorage.removeItem('current_room_id');
+    if (token) {
+        sessionStorage.removeItem(`room_token_${roomId}`);
+    }
+    if (tokenHint) {
+        sessionStorage.removeItem(`room_token_hint_${roomId}`);
+    }
 });

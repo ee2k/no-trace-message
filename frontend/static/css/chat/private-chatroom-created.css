@@ -111,16 +111,15 @@ footer {
 }
 
 .success-container {
-    max-width: 600px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 1.5rem;
 }
 
 .success-header {
     display: flex;
     align-items: center;
     gap: 1rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     justify-content: center;
 }
 
@@ -166,7 +165,6 @@ footer {
     flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
     font-family: monospace;
 }
 
@@ -193,7 +191,6 @@ footer {
 }
 
 .actions {
-    margin-top: 2rem;
     display: flex;
     justify-content: center;
 }
@@ -223,7 +220,7 @@ footer {
 
     .url-box {
         flex-wrap: wrap;
-        flex-direction: column;
+        /* flex-direction: column; */
         align-items: stretch;
         gap: 0.75rem;
     }
@@ -238,6 +235,9 @@ footer {
     }
 }
 @media (max-width: 428px) {
+    .container {
+        padding: 1rem 1rem;
+    }
     .subtitle {
         margin: 0.5rem 0 0.2rem;
         font-size: 0.8rem;
