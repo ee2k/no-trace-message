@@ -163,7 +163,6 @@ footer {
 
 .url-box span, .token-box span {
     flex: 1;
-    overflow: hidden;
     text-overflow: ellipsis;
     font-family: monospace;
 }

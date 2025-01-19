@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error('Failed to create room');
 
             const data = await response.json();
-            window.location.href = `/chat?room=${data.room_id}&token=${data.token}&show_share=true`;
+            window.location.href = `/chatroom/${data.room_id}&token=${data.token}&show_share=true`;
         } catch (error) {
             console.error('Error creating room:', error);
             alert('Failed to create room. Please try again.');
