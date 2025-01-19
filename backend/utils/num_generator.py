@@ -3,7 +3,7 @@ import string
 import secrets
 from typing import Callable
 
-def generate_message_id(
+def generate_id(
     length: int = 16,
     exists_check: Callable[[str], bool] = lambda _: False,
     max_attempts: int = 5
@@ -22,7 +22,7 @@ def generate_message_id(
             
     raise RuntimeError(f"Failed to generate unique message ID after {max_attempts} attempts")
 
-def generate_short_message_id(
+def generate_simple_id(
     length: int = 10,
     exists_check: Callable[[str], bool] = lambda _: False,
     max_attempts: int = 5

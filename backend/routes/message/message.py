@@ -3,7 +3,7 @@ from typing import List, Optional
 from models.message import Message
 from services.message_store import MessageStore
 from datetime import datetime, timedelta
-from utils.num_generator import generate_message_id
+from utils.num_generator import generate_id
 import base64
 import traceback
 from pydantic import BaseModel
@@ -102,7 +102,8 @@ async def create_message(
                 await img.seek(0)
 
         # Generate message ID with collision checking
-        message_id = generate_message_id(
+        message_id = generate_id(
+            length=16,
             exists_check=lambda id: id in message_store.messages
         )
         

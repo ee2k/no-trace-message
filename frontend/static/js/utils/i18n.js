@@ -107,6 +107,15 @@ class I18nManager {
             element.placeholder = translation;
         }
     });
+
+    // Handle titles
+    $$('[data-i18n-title]').forEach(element => {
+      const key = element.dataset.i18nTitle;
+      const translation = this.t(key);
+      if (translation) {
+          element.title = translation;
+      }
+  });
   }
 
   getExpiryTimes() {

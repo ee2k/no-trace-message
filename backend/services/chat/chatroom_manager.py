@@ -1,4 +1,5 @@
 from models.chat.chatroom import PrivateRoom
+from utils.num_generator import generate_id
 from datetime import datetime, UTC
 from typing import Dict, Optional
 import secrets
@@ -58,20 +59,12 @@ class ChatroomManager:
             )
             self._rooms[room_id] = room
             return room
-            
+        
         # Generate random room ID if not provided
-        attempts = 0
-        while attempts < self._max_collision_attempts:
-            generated_id = secrets.token_urlsafe(12)
-            if generated_id not in self._rooms:
-                room = PrivateRoom(
-                    room_id=generated_id
-                )
-                self._rooms[generated_id] = room
-                return room
-            attempts += 1
-            
-        raise RuntimeError("Failed to generate unique room ID")
+        generated_id = generate_id(length=16, exists_check=lambda id: id in self._rooms)
+        room = PrivateRoom(room_id=generated_id)
+        self._rooms[generated_id] = room
+        return room
 
     def validate_room_token(self, room_id: str, token: str) -> bool:
         """Validate room token"""
