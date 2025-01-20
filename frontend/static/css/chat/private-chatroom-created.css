@@ -163,8 +163,10 @@ footer {
 
 .url-box span, .token-box span {
     flex: 1;
+    overflow: hidden;
     text-overflow: ellipsis;
     font-family: monospace;
+    min-width: 0;
 }
 
 .token-box span {
@@ -178,10 +180,7 @@ footer {
 }
 
 .token-hint {
-    margin-top: 1rem;
-    padding: 0.75rem 1rem;
-    background: var(--bg-color);
-    border-radius: 6px;
+    margin-top: 0.75rem;
     color: var(--text-secondary);
 }
 
@@ -209,28 +208,42 @@ footer {
 .button.primary:hover {
     background: var(--accent-color-dark);
 }
+/* Add these styles */
+.url-box p, .token-box p {
+    color: var(--text-secondary);
+    margin: 0;
+    min-width: 100px;  /* Ensure consistent width for labels */
+}
 
 /* Always put screen size media queries at the end of the file */
 /* For very small screens and mobile devices */
 @media (max-width: 600px) {
+    .container {
+        padding: 0.5rem;
+    }
+
     .success-container {
         padding: 1rem;
     }
 
-    .url-box {
-        flex-wrap: wrap;
-        /* flex-direction: column; */
-        align-items: stretch;
-        gap: 0.75rem;
+    .share-section {
+        padding: 1rem;
     }
 
-    .url-box span {
-        width: 100%;
+    .url-box, .token-box {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .url-box p, .token-box p {
+        margin-bottom: 0.5rem;
     }
 
     .button-group {
-        width: 100%;
+        display: flex;
         justify-content: center;
+        gap: 0.5rem;
+        width: 100%;
     }
 }
 @media (max-width: 428px) {
@@ -251,6 +264,22 @@ footer {
         gap: 0.2rem;
     }
     .success-container {
-        padding: 0rem;
+        padding: 0.5rem;
+    }
+
+    .share-section {
+        padding: 0.75rem;
+    }
+
+    .url-box, .token-box {
+        padding: 0.5rem;
+    }
+
+    h3 {
+        font-size: 1rem;
+    }
+
+    .hint-text {
+        font-size: 0.8rem;
     }
 }

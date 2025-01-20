@@ -37,7 +37,7 @@ class SuccessPage {
         this.tokenHintSection = $('#tokenHintSection');
         
         this.setupCopyButtons();
-        this.setupShareButton();
+        this.setupShareButtons();
         this.loadMessageMeta().then(() => {
             // Only remove from sessionStorage after successful load
             sessionStorage.removeItem('current_message_id');
@@ -72,7 +72,35 @@ class SuccessPage {
             });
         });
     }
-    
+
+    setupShareButtons() {
+        if (!navigator.share) {
+            return;
+        }
+
+        // Show all share buttons if Web Share API is supported
+        $$('.share-btn').forEach(btn => {
+            btn.style.display = 'flex';
+            
+            btn.addEventListener('click', async () => {
+                const targetId = btn.previousElementSibling.dataset.clipboard;
+                const text = $('#' + targetId).textContent;
+                const title = i18n.t('common.header');
+                
+                try {
+                    await navigator.share({
+                        title: title,
+                        text: `${title}\n${text}`,
+                    });
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        console.error('Share failed:', err);
+                    }
+                }
+            });
+        });
+    }
+
     async loadMessageMeta() {
         try {
             const token = sessionStorage.getItem(`msg_token_${this.messageId}`);
@@ -133,31 +161,6 @@ class SuccessPage {
             console.error('Error loading message metadata:', error);
             alert(i18n.t('message.errors.SERVER_ERROR'));
         }
-    }
-    
-    setupShareButton() {
-        const shareBtn = $('.share-btn');
-        
-        if (!navigator.share) {
-            return;
-        }
-
-        // Show button if share API is supported
-        shareBtn.style.display = 'flex';
-
-        // Share handler
-        shareBtn.addEventListener('click', async () => {
-            try {
-                const title = i18n.t('common.header');
-                await navigator.share({
-                    title: title,
-                    text: title,
-                    url: this.messageUrl.textContent
-                });
-            } catch (err) {
-                console.log('Share failed:', err);
-            }
-        });
     }
 }
 

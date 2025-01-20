@@ -48,14 +48,19 @@
                 </div>
 
                 <div id="tokenSection" class="token-section" style="display: none;">
-                    <p data-i18n="success.token.instruction">Please pass the one-time token securely :</p>
+                    <p data-i18n="success.token.instruction">Please pass the one-time token securely:</p>
                     <div class="token-box">
                         <span id="messageToken">your-custom-token</span>
-                        <button class="copy-btn" data-clipboard="messageToken">
-                            <svg class="copy-icon">
-                                <use href="static/images/copy.svg#icon"></use>
-                            </svg>
-                            <span data-i18n="success.share.copy">Copy</span>
+                        <button class="copy-btn" data-clipboard="messageToken" title="Copy" data-i18n-title="success.share.copy">
+                            <div class="btn-content">
+                                <svg class="copy-icon"><use href="static/images/copy.svg#icon"></use></svg>
+                            </div>
+                            <div class="btn-content-copied" style="display: none;">
+                                <svg class="copy-icon"><use href="static/images/checkmark.svg#icon"></use></svg>
+                            </div>
+                        </button>
+                        <button class="share-btn" style="display: none;" title="Share" data-i18n-title="success.share.share">
+                            <svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg>
                         </button>
                     </div>
                     <div id="tokenHintSection" class="token-hint" style="display: none;">

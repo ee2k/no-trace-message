@@ -22,7 +22,7 @@
                 <!-- Full Link Section -->
                 <div class="share-section">
                     <h3>Complete Room Link</h3>
-                    <p class="hint-text">Share this link for direct access (includes token)</p>
+                    <p class="hint-text">For direct access (includes token if present)</p>
                     <div class="url-box">
                         <span id="fullLink"></span>
                         <div class="button-group">
@@ -39,12 +39,15 @@
                             </button>
                         </div>
                     </div>
+                    <div id="fullLinkTokenHintSection" class="token-hint" style="display: none;">
+                        <p>Token hint: <span id="fullLinkTokenHint"></span></p>
+                    </div>
                 </div>
 
                 <!-- Basic Link Section -->
                 <div class="share-section" style="display: none;">
                     <h3>Basic Room Link</h3>
-                    <p class="hint-text">Share link and token separately</p>
+                    <p class="hint-text">Share link and token separately (more secure)</p>
                     <div class="url-box">
                         <span id="basicLink"></span>
                         <div class="button-group">
@@ -88,6 +91,7 @@
                     <h3>Separate Info (Most Secure)</h3>
                     <p class="hint-text">Share each piece of information separately</p>
                     <div class="url-box">
+                        <p>Base URL:</p>
                         <span id="baseLink"></span>
                         <div class="button-group">
                             <button class="copy-btn" data-clipboard="baseLink" title="Copy">
@@ -104,6 +108,7 @@
                         </div>
                     </div>
                     <div class="token-box">
+                        <p>Chatroom ID:</p>
                         <span id="roomId"></span>
                         <div class="button-group">
                             <button class="copy-btn" data-clipboard="roomId" title="Copy">
@@ -120,6 +125,7 @@
                         </div>
                     </div>
                     <div class="token-box" style="display: none;">
+                        <p>Token:</p>
                         <span id="separateToken"></span>
                         <div class="button-group">
                             <button class="copy-btn" data-clipboard="separateToken" title="Copy">
@@ -132,6 +138,9 @@
                                 <svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg>
                             </button>
                         </div>
+                    </div>
+                    <div id="tokenHintSection" class="token-hint" style="display: none;">
+                        <p>Token hint: <span id="tokenHint"></span></p>
                     </div>
                 </div>
 

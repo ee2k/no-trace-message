@@ -31,7 +31,7 @@ async def create_private_room(request: CreateRoomRequest):
                 detail={CODE: ChatErrorCodes.INVALID_ROOM_ID.value}
             )
     
-    if request.room_token and len(request.room_token) < 6:
+    if request.room_token and len(request.room_token) < 1:
         raise HTTPException(
             status_code=STATUS_CODES[ChatErrorCodes.INVALID_TOKEN],
             detail={CODE: ChatErrorCodes.INVALID_TOKEN.value}

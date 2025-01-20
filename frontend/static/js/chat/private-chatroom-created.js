@@ -1,5 +1,5 @@
 import { initSvgIcons } from '../global.js';
-import { $ } from '../utils/dom.js';
+import { $, $$ } from '../utils/dom.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Initialize global features
@@ -19,11 +19,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const baseUrl = window.location.origin;
     
     // Set up all the links and information
-    const fullLink = token 
-        ? `${baseUrl}/join-private-chatroom/${roomId}?token=${token}`
-        : `${baseUrl}/join-private-chatroom/${roomId}`;
-    const basicLink = `${baseUrl}/join-private-chatroom/${roomId}`;
     const baseLink = `${baseUrl}/join-private-chatroom`;
+    const basicLink = `${baseLink}/${roomId}`;
+    const fullLink = token 
+        ? `${basicLink}?token=${token}`
+        : basicLink;
     
     // Populate spans
     $('#fullLink').textContent = fullLink;
@@ -31,14 +31,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     $('#baseLink').textContent = baseLink;
     $('#roomId').textContent = roomId;
 
-    // Handle token-related elements
-    const tokenBox = $('.token-box');
-    const separateTokenBox = $('.token-box:last-child');
-    
+    // Show/hide Basic Link Section based on token presence
+    const basicLinkSection = $('.share-section:nth-child(2)'); // Second share-section
     if (token) {
+        basicLinkSection.style.display = 'block';
         $('#roomToken').textContent = token;
+    }
+
+    // Handle token-related elements in Separate Info section
+    const separateTokenBox = $('.token-box:last-child');
+    if (token) {
         $('#separateToken').textContent = token;
-        tokenBox.style.display = 'flex';
         separateTokenBox.style.display = 'flex';
     }
 
@@ -50,7 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Setup copy buttons
-    document.querySelectorAll('.copy-btn').forEach(button => {
+    $$('.copy-btn').forEach(button => {
         button.addEventListener('click', async () => {
             const targetId = button.dataset.clipboard;
             const text = $('#' + targetId).textContent;
@@ -79,17 +82,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Setup share buttons if Web Share API is available
     if (navigator.share) {
-        document.querySelectorAll('.share-btn').forEach(btn => {
+        $$('.share-btn').forEach(btn => {
             btn.style.display = 'flex';
             btn.addEventListener('click', async () => {
                 const targetId = btn.previousElementSibling.dataset.clipboard;
                 const text = $('#' + targetId).textContent;
+                const title = 'Join Private Chatroom';
                 
                 try {
                     await navigator.share({
-                        title: 'Join Private Chatroom',
-                        text: 'Join me in this private chat room',
-                        url: text
+                        title: title,
+                        text: text
                     });
                 } catch (err) {
                     if (err.name !== 'AbortError') {

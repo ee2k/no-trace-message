@@ -189,4 +189,7 @@
     .url-box span {
         width: 100%;
     }
+    .share-section {
+        padding: 1.2rem;
+    }
 }
