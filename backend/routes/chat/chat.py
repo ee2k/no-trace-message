@@ -12,10 +12,6 @@ routes = {
         "method": "GET",
         "summary": "Get chat history"
     },
-    "/{room_id}/clear": {
-        "method": "DELETE",
-        "summary": "Clear chat history"
-    },
     "/{room_id}/messages/{message_id}/read": {
         "method": "PUT",
         "summary": "Update message read status"

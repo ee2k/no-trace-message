@@ -16,21 +16,52 @@ const nouns = [
     'Tree', 'Sequoia', 'Rose', 'Lily', 'Daisy', 'Sunflower', 'Tulip', 'Orchid', 'Daffodil', 'Iris', 'Hyacinth', 'Dahlia', 'Poppy', 'Marigold', 'Poppy',
 ];
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Initialize global features
     initSvgIcons();
     
-    // Initialize page-specific features
+    // Get room ID from URL path
+    const pathParts = window.location.pathname.split('/');
+    const roomId = pathParts[pathParts.length - 1];
+
+    if (roomId) {
+        $('#roomId').value = roomId;
+        
+        try {
+            // Fetch room metadata
+            const response = await fetch(`/api/chat/room/${roomId}/meta`);
+            if (!response.ok) {
+                if (response.status === 404) {
+                    alert('Room not found. Please check the room ID.');
+                    return;
+                }
+                throw new Error('Failed to fetch room metadata');
+            }
+
+            const data = await response.json();
+            if (data.token_required) {
+                $('#tokenSection').style.display = 'block';
+                if (data.token_hint) {
+                    $('#tokenHint').textContent = data.token_hint;
+                    $('#tokenHintSection').style.display = 'block';
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching room metadata:', error);
+            alert('Failed to load room information. Please try again.');
+            return;
+        }
+    }
+
+    // Username input error handling
     $('#username').addEventListener('input', (e) => {
         e.target.classList.remove('input-error');
     });
 
-    const generateUsername = $('#generateUsername');
-
     // Generate random username
-    generateUsername.addEventListener('click', () => {
+    $('#generateUsername').addEventListener('click', () => {
         const username = `${adjectives[Math.floor(Math.random() * adjectives.length)]} ${nouns[Math.floor(Math.random() * nouns.length)]}`;
-        document.getElementById('username').value = username;
+        $('#username').value = username;
     });
 
     // Setup custom ID section
@@ -106,44 +137,69 @@ document.addEventListener('DOMContentLoaded', () => {
     setupCounter(customToken, tokenCounter, 70);
     setupCounter(tokenHint, hintCounter, 70);
 
-    // Modify the existing room creation handler
-    document.getElementById('createBtn').addEventListener('click', async () => {
-        const usernameInput = document.getElementById('username');
-        const username = usernameInput.value.trim();
-        const customRoomId = customID.value.trim();
-        const token = customToken.value.trim();
-        const hint = tokenHint.value.trim();
-        
+    // Join room handler
+    $('#joinBtn').addEventListener('click', async () => {
+        const username = $('#username').value.trim();
+        const roomIdValue = $('#roomId').value.trim();
+        const tokenValue = $('#token').value.trim();
+
         if (!username) {
-            usernameInput.classList.add('input-error');
-            usernameInput.focus();
+            $('#username').classList.add('input-error');
+            $('#username').focus();
             setTimeout(() => {
-                usernameInput.classList.remove('input-error');
+                $('#username').classList.remove('input-error');
+            }, 400);
+            return;
+        }
+
+        if (!roomIdValue) {
+            $('#roomId').classList.add('input-error');
+            $('#roomId').focus();
+            setTimeout(() => {
+                $('#roomId').classList.remove('input-error');
             }, 400);
             return;
         }
 
         try {
-            const response = await fetch('/api/chat/private_room/create', {
+            const response = await fetch('/api/chat/join', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     username,
-                    custom_id: customRoomId || undefined,
-                    token: token || undefined,
-                    token_hint: hint || undefined
+                    room_id: roomIdValue,
+                    token: tokenValue || undefined
                 })
             });
 
-            if (!response.ok) throw new Error('Failed to create room');
+            if (!response.ok) {
+                const errorData = await response.json();
+                let errorMessage = 'Failed to join room. Please try again.';
+                
+                switch (errorData.detail.code) {
+                    case 'INVALID_TOKEN':
+                        errorMessage = 'Invalid access token. Please check and try again.';
+                        break;
+                    case 'ROOM_NOT_FOUND':
+                        errorMessage = 'Room not found. Please check the room ID.';
+                        break;
+                    // Add more cases as needed
+                }
+                
+                alert(errorMessage);
+                throw new Error(errorData.detail.code);
+            }
 
             const data = await response.json();
-            window.location.href = `/chatroom/${data.room_id}&token=${data.token}&show_share=true`;
+            window.location.href = `/chatroom/${data.room_id}`;
         } catch (error) {
-            console.error('Error creating room:', error);
-            alert('Failed to create room. Please try again.');
+            console.error('Error joining room:', error);
+            // Only show generic error if it's not a handled error code
+            if (!error.message || !['INVALID_TOKEN', 'ROOM_NOT_FOUND'].includes(error.message)) {
+                alert('Failed to join room. Please try again.');
+            }
         }
     });
 });

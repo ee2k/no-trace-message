@@ -36,7 +36,7 @@
                     </button>
                     <div class="token-input-container" id="tokenInputContainer" style="display: none;">
                         <div class="code-row">
-                            <textarea id="customToken" rows="3" maxlength="70" placeholder="70 chars max"></textarea>
+                            <input type="text" id="customToken" maxlength="70" placeholder="Access token (70 chars max)" class="custom-input">
                             <div class="char-counter" id="tokenCounter"></div>
                         </div>
                         <div class="code-row">
@@ -46,7 +46,7 @@
                     </div>
                 </div>
 
-                <p class="legal-text" data-i18n="create.legal" data-i18n-html="true">By using this service, you agree to our <a href="static/i18n/en/tos.html" class="hyperlink" href="tos">Terms of Service</a> and <a href="static/i18n/en/privacy.html" class="hyperlink" href="privacy">Privacy Policy</a></p>
+                <p class="legal-text" data-i18n="create.legal" data-i18n-html="true">By using this service, you agree to our <a href="static/i18n/en/tos.html" class="hyperlink" href="tos" target="_blank">Terms of Service</a> and <a href="static/i18n/en/privacy.html" class="hyperlink" href="privacy" target="_blank">Privacy Policy</a></p>
                 <button id="createBtn" class="primary-button" data-i18n="create.createButton">Create Private Chatroom</button>
             </div>
 

@@ -6,8 +6,7 @@
     <title>NoTrace Chat - Private Room</title>
     <base href="/">
     <link rel="stylesheet" href="static/css/global.css">
-    <link rel="stylesheet" href="static/css/chat/chat.css">
-    <script type="module" src="static/js/chat/chat.js"></script>
+    <link rel="stylesheet" href="static/css/chat/chatroom.css">
 </head>
 <body>
     <div class="chat-container">
@@ -18,7 +17,6 @@
                 <span id="roomStatus"></span>
             </div>
             <div class="actions">
-                <button id="shareBtn">Share Room Link</button>
                 <div class="menu-container">
                     <button id="menuBtn" class="icon-button">
                         <svg class="menu-icon icon-primary" width="24" height="24">
@@ -26,11 +24,11 @@
                         </svg>
                     </button>
                     <div id="menuDropdown" class="menu-dropdown" hidden>
+                        <button class="menu-item" id="shareBtn">
+                            <span>Share Room Link</span>
+                        </button>
                         <button class="menu-item" id="muteBtn">
                             <span>Mute</span>
-                        </button>
-                        <button class="menu-item" id="clearHistoryBtn">
-                            <span>Clear History</span>
                         </button>
                         <button class="menu-item" id="leaveBtn">
                             <span>Leave Room</span>
@@ -92,5 +90,6 @@
         <p class="note">Links and codes expire in 1 hour if unused</p>
         <button class="close-btn" id="closeShareDialog">Close</button>
     </div>
+    <script type="module" src="static/js/chat/chatroom.js"></script>
 </body>
 </html>

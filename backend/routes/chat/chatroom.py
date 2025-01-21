@@ -149,3 +149,26 @@ async def delete_private_room(room_id: str):
     if not await private_room_manager.delete_private_room(room_id):
         raise HTTPException(status_code=404, detail="Room not found")
     return {"status": "ok"}
+
+@router.get("/{room_id}/meta", response_model=dict)
+async def get_room_meta(room_id: str):
+    """Get room metadata including token requirement and hint"""
+    try:
+        room = await private_room_manager.get_room(room_id)
+        if not room:
+            raise HTTPException(
+                status_code=STATUS_CODES[ChatErrorCodes.ROOM_NOT_FOUND],
+                detail={CODE: ChatErrorCodes.ROOM_NOT_FOUND.value}
+            )
+            
+        return {
+            "token_required": bool(room.room_token),
+            "token_hint": room.room_token_hint if room.room_token else None
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting room metadata: {str(e)}")
+        raise HTTPException(
+            status_code=STATUS_CODES[ChatErrorCodes.SERVER_ERROR],
+            detail={CODE: ChatErrorCodes.SERVER_ERROR.value}
+        )

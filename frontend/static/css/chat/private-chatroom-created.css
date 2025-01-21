@@ -150,7 +150,7 @@ footer {
     margin-bottom: 1rem;
 }
 
-.url-box, .token-box {
+.url-box, .room-box, .token-box {
     display: flex;
     align-items: center;
     gap: 1rem;
@@ -161,7 +161,13 @@ footer {
     margin-top: 0.5rem;
 }
 
-.url-box span, .token-box span {
+.url-box p, .room-box p, .token-box p {
+    margin: 0;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.url-box span, .room-box span, .token-box span {
     flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -182,10 +188,19 @@ footer {
 .token-hint {
     margin-top: 0.75rem;
     color: var(--text-secondary);
+    font-size: 0.85rem;
+    padding: 0.5rem;
 }
 
 .token-hint p {
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.token-hint span {
+    font-style: italic;
 }
 
 .actions {
@@ -213,6 +228,12 @@ footer {
     color: var(--text-secondary);
     margin: 0;
     min-width: 100px;  /* Ensure consistent width for labels */
+}
+
+.token-box p {
+    margin: 0;
+    color: var(--text-secondary);
+    white-space: nowrap;
 }
 
 /* Always put screen size media queries at the end of the file */
@@ -281,5 +302,10 @@ footer {
 
     .hint-text {
         font-size: 0.8rem;
+    }
+
+    .token-hint {
+        font-size: 0.75rem;
+        padding: 0.4rem;
     }
 }

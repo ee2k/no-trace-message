@@ -250,7 +250,7 @@
 }
 
 /* Header button styles */
-.menu-button, #shareBtn {
+.menu-button {
     background-color: transparent;
     border: none;
     padding: 0.5rem;
@@ -277,7 +277,7 @@
     opacity: 1;
 }
 
-.menu-button:hover, #shareBtn:hover {
+.menu-button:hover {
     background-color: transparent;
     opacity: 1;
 }

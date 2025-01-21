@@ -21,35 +21,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Set up all the links and information
     const baseLink = `${baseUrl}/join-private-chatroom`;
     const basicLink = `${baseLink}/${roomId}`;
-    const fullLink = token 
-        ? `${basicLink}?token=${token}`
-        : basicLink;
     
     // Populate spans
-    $('#fullLink').textContent = fullLink;
     $('#basicLink').textContent = basicLink;
     $('#baseLink').textContent = baseLink;
     $('#roomId').textContent = roomId;
 
-    // Show/hide Basic Link Section based on token presence
-    const basicLinkSection = $('.share-section:nth-child(2)'); // Second share-section
-    if (token) {
-        basicLinkSection.style.display = 'block';
-        $('#roomToken').textContent = token;
-    }
-
-    // Handle token-related elements in Separate Info section
-    const separateTokenBox = $('.token-box:last-child');
-    if (token) {
-        $('#separateToken').textContent = token;
-        separateTokenBox.style.display = 'flex';
-    }
-
-    // Show/hide token hint section
+    // Get all required elements
+    const basicTokenBox = $('#basicTokenBox');
     const tokenHintSection = $('#tokenHintSection');
-    if (tokenHint) {
-        $('#tokenHint').textContent = tokenHint;
-        tokenHintSection.style.display = 'block';
+
+    // Handle token display if present
+    if (token) {
+        // Show token in Basic Link Section
+        basicTokenBox.style.display = 'flex';
+        $('#roomToken').textContent = token;
+
+        // Show token in Separate Info Section
+        $('.token-box', $('#separateInfoSection')).style.display = 'flex';
+        $('#separateToken').textContent = token;
+
+        if (tokenHint) {
+            // Show token hint in Basic Link Section
+            $('#tokenHint').textContent = tokenHint;
+            tokenHintSection.style.display = 'block';
+
+            // Show token hint in Separate Info Section
+            $('#separateTokenHint').textContent = tokenHint;
+            $('#separateTokenHintSection').style.display = 'block';
+        }
     }
 
     // Setup copy buttons

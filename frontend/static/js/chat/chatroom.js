@@ -29,7 +29,7 @@ class ChatRoom {
         this.charCounter = document.createElement('div');
         this.charCounter.className = 'char-counter';
         this.charCounter.style.display = 'none';
-        document.querySelector('.chat-input').appendChild(this.charCounter);
+        $('.chat-input').append(this.charCounter);
 
         // Check if we should show share dialog on load
         const params = new URLSearchParams(window.location.search);
@@ -52,9 +52,9 @@ class ChatRoom {
         // }
 
         // Setup event listeners
-        document.getElementById('sendBtn').addEventListener('click', () => this.sendMessage());
-        document.getElementById('shareBtn').addEventListener('click', () => this.showShareDialog());
-        document.getElementById('leaveBtn').addEventListener('click', () => this.leaveRoom());
+        $('#sendBtn').addEventListener('click', () => this.sendMessage());
+        $('#shareBtn').addEventListener('click', () => this.showShareDialog());
+        $('#leaveBtn').addEventListener('click', () => this.leaveRoom());
         this.messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.sendMessage();
         });
@@ -74,9 +74,9 @@ class ChatRoom {
                 room: this.roomId,
                 token: this.token
             }));
-            const roomStatus = document.getElementById('roomStatus');
-            roomStatus.textContent = 'Connected';
-            roomStatus.classList.remove('connecting');
+            const roomStatus = $('#roomStatus');
+            roomStatus.text('Connected');
+            roomStatus.removeClass('connecting');
         };
 
         this.ws.onmessage = (event) => {
@@ -86,7 +86,7 @@ class ChatRoom {
 
         this.ws.onclose = () => {
             // Update room status with animated dots
-            const roomStatus = document.getElementById('roomStatus');
+            const roomStatus = $('#roomStatus');
             roomStatus.textContent = 'Reconnecting';
             roomStatus.classList.add('connecting');
             setTimeout(() => this.connectWebSocket(), 3000);
@@ -97,7 +97,7 @@ class ChatRoom {
         switch (data.type) {
             case 'join_success':
                 this.username = data.username;
-                document.getElementById('roomId').textContent = `Room: ${this.roomId}`;
+                $('#roomId').text(`Room: ${this.roomId}`);
                 
                 // Show share dialog if requested
                 if (this.showShareDialogOnConnect) {
@@ -167,10 +167,10 @@ class ChatRoom {
         
         // Pre-generate share URL
         const shareUrl = `${window.location.origin}/join?room=${this.roomId}`;
-        document.getElementById('shareUrl').value = shareUrl;
+        $('#shareUrl').val(shareUrl);
         
         // Optional: Auto-select the URL for easy copying
-        document.getElementById('shareUrl').select();
+        $('#shareUrl').select();
     }
 
     leaveRoom() {
@@ -203,20 +203,12 @@ class ChatRoom {
         });
 
         // Menu item handlers
-        document.getElementById('muteBtn').addEventListener('click', () => {
+        $('#muteBtn').addEventListener('click', () => {
             // Toggle mute logic here
             this.menuDropdown.hidden = true;
         });
 
-        document.getElementById('clearHistoryBtn').addEventListener('click', () => {
-            if (confirm('Clear all chat history?')) {
-                this.messages.innerHTML = '';
-                this.addSystemMessage('Chat history cleared');
-            }
-            this.menuDropdown.hidden = true;
-        });
-
-        document.getElementById('deleteRoomBtn').addEventListener('click', () => {
+        $('#deleteRoomBtn').addEventListener('click', () => {
             if (confirm('Are you sure to delete this room? This cannot be undone.')) {
                 this.ws.send(JSON.stringify({ type: 'delete_room' }));
                 // window.location.href = '/';

@@ -103,9 +103,6 @@ http {
         # Root directory for static files - adjust path to your local project
         root /Path/to/burning-message/frontend;
 
-        # Add index directive
-        index index.html;
-
         # Static assets - no rewriting
         location /static/ {
             #expires 1h;
@@ -129,14 +126,9 @@ http {
             proxy_set_header X-Forwarded-Proto $scheme;
         }
 
-        # Message URLs
-        location /message/ {
-            try_files $uri /message.html;
-        }
-
-        # Root redirect
-        location = / {
-            return 301 /create;
+        # HTML pages with matching filenames
+        location ~ ^/(message|chatroom|join-private-chatroom)/ {
+            try_files $uri /$1.html;
         }
 
         # Remove .html and .htm suffix for all other paths

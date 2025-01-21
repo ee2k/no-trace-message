@@ -118,7 +118,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                 })
             });
 
-            if (!response.ok) throw new Error('Failed to create room');
+            if (!response.ok) {
+                const responseData = await response.json();
+                let errorMessage = 'Failed to create room. Please try again.';
+                
+                switch (responseData.detail.code) {
+                    case 'ROOM_ID_EXISTS':
+                        errorMessage = 'This room ID is already taken. Please choose a different one.';
+                        break;
+                    case 'INVALID_ROOM_ID':
+                        errorMessage = 'Invalid room ID format. Please try a different one.';
+                        break;
+                    case 'INVALID_TOKEN':
+                        errorMessage = 'Invalid token format. Please try a different one.';
+                        break;
+                    // Add more cases as needed
+                }
+                
+                alert(errorMessage);
+                throw new Error(responseData.detail.code);
+            }
 
             const data = await response.json();
             // Store data in sessionStorage before redirect
@@ -132,7 +151,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.location.href = '/private-chatroom-created';
         } catch (error) {
             console.error('Error creating room:', error);
-            alert('Failed to create room. Please try again.');
+            // Only show generic error if it's not a handled error code
+            if (!error.message || !['ROOM_ID_EXISTS', 'INVALID_ROOM_ID', 'INVALID_TOKEN'].includes(error.message)) {
+                alert('Failed to create room. Please try again.');
+            }
         }
     });
 });
