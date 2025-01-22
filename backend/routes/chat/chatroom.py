@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from models.chat.chatroom import CreateRoomRequest, CreateRoomResponse, RoomValidationRequest, RoomValidationResponse, RoomStatusResponse, InviteResponse, JoinResponse, LeaveResponse, DeleteResponse
+from models.chat.chatroom import CreateRoomRequest, CreateRoomResponse, RoomValidationRequest, RoomValidationResponse, RoomStatusResponse, InviteResponse, JoinResponse, LeaveResponse, DeleteResponse, JoinRequest
 from services.chat.chatroom_manager import ChatroomManager
 from utils.chat_error_codes import ChatErrorCodes, STATUS_CODES
 from utils.constants import CODE
@@ -115,24 +115,47 @@ async def generate_private_room_invite(room_id: str, creator_token: str):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.post("/{room_id}/join", response_model=JoinResponse)
-async def join_private_room(room_id: str, username: str):
+@router.post("/join", response_model=JoinResponse)
+async def join_private_room(request: JoinRequest):
     try:
-        if not username or len(username) < 1:
+        # Validate room ID
+        if not request.room_id or len(request.room_id.strip()) < 1:
             raise HTTPException(
-                status_code=STATUS_CODES[ChatErrorCodes.INVALID_USERNAME],
-                detail={CODE: ChatErrorCodes.INVALID_USERNAME.value}
+                status_code=STATUS_CODES[ChatErrorCodes.INVALID_ROOM_ID],
+                detail={CODE: ChatErrorCodes.INVALID_ROOM_ID.value}
+            )
+        
+        # Validate room exists
+        room = await private_room_manager.get_room(request.room_id)
+        if not room:
+            raise HTTPException(
+                status_code=STATUS_CODES[ChatErrorCodes.ROOM_NOT_FOUND],
+                detail={CODE: ChatErrorCodes.ROOM_NOT_FOUND.value}
             )
             
-        result = await private_room_manager.add_private_room_participant(room_id, username, "pending")
+        # Validate token if required
+        if room.room_token and room.room_token != request.token:
+            raise HTTPException(
+                status_code=STATUS_CODES[ChatErrorCodes.INVALID_TOKEN],
+                detail={CODE: ChatErrorCodes.INVALID_TOKEN.value}
+            )
+        
+        # Add participant
+        result = await private_room_manager.add_private_room_participant(
+            request.room_id, 
+            request.user
+        )
+        
         if not result:
             raise HTTPException(
                 status_code=STATUS_CODES[ChatErrorCodes.ROOM_FULL],
                 detail={CODE: ChatErrorCodes.ROOM_FULL.value}
             )
-        return {"status": "ok"}
+            
+        return {"status": "ok", "room_id": request.room_id}
+        
     except Exception as e:
-        logger.error(f"Error joining room: {str(e)}")
+        logger.error(f"Error joining room {request.room_id}: {str(e)}")
         raise HTTPException(
             status_code=STATUS_CODES[ChatErrorCodes.SERVER_ERROR],
             detail={CODE: ChatErrorCodes.SERVER_ERROR.value}

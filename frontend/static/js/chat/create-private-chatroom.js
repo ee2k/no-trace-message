@@ -1,6 +1,7 @@
 import { initSvgIcons } from '../global.js';
 import { $ } from '../utils/dom.js';
 import { loadComponent } from '../utils/components.js';
+import { setupCounter } from '../utils/input.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Load header component
@@ -72,14 +73,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Setup character counters
-    function setupCounter(textarea, counter, maxLength) {
-        counter.textContent = maxLength;
-        textarea.addEventListener('input', () => {
-            const remaining = maxLength - textarea.value.length;
-            counter.textContent = remaining;
-        });
-    }
-
     setupCounter(customID, idCounter, 70);
     setupCounter(customToken, tokenCounter, 70);
     setupCounter(tokenHint, hintCounter, 70);

@@ -4,6 +4,8 @@ from routes.api import api_router
 from fastapi.responses import JSONResponse
 from pathlib import Path
 from middleware.rate_limit import RateLimiter
+from middleware.chat_rate_limit import ChatRateLimiter
+from constants import CONTENT_TYPE, APPLICATION_JSON
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -75,8 +77,13 @@ def get_cors_origins() -> List[str]:
 # always put RateLimiter before CORSMiddleware and routers
 app.add_middleware(
     RateLimiter,
-    ip_limit=10,        # 3 requests per minute per IP
-    window_size=60     # 1 minute window
+    limits={
+        "/message/": {"ip_limit": 10, "window_size": 60}
+    }
+)
+
+app.add_middleware(
+    ChatRateLimiter
 )
 
 # CORS middleware
@@ -100,11 +107,10 @@ async def add_security_headers(request: Request, call_next):
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "0"
-    # Security headers
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
-    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers[CONTENT_TYPE] = APPLICATION_JSON
     return response
 
 # Error handling - Order matters!

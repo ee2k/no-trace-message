@@ -45,7 +45,7 @@ footer {
 }
 
 .code-row + .code-row {
-    margin-top: 0.6rem;  /* Add top margin to hint textarea */
+    margin-top: 1rem;
 }
 
 .code-row input.custom-input {
@@ -166,10 +166,6 @@ footer {
 }
 
 /* When toggled */
-.toggle-button.active {
-    color: var(--accent-color);
-}
-
 .toggle-button.active .toggle-icon {
     transform: rotate(180deg);
 }

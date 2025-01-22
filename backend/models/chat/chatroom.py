@@ -3,6 +3,7 @@ from typing import Dict, List, Optional
 from .participant import Participant
 from .message import Message
 from pydantic import BaseModel, Field
+from .user import User
 
 class CreateRoomRequest(BaseModel):
     room_id: Optional[str] = Field(None, description="Custom Chatroom ID")
@@ -35,6 +36,11 @@ class LeaveResponse(BaseModel):
 
 class DeleteResponse(BaseModel):
     status: str
+
+class JoinRequest(BaseModel):
+    room_id: str
+    user: User
+    token: Optional[str] = None
 
 class PrivateRoom:
     def __init__(

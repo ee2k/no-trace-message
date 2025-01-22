@@ -1,5 +1,6 @@
 import { initSvgIcons } from '../global.js';
 import { $ } from '../utils/dom.js';
+import { setupCounter } from '../utils/input.js';
 
 const adjectives = [
     'Happy', 'Lucky', 'Sunny', 'Clever', 'Swift', 'Gloomy', 'Boring', 'Sleepy', 'Grumpy', 'Lazy', 'Dreamy', 'Silly', 'Witty', 'Clumsy', 'Brave', 'Shy', 'Wild', 'Calm', 'Quiet', 'Loud', 'Gentle', 'Bold', 'Wise', 'Fancy', 'Neat', 'Smart', 'Crazy', 'Smartass'
@@ -20,16 +21,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize global features
     initSvgIcons();
     
+    // Setup character counter for Room ID
+    setupCounter($('#roomId'), $('#roomIdCounter'), 70);
+
     // Get room ID from URL path
-    const pathParts = window.location.pathname.split('/');
-    const roomId = pathParts[pathParts.length - 1];
+    const url = new URL(window.location.href);
+    const pathParts = url.pathname.split('/').filter(Boolean); // Remove empty parts
+    
+    // Check if the path is exactly "/join-private-chatroom" or has a room ID
+    const isBaseRoute = pathParts.length === 1 && pathParts[0] === 'join-private-chatroom';
+    const roomId = isBaseRoute ? null : pathParts[pathParts.length - 1];
 
     if (roomId) {
         $('#roomId').value = roomId;
         
         try {
             // Fetch room metadata
-            const response = await fetch(`/api/chat/room/${roomId}/meta`);
+            const response = await fetch(`/api/chat/private_room/${roomId}/meta`);
             if (!response.ok) {
                 if (response.status === 404) {
                     alert('Room not found. Please check the room ID.');
@@ -64,85 +72,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         $('#username').value = username;
     });
 
-    // Setup custom ID section
-    const customIDBtn = $('#customIDBtn');
-    const idInputContainer = $('#idInputContainer');
-    const customID = $('#customID');
-    const idCounter = $('#idCounter');
-
-    customIDBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const isHidden = !idInputContainer.classList.contains('show');
-        
-        // Toggle button state
-        customIDBtn.classList.toggle('active');
-        
-        // Show container before animation
-        if (isHidden) {
-            idInputContainer.style.display = 'block';
-            // Small delay to ensure display: block is applied
-            setTimeout(() => {
-                idInputContainer.classList.add('show');
-            }, 10);
-        } else {
-            idInputContainer.classList.remove('show');
-            // Hide after animation completes
-            setTimeout(() => {
-                idInputContainer.style.display = 'none';
-            }, 300);
-        }
-    });
-
-    // Setup custom token section
-    const customTokenBtn = $('#customTokenBtn');
-    const tokenInputContainer = $('#tokenInputContainer');
-    const customToken = $('#customToken');
-    const tokenHint = $('#tokenHint');
-    const tokenCounter = $('#tokenCounter');
-    const hintCounter = $('#hintCounter');
-
-    customTokenBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const isHidden = !tokenInputContainer.classList.contains('show');
-        
-        // Toggle button state
-        customTokenBtn.classList.toggle('active');
-        
-        // Show container before animation
-        if (isHidden) {
-            tokenInputContainer.style.display = 'block';
-            // Small delay to ensure display: block is applied
-            setTimeout(() => {
-                tokenInputContainer.classList.add('show');
-            }, 10);
-        } else {
-            tokenInputContainer.classList.remove('show');
-            // Hide after animation completes
-            setTimeout(() => {
-                tokenInputContainer.style.display = 'none';
-            }, 300);
-        }
-    });
-
-    // Setup character counters
-    function setupCounter(textarea, counter, maxLength) {
-        counter.textContent = maxLength;
-        textarea.addEventListener('input', () => {
-            const remaining = maxLength - textarea.value.length;
-            counter.textContent = remaining;
-        });
-    }
-
-    setupCounter(customID, idCounter, 70);
-    setupCounter(customToken, tokenCounter, 70);
-    setupCounter(tokenHint, hintCounter, 70);
-
-    // Join room handler
+    // Join button handler
     $('#joinBtn').addEventListener('click', async () => {
         const username = $('#username').value.trim();
         const roomIdValue = $('#roomId').value.trim();
         const tokenValue = $('#token').value.trim();
 
+        // Validate inputs
         if (!username) {
             $('#username').classList.add('input-error');
             $('#username').focus();
@@ -162,14 +98,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         try {
-            const response = await fetch('/api/chat/join', {
+            const response = await fetch('/api/chat/private_room/join', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    username,
                     room_id: roomIdValue,
+                    user: {
+                        username: username
+                    },
                     token: tokenValue || undefined
                 })
             });
@@ -185,19 +123,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                     case 'ROOM_NOT_FOUND':
                         errorMessage = 'Room not found. Please check the room ID.';
                         break;
-                    // Add more cases as needed
+                    case 'ROOM_FULL':
+                        errorMessage = 'Room is full. Maximum 2 participants allowed.';
+                        break;
                 }
                 
                 alert(errorMessage);
-                throw new Error(errorData.detail.code);
+                return;
             }
 
             const data = await response.json();
             window.location.href = `/chatroom/${data.room_id}`;
         } catch (error) {
             console.error('Error joining room:', error);
-            // Only show generic error if it's not a handled error code
-            if (!error.message || !['INVALID_TOKEN', 'ROOM_NOT_FOUND'].includes(error.message)) {
+            if (!error.message || !['INVALID_TOKEN', 'ROOM_NOT_FOUND', 'ROOM_FULL'].includes(error.message)) {
                 alert('Failed to join room. Please try again.');
             }
         }

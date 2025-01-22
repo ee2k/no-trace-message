@@ -389,10 +389,6 @@ footer {
 }
 
 /* When toggled */
-.toggle-button.active {
-    color: var(--accent-color);
-}
-
 .toggle-button.active .toggle-icon {
     transform: rotate(180deg);
 }

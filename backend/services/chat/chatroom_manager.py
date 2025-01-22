@@ -6,6 +6,7 @@ import secrets
 import string
 from models.chat.message import Message, MessageType
 from sys import getsizeof
+from models.chat.user import User
 
 class RoomError(Exception):
     """Base exception for room operations"""
@@ -98,16 +99,20 @@ class ChatroomManager:
         del room.tokens[token]  # One-time use
         return True
 
-    def add_private_room_participant(self, room_id: str, username: str, connection_id: str) -> bool:
+    async def add_private_room_participant(self, room_id: str, user: User) -> bool:
         """Add a participant to a room"""
-        room = self.get_private_room(room_id)
+        room = await self.get_private_room(room_id)
         if not room:
             return False
             
         if len(room.participants) >= 2:
             return False
             
-        room.participants[username] = connection_id
+        # Store user by their ID instead of username
+        room.participants[user.user_id] = {
+            'username': user.username,
+            'connection_id': user.connection_id
+        }
         room.last_activity = datetime.now(UTC)
         return True
 
@@ -127,7 +132,7 @@ class ChatroomManager:
         if room:
             room.last_activity = datetime.now(UTC)
 
-    def get_private_room(self, room_id: str) -> PrivateRoom:
+    async def get_private_room(self, room_id: str) -> PrivateRoom:
         """Get room by ID with error handling"""
         room = self._rooms.get(room_id)
         if not room:
@@ -186,3 +191,7 @@ class ChatroomManager:
                 raise MemoryLimitError("Image size exceeds limit")
         
         room.messages.append(message)
+
+    async def get_room(self, room_id: str) -> Optional[PrivateRoom]:
+        """Get a room by its ID"""
+        return self._rooms.get(room_id)

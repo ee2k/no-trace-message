@@ -1,4 +1,6 @@
 from enum import Enum, auto
+from .status_codes import COMMON_STATUS_CODES
+from constants import code, message
 
 class ChatErrorCodes(str, Enum):
     def _generate_next_value_(name, start, count, last_values):
@@ -17,7 +19,6 @@ class ChatErrorCodes(str, Enum):
     INVALID_USERNAME = auto()
     
     # General
-    SERVER_ERROR = auto()
     MEMORY_LIMIT = auto()
 
 # HTTP status codes mapping
@@ -36,7 +37,15 @@ STATUS_CODES = {
     ChatErrorCodes.ROOM_FULL: 403,
     ChatErrorCodes.ROOM_EXPIRED: 403,
     
-    # Server errors -> 500, 507
-    ChatErrorCodes.SERVER_ERROR: 500,
+    # Memory limit -> 507
     ChatErrorCodes.MEMORY_LIMIT: 507,
+    
+    # Merge with common status codes
+    **COMMON_STATUS_CODES
+}
+
+# Example usage in error handling
+error_response = {
+    code: ChatErrorCodes.INVALID_ROOM_ID,
+    message: "Invalid room ID provided"
 }
