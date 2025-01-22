@@ -88,10 +88,13 @@
 }
 
 .message {
+    font-size: 0.8rem;
     max-width: 70%;
     padding: 0.8rem;
     border-radius: 8px;
+    margin-bottom: 0.3rem;
     word-wrap: break-word;
+    opacity: 0.8;
 }
 
 .message.own {
@@ -110,13 +113,6 @@
     font-style: italic;
     font-size: 0.9rem;
     padding: 0.5rem 1rem;
-}
-
-.message {
-    display: block;
-    font-size: 0.8rem;
-    margin-bottom: 0.3rem;
-    opacity: 0.8;
 }
 
 /* Input Area Styles */

@@ -38,33 +38,19 @@ class ChatroomManager:
         self._max_room_id_length = 70
         self._max_message_chars = 2000
 
-    async def create_private_room(self, room_id: Optional[str] = None) -> PrivateRoom:
+    async def create_private_room(self, room_id: Optional[str] = None, room_token: Optional[str] = None, room_token_hint: Optional[str] = None) -> PrivateRoom:
         """Create a private chat room with optional custom ID"""
         if len(self._rooms) >= self._max_rooms:
-            raise MemoryError("Maximum room limit reached")
+            raise MemoryLimitError("Maximum room limit reached")
             
-        # Validate custom room ID if provided
-        if room_id:
-            if len(room_id) < self._min_room_id_length or len(room_id) > self._max_room_id_length:
-                raise ValueError(f"Room ID must be between {self._min_room_id_length} and {self._max_room_id_length} characters")
-                
-            # Check for newlines or control characters
-            if any(ord(c) < 32 for c in room_id):
-                raise ValueError("Room ID cannot contain newlines or control characters")
-                
-            if room_id in self._rooms:
-                raise ValueError("Room ID already exists")
-                
-            room = PrivateRoom(
-                room_id=room_id
-            )
-            self._rooms[room_id] = room
-            return room
+        # Create room with validation handled by PrivateRoom class
+        room = PrivateRoom(
+            room_id=room_id or generate_id(length=16, exists_check=lambda id: id in self._rooms),
+            room_token=room_token,
+            room_token_hint=room_token_hint
+        )
         
-        # Generate random room ID if not provided
-        generated_id = generate_id(length=16, exists_check=lambda id: id in self._rooms)
-        room = PrivateRoom(room_id=generated_id)
-        self._rooms[generated_id] = room
+        self._rooms[room.room_id] = room
         return room
 
     def validate_room_token(self, room_id: str, token: str) -> bool:
@@ -86,18 +72,11 @@ class ChatroomManager:
         return token
 
     def validate_private_room_token(self, room_id: str, token: str) -> bool:
-        """Validate a room token and remove if valid"""
+        """Validate a room token"""
         room = self.get_private_room(room_id)
-        if not room or token not in room.tokens:
+        if not room or not room.room_token:
             return False
-            
-        expiry = room.tokens[token]
-        if datetime.now(UTC).timestamp() > expiry:
-            del room.tokens[token]
-            return False
-            
-        del room.tokens[token]  # One-time use
-        return True
+        return room.room_token == token
 
     async def add_private_room_participant(self, room_id: str, user: User) -> bool:
         """Add a participant to a room"""

@@ -12,39 +12,13 @@ private_room_manager = ChatroomManager()
 
 @router.post("/create", response_model=CreateRoomResponse)
 async def create_private_room(request: CreateRoomRequest):
-    # Validate custom room ID and token if provided
-    if request.room_id:
-        # Remove leading/trailing whitespace
-        request.room_id = request.room_id.strip()
-        
-        # Check minimum length after stripping
-        if len(request.room_id) < 1:
-            raise HTTPException(
-                status_code=STATUS_CODES[ChatErrorCodes.INVALID_ROOM_ID],
-                detail={CODE: ChatErrorCodes.INVALID_ROOM_ID.value}
-            )
-            
-        # Check for newlines or control characters
-        if any(ord(c) < 32 for c in request.room_id):
-            raise HTTPException(
-                status_code=STATUS_CODES[ChatErrorCodes.INVALID_ROOM_ID],
-                detail={CODE: ChatErrorCodes.INVALID_ROOM_ID.value}
-            )
-    
-    if request.room_token and len(request.room_token) < 1:
-        raise HTTPException(
-            status_code=STATUS_CODES[ChatErrorCodes.INVALID_TOKEN],
-            detail={CODE: ChatErrorCodes.INVALID_TOKEN.value}
-        )
-
     try:
         # Create room with optional custom ID
-        room = await private_room_manager.create_private_room(room_id=request.room_id)
-        
-        # Store token and hint if provided
-        if request.room_token:
-            room.room_token = request.room_token
-            room.room_token_hint = request.room_token_hint
+        room = await private_room_manager.create_private_room(
+            room_id=request.room_id,
+            room_token=request.room_token,
+            room_token_hint=request.room_token_hint
+        )
         
         return CreateRoomResponse(
             room_id=room.room_id,
@@ -53,14 +27,15 @@ async def create_private_room(request: CreateRoomRequest):
         )
         
     except ValueError as e:
-        if "already exists" in str(e):
-            raise HTTPException(
-                status_code=STATUS_CODES[ChatErrorCodes.ROOM_ID_EXISTS],
-                detail={CODE: ChatErrorCodes.ROOM_ID_EXISTS.value}
-            )
+        error_code = ChatErrorCodes.INVALID_ROOM_ID
+        if "Token" in str(e):
+            error_code = ChatErrorCodes.INVALID_TOKEN
+        elif "hint" in str(e):
+            error_code = ChatErrorCodes.INVALID_TOKEN
+            
         raise HTTPException(
-            status_code=STATUS_CODES[ChatErrorCodes.INVALID_ROOM_ID],
-            detail={CODE: ChatErrorCodes.INVALID_ROOM_ID.value}
+            status_code=STATUS_CODES[error_code],
+            detail={CODE: error_code.value}
         )
     except MemoryError:
         raise HTTPException(

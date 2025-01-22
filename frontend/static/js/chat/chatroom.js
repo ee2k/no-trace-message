@@ -31,12 +31,6 @@ class ChatRoom {
         this.charCounter.style.display = 'none';
         $('.chat-input').append(this.charCounter);
 
-        // Check if we should show share dialog on load
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('show_share') === 'true') {
-            // Wait for WebSocket connection before showing dialog
-            this.showShareDialogOnConnect = true;
-        }
     }
 
     init() {
@@ -75,7 +69,7 @@ class ChatRoom {
                 token: this.token
             }));
             const roomStatus = $('#roomStatus');
-            roomStatus.text('Connected');
+            roomStatus.textContent = 'Connected';
             roomStatus.removeClass('connecting');
         };
 

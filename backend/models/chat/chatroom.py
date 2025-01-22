@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, UTC
 from typing import Dict, List, Optional
 from .participant import Participant
 from .message import Message
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator, root_validator
 from .user import User
 
 class CreateRoomRequest(BaseModel):
@@ -58,6 +58,43 @@ class PrivateRoom:
         self.room_token: Optional[str] = None
         self.room_token_hint: Optional[str] = None
 
+    @validator('room_id')
+    def validate_room_id(cls, value):
+        if not value:
+            raise ValueError("Room ID cannot be empty")
+        if len(value) < 1 or len(value) > 70:
+            raise ValueError("Room ID must be between 1 and 70 characters")
+        if any(ord(c) < 32 for c in value):
+            raise ValueError("Room ID contains invalid characters")
+        return value.strip()
+
+    @validator('room_token')
+    def validate_room_token(cls, value):
+        if value is not None:
+            if len(value) < 1:
+                raise ValueError("Token cannot be empty")
+            if len(value) > 70:
+                raise ValueError("Token cannot exceed 70 characters")
+            if any(ord(c) < 32 for c in value):
+                raise ValueError("Token contains invalid characters")
+        return value
+
+    @validator('room_token_hint')
+    def validate_room_token_hint(cls, value):
+        if value is not None:
+            if len(value) > 70:
+                raise ValueError("Token hint cannot exceed 70 characters")
+        return value
+
+    @root_validator
+    def validate_token_with_hint(cls, values):
+        token = values.get('room_token')
+        hint = values.get('room_token_hint')
+        
+        if hint and not token:
+            raise ValueError("Token hint cannot exist without a token")
+        return values
+
     def add_participant(self, participant: Participant) -> bool:
         if len(self.participants) >= self.max_participants:
             return False
@@ -78,7 +115,7 @@ class PrivateRoom:
 
     def to_dict(self) -> dict:
         return {
-            "id": self.id,
+            "room_id": self.room_id,
             "created_at": self.created_at.isoformat(),
             "expires_at": self.expires_at.isoformat(),
             "max_participants": self.max_participants,

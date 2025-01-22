@@ -18,12 +18,11 @@ logger = logging.getLogger("rate_limiter")
 log_level = os.getenv("LOG_LEVEL", "info").upper()
 logger.setLevel(getattr(logging, log_level))
 
-class RateLimiter(BaseHTTPMiddleware):
+class MessageRateLimiter(BaseHTTPMiddleware):
     def __init__(self, app, limits: dict = None):
         super().__init__(app)
         self.limits = limits or {
-            "/message/create": {"ip_limit": 10, "window_size": 60},
-            "/chat/": {"ip_limit": 20, "window_size": 60}
+            "/message/create": {"ip_limit": 10, "window_size": 60}
         }
         self.ip_requests = defaultdict(lambda: defaultdict(list))
         logger.info(f"RateLimiter initialized with limits: {self.limits}")
@@ -35,10 +34,18 @@ class RateLimiter(BaseHTTPMiddleware):
             now = datetime.now()
 
             # Find matching rate limit configuration
-            limit_config = next(
-                (config for route, config in self.limits.items() if path.startswith(route)),
-                None
-            )
+            # Try exact match first, then prefix matches
+            limit_config = self.limits.get(path)
+            if not limit_config:
+                # Find the most specific prefix match
+                matching_routes = [
+                    route for route in self.limits 
+                    if path.startswith(route + '/') or path == route
+                ]
+                if matching_routes:
+                    # Use the longest matching route (most specific)
+                    best_match = max(matching_routes, key=len)
+                    limit_config = self.limits[best_match]
 
             if limit_config:
                 window_size = limit_config["window_size"]

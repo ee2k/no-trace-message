@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routes.api import api_router
 from fastapi.responses import JSONResponse
 from pathlib import Path
-from middleware.rate_limit import RateLimiter
+from backend.middleware.message_rate_limit import MessageRateLimiter
 from middleware.chat_rate_limit import ChatRateLimiter
 from constants import CONTENT_TYPE, APPLICATION_JSON
 import logging
@@ -16,6 +16,8 @@ import sys
 import signal
 import traceback
 from dotenv import load_dotenv
+from middleware.security_headers import SecurityHeadersMiddleware
+from middleware.unmatched_request_limiter import UnmatchedRequestLimiter
 
 # Load environment variables from .env file
 load_dotenv()
@@ -76,7 +78,7 @@ def get_cors_origins() -> List[str]:
 
 # always put RateLimiter before CORSMiddleware and routers
 app.add_middleware(
-    RateLimiter,
+    MessageRateLimiter,
     limits={
         "/message/": {"ip_limit": 10, "window_size": 60}
     }
@@ -95,23 +97,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Add security middlewares
+app.add_middleware(SecurityHeadersMiddleware)
+
 # Include routers
 # app.include_router(pages_router)
 app.include_router(api_router, prefix="/api")
-
-# Security headers middleware
-@app.middleware("http")
-async def add_security_headers(request: Request, call_next):
-    response = await call_next(request)
-    # Cache control
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "DENY"
-    response.headers["X-XSS-Protection"] = "1; mode=block"
-    response.headers[CONTENT_TYPE] = APPLICATION_JSON
-    return response
 
 # Error handling - Order matters!
 @app.exception_handler(HTTPException)
@@ -190,6 +181,8 @@ def signal_handler(signum, frame):
 
 signal.signal(signal.SIGTERM, signal_handler)
 signal.signal(signal.SIGINT, signal_handler)
+
+app.add_middleware(UnmatchedRequestLimiter)
 
 if __name__ == "__main__":
     import uvicorn
