@@ -2,8 +2,8 @@ from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from datetime import datetime, timedelta
 from collections import defaultdict
-from utils.error_codes import CommonErrorCodes, STATUS_CODES
-from constants import CONTENT_TYPE, APPLICATION_JSON, detail
+from utils.msg_error_codes import MessageErrorCodes, STATUS_CODES
+from constants import CONTENT_TYPE, APPLICATION_JSON
 import logging
 import os
 from dotenv import load_dotenv
@@ -64,8 +64,8 @@ class MessageRateLimiter(BaseHTTPMiddleware):
                     # wait_time = (oldest + timedelta(seconds=window_size) - now).seconds
                     logger.warning(f"Rate limit exceeded for IP {client_ip} on {path}")
                     return JSONResponse(
-                        status_code=STATUS_CODES[CommonErrorCodes.TOO_MANY_REQUESTS],
-                        content={detail: "Too many requests"},
+                        status_code=STATUS_CODES[MessageErrorCodes.TOO_MANY_REQUESTS],
+                        content={"detail": "Too many requests"},
                         headers={CONTENT_TYPE: APPLICATION_JSON}
                     )
 
@@ -76,6 +76,6 @@ class MessageRateLimiter(BaseHTTPMiddleware):
         except Exception as e:
             logger.error(f"Error in rate limiter: {str(e)}", exc_info=True)
             raise HTTPException(
-                status_code=STATUS_CODES[CommonErrorCodes.SERVER_ERROR],
-                detail="Internal server error"
+                status_code=STATUS_CODES[MessageErrorCodes.SERVER_ERROR],
+                detail={"message": "Internal server error"}
             ) 

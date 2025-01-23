@@ -1,8 +1,7 @@
-from datetime import datetime, timedelta, UTC
-from typing import Dict, List, Optional
-from .participant import Participant
+from datetime import datetime, UTC
+from typing import List, Optional
 from .message import Message
-from pydantic import BaseModel, Field, validator, root_validator
+from pydantic import BaseModel, Field, validator, model_validator
 from .user import User
 
 class CreateRoomRequest(BaseModel):
@@ -42,21 +41,21 @@ class JoinRequest(BaseModel):
     user: User
     token: Optional[str] = None
 
-class PrivateRoom:
-    def __init__(
-        self,
-        room_id: str,
-        max_participants: int = 6,
-        lifetime_minutes: int = 60
-    ):
-        self.room_id: str = room_id
-        self.created_at: datetime = datetime.now(UTC)
-        self.expires_at: datetime = self.created_at + timedelta(minutes=lifetime_minutes)
-        self.max_participants: int = max_participants
-        self.participants: Dict[str, Participant] = {}
-        self.messages: List[Message] = []
-        self.room_token: Optional[str] = None
-        self.room_token_hint: Optional[str] = None
+class PrivateRoom(BaseModel):
+    room_id: str
+    room_token: Optional[str] = None
+    room_token_hint: Optional[str] = None
+    participants: List[User] = []
+    messages: List[Message] = []
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    expires_at: Optional[datetime] = None
+    max_participants: int = 6
+
+    @model_validator(mode='before')
+    def validate_room(cls, values):
+        if values.get('room_id') is None:
+            raise ValueError("room_id is required")
+        return values
 
     @validator('room_id')
     def validate_room_id(cls, value):
@@ -86,31 +85,35 @@ class PrivateRoom:
                 raise ValueError("Token hint cannot exceed 70 characters")
         return value
 
-    @root_validator
-    def validate_token_with_hint(cls, values):
-        token = values.get('room_token')
-        hint = values.get('room_token_hint')
+    @model_validator(mode='after')
+    def validate_token_with_hint(self) -> 'PrivateRoom':
+        token = self.room_token
+        hint = self.room_token_hint
         
         if hint and not token:
             raise ValueError("Token hint cannot exist without a token")
-        return values
+        return self
 
-    def add_participant(self, participant: Participant) -> bool:
+    def add_participant(self, user: User) -> bool:
         if len(self.participants) >= self.max_participants:
             return False
-        self.participants[participant.username] = participant
+        self.participants.append(user)
         return True
 
-    def remove_participant(self, username: str) -> bool:
-        if username in self.participants:
-            del self.participants[username]
-            return True
-        return False
+    def remove_participant(self, user_id: str) -> bool:
+        # Use list comprehension to find matching user
+        matching_users = [user for user in self.participants if user.user_id == user_id]
+        if not matching_users:
+            return False
+        self.participants.remove(matching_users[0])
+        return True
 
     def add_message(self, message: Message) -> None:
         self.messages.append(message)
 
     def is_expired(self) -> bool:
+        if self.expires_at is None:
+            return False  # Room never expires if expires_at is None
         return datetime.now(UTC) > self.expires_at
 
     def to_dict(self) -> dict:

@@ -3,9 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from routes.api import api_router
 from fastapi.responses import JSONResponse
 from pathlib import Path
-from backend.middleware.message_rate_limit import MessageRateLimiter
+from middleware.message_rate_limit import MessageRateLimiter
 from middleware.chat_rate_limit import ChatRateLimiter
-from constants import CONTENT_TYPE, APPLICATION_JSON
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime

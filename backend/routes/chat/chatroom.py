@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException
 from models.chat.chatroom import CreateRoomRequest, CreateRoomResponse, RoomValidationRequest, RoomValidationResponse, RoomStatusResponse, InviteResponse, JoinResponse, LeaveResponse, DeleteResponse, JoinRequest
 from services.chat.chatroom_manager import ChatroomManager
 from utils.chat_error_codes import ChatErrorCodes, STATUS_CODES
-from utils.constants import CODE
 import logging
+from utils.error_codes import CommonErrorCodes
 
 logger = logging.getLogger(__name__)
 
@@ -35,18 +35,18 @@ async def create_private_room(request: CreateRoomRequest):
             
         raise HTTPException(
             status_code=STATUS_CODES[error_code],
-            detail={CODE: error_code.value}
+            detail={"code": error_code.value}
         )
     except MemoryError:
         raise HTTPException(
             status_code=STATUS_CODES[ChatErrorCodes.MEMORY_LIMIT],
-            detail={CODE: ChatErrorCodes.MEMORY_LIMIT.value}
+            detail={"code": ChatErrorCodes.MEMORY_LIMIT.value}
         )
     except Exception as e:
         logger.error(f"Error creating room: {str(e)}")
         raise HTTPException(
-            status_code=STATUS_CODES[ChatErrorCodes.SERVER_ERROR],
-            detail={CODE: ChatErrorCodes.SERVER_ERROR.value}
+            status_code=STATUS_CODES[CommonErrorCodes.SERVER_ERROR],
+            detail={"code": CommonErrorCodes.SERVER_ERROR.value}
         )
 
 @router.post("/validate", response_model=RoomValidationResponse)
@@ -55,14 +55,14 @@ async def validate_private_room(request: RoomValidationRequest):
         if not await private_room_manager.validate_private_room_token(request.room_id, request.token):
             raise HTTPException(
                 status_code=STATUS_CODES[ChatErrorCodes.INVALID_TOKEN],
-                detail={CODE: ChatErrorCodes.INVALID_TOKEN.value}
+                detail={"code": ChatErrorCodes.INVALID_TOKEN.value}
             )
         return {"status": "ok"}
     except Exception as e:
         logger.error(f"Error validating room: {str(e)}")
         raise HTTPException(
-            status_code=STATUS_CODES[ChatErrorCodes.SERVER_ERROR],
-            detail={CODE: ChatErrorCodes.SERVER_ERROR.value}
+            status_code=STATUS_CODES[CommonErrorCodes.SERVER_ERROR],
+            detail={"code": CommonErrorCodes.SERVER_ERROR.value}
         )
 
 @router.get("/{room_id}/status", response_model=RoomStatusResponse)
@@ -72,14 +72,14 @@ async def get_private_room_status(room_id: str):
         if not status:
             raise HTTPException(
                 status_code=STATUS_CODES[ChatErrorCodes.ROOM_NOT_FOUND],
-                detail={CODE: ChatErrorCodes.ROOM_NOT_FOUND.value}
+                detail={"code": ChatErrorCodes.ROOM_NOT_FOUND.value}
             )
         return status
     except Exception as e:
         logger.error(f"Error getting room status: {str(e)}")
         raise HTTPException(
-            status_code=STATUS_CODES[ChatErrorCodes.SERVER_ERROR],
-            detail={CODE: ChatErrorCodes.SERVER_ERROR.value}
+            status_code=STATUS_CODES[CommonErrorCodes.SERVER_ERROR],
+            detail={"code": CommonErrorCodes.SERVER_ERROR.value}
         )
 
 @router.post("/{room_id}/invite", response_model=InviteResponse)
@@ -97,22 +97,17 @@ async def join_private_room(request: JoinRequest):
         if not request.room_id or len(request.room_id.strip()) < 1:
             raise HTTPException(
                 status_code=STATUS_CODES[ChatErrorCodes.INVALID_ROOM_ID],
-                detail={CODE: ChatErrorCodes.INVALID_ROOM_ID.value}
+                detail={"code": ChatErrorCodes.INVALID_ROOM_ID.value}
             )
         
-        # Validate room exists
+        # Get room (this will raise HTTPException if room doesn't exist)
         room = await private_room_manager.get_room(request.room_id)
-        if not room:
-            raise HTTPException(
-                status_code=STATUS_CODES[ChatErrorCodes.ROOM_NOT_FOUND],
-                detail={CODE: ChatErrorCodes.ROOM_NOT_FOUND.value}
-            )
-            
+        
         # Validate token if required
         if room.room_token and room.room_token != request.token:
             raise HTTPException(
                 status_code=STATUS_CODES[ChatErrorCodes.INVALID_TOKEN],
-                detail={CODE: ChatErrorCodes.INVALID_TOKEN.value}
+                detail={"code": ChatErrorCodes.INVALID_TOKEN.value}
             )
         
         # Add participant
@@ -124,16 +119,19 @@ async def join_private_room(request: JoinRequest):
         if not result:
             raise HTTPException(
                 status_code=STATUS_CODES[ChatErrorCodes.ROOM_FULL],
-                detail={CODE: ChatErrorCodes.ROOM_FULL.value}
+                detail={"code": ChatErrorCodes.ROOM_FULL.value}
             )
             
         return {"status": "ok", "room_id": request.room_id}
         
+    except HTTPException:
+        # Propagate the HTTPException with the original error code
+        raise
     except Exception as e:
         logger.error(f"Error joining room {request.room_id}: {str(e)}")
         raise HTTPException(
-            status_code=STATUS_CODES[ChatErrorCodes.SERVER_ERROR],
-            detail={CODE: ChatErrorCodes.SERVER_ERROR.value}
+            status_code=STATUS_CODES[CommonErrorCodes.SERVER_ERROR],
+            detail={"code": CommonErrorCodes.SERVER_ERROR.value}
         )
 
 @router.post("/{room_id}/leave", response_model=LeaveResponse)
@@ -156,7 +154,7 @@ async def get_room_meta(room_id: str):
         if not room:
             raise HTTPException(
                 status_code=STATUS_CODES[ChatErrorCodes.ROOM_NOT_FOUND],
-                detail={CODE: ChatErrorCodes.ROOM_NOT_FOUND.value}
+                detail={"code": ChatErrorCodes.ROOM_NOT_FOUND.value}
             )
             
         return {
@@ -167,6 +165,6 @@ async def get_room_meta(room_id: str):
     except Exception as e:
         logger.error(f"Error getting room metadata: {str(e)}")
         raise HTTPException(
-            status_code=STATUS_CODES[ChatErrorCodes.SERVER_ERROR],
-            detail={CODE: ChatErrorCodes.SERVER_ERROR.value}
+            status_code=STATUS_CODES[CommonErrorCodes.SERVER_ERROR],
+            detail={"code": CommonErrorCodes.SERVER_ERROR.value}
         )

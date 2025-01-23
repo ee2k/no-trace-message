@@ -7,6 +7,8 @@ import string
 from models.chat.message import Message, MessageType
 from sys import getsizeof
 from models.chat.user import User
+from fastapi import HTTPException
+from utils.chat_error_codes import ChatErrorCodes, STATUS_CODES
 
 class RoomError(Exception):
     """Base exception for room operations"""
@@ -173,4 +175,10 @@ class ChatroomManager:
 
     async def get_room(self, room_id: str) -> Optional[PrivateRoom]:
         """Get a room by its ID"""
-        return self._rooms.get(room_id)
+        room = self._rooms.get(room_id)
+        if not room:
+            raise HTTPException(
+                status_code=STATUS_CODES[ChatErrorCodes.ROOM_NOT_FOUND],
+                detail={"code": ChatErrorCodes.ROOM_NOT_FOUND.value}
+            )
+        return room

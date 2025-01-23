@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter
 from models.enums import APITags
 from routes.message.message import router as message_router
 from routes.chat.chatroom import router as private_room_router

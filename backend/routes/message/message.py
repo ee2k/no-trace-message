@@ -9,8 +9,7 @@ import traceback
 from pydantic import BaseModel
 import logging
 from fastapi.responses import StreamingResponse
-from utils.msg_error_codes import ErrorCodes, STATUS_CODES
-from utils.constants import CODE
+from utils.msg_error_codes import MessageErrorCodes, STATUS_CODES
 
 logger = logging.getLogger(__name__)
 
@@ -64,40 +63,40 @@ async def create_message(
         # Validate indices
         if not (0 <= expiry_index < len(EXPIRY_TIMES)):
             raise HTTPException(
-                status_code=STATUS_CODES[ErrorCodes.INVALID_EXPIRY],
-                detail={CODE: ErrorCodes.INVALID_EXPIRY.value}
+                status_code=STATUS_CODES[MessageErrorCodes.INVALID_EXPIRY],
+                detail={"code": MessageErrorCodes.INVALID_EXPIRY.value}
             )
         if not (0 <= burn_index < len(BURN_TIMES)):
             raise HTTPException(
-                status_code=STATUS_CODES[ErrorCodes.INVALID_BURN],
-                detail={CODE: ErrorCodes.INVALID_BURN.value}
+                status_code=STATUS_CODES[MessageErrorCodes.INVALID_BURN],
+                detail={"code": MessageErrorCodes.INVALID_BURN.value}
             )
         if font_size is not None and not (0 <= font_size < 5):
             raise HTTPException(
-                status_code=STATUS_CODES[ErrorCodes.INVALID_FONT],
-                detail={CODE: ErrorCodes.INVALID_FONT.value}
+                status_code=STATUS_CODES[MessageErrorCodes.INVALID_FONT],
+                detail={"code": MessageErrorCodes.INVALID_FONT.value}
             )
 
         # Validate images
         if images:
             if len(images) > 1:
                 raise HTTPException(
-                    status_code=STATUS_CODES[ErrorCodes.MAX_IMAGES_EXCEEDED],
-                    detail={CODE: ErrorCodes.MAX_IMAGES_EXCEEDED.value}
+                    status_code=STATUS_CODES[MessageErrorCodes.MAX_IMAGES_EXCEEDED],
+                    detail={"code": MessageErrorCodes.MAX_IMAGES_EXCEEDED.value}
                 )
             
             for img in images:
                 if not img.content_type.startswith('image/'):
                     raise HTTPException(
-                        status_code=STATUS_CODES[ErrorCodes.INVALID_FILE_TYPE],
-                        detail={CODE: ErrorCodes.INVALID_FILE_TYPE.value}
+                        status_code=STATUS_CODES[MessageErrorCodes.INVALID_FILE_TYPE],
+                        detail={"code": MessageErrorCodes.INVALID_FILE_TYPE.value}
                     )
                 
                 content = await img.read()
                 if len(content) > 3 * 1024 * 1024:  # 3MB
                     raise HTTPException(
-                        status_code=STATUS_CODES[ErrorCodes.FILE_TOO_LARGE],
-                        detail={CODE: ErrorCodes.FILE_TOO_LARGE.value}
+                        status_code=STATUS_CODES[MessageErrorCodes.FILE_TOO_LARGE],
+                        detail={"code": MessageErrorCodes.FILE_TOO_LARGE.value}
                     )
                 await img.seek(0)
 
@@ -144,8 +143,8 @@ async def create_message(
         logger.error(f"Error creating message: {str(e)}")
         traceback.print_exc()
         raise HTTPException(
-            status_code=STATUS_CODES[ErrorCodes.SERVER_ERROR],
-            detail={CODE: ErrorCodes.SERVER_ERROR.value}
+            status_code=STATUS_CODES[MessageErrorCodes.SERVER_ERROR],
+            detail={"code": MessageErrorCodes.SERVER_ERROR.value}
         )
 
 @router.post("/{message_id}")
@@ -155,8 +154,8 @@ async def get_message(message_id: str, request: TokenRequest, client: Request):
         message = await message_store.check_message(message_id)
         if not message:
             raise HTTPException(
-                status_code=STATUS_CODES[ErrorCodes.MESSAGE_NOT_FOUND],
-                detail={CODE: ErrorCodes.MESSAGE_NOT_FOUND.value}
+                status_code=STATUS_CODES[MessageErrorCodes.MESSAGE_NOT_FOUND],
+                detail={"code": MessageErrorCodes.MESSAGE_NOT_FOUND.value}
             )
             
         # If message requires token
@@ -165,8 +164,8 @@ async def get_message(message_id: str, request: TokenRequest, client: Request):
             check_result = await message_store.check_token_attempts(message_id, client.client.host)
             if not check_result["allowed"]:
                 raise HTTPException(
-                    status_code=STATUS_CODES[ErrorCodes.TOO_MANY_ATTEMPTS],
-                    detail={CODE: ErrorCodes.TOO_MANY_ATTEMPTS.value}
+                    status_code=STATUS_CODES[MessageErrorCodes.TOO_MANY_ATTEMPTS],
+                    detail={"code": MessageErrorCodes.TOO_MANY_ATTEMPTS.value}
                 )
             
             # If token provided, validate it
@@ -174,8 +173,8 @@ async def get_message(message_id: str, request: TokenRequest, client: Request):
                 if not message.check_token(request.token):
                     await message_store.record_failed_attempt(message_id, client.client.host)
                     raise HTTPException(
-                        status_code=STATUS_CODES[ErrorCodes.INVALID_TOKEN],
-                        detail={CODE: ErrorCodes.INVALID_TOKEN.value}
+                        status_code=STATUS_CODES[MessageErrorCodes.INVALID_TOKEN],
+                        detail={"code": MessageErrorCodes.INVALID_TOKEN.value}
                     )
                 # Return full message content if token valid
                 return StreamingResponse(
@@ -203,8 +202,8 @@ async def get_message(message_id: str, request: TokenRequest, client: Request):
     except Exception as e:
         logger.error(f"Error retrieving message: {str(e)}")
         raise HTTPException(
-            status_code=STATUS_CODES[ErrorCodes.SERVER_ERROR],
-            detail={CODE: ErrorCodes.SERVER_ERROR.value}
+            status_code=STATUS_CODES[MessageErrorCodes.SERVER_ERROR],
+            detail={"code": MessageErrorCodes.SERVER_ERROR.value}
         )
 
 @router.post("/{message_id}/meta")
@@ -212,7 +211,7 @@ async def get_message_meta(message_id: str, request: TokenRequest):
     try:
         message = await message_store.get_message(message_id, request.token)
         if not message:
-            raise HTTPException(status_code=400, detail={CODE: ErrorCodes.MESSAGE_NOT_FOUND.value})
+            raise HTTPException(status_code=400, detail={"code": MessageErrorCodes.MESSAGE_NOT_FOUND.value})
 
         return {
             "burn_index": message.burn_index,
@@ -223,4 +222,4 @@ async def get_message_meta(message_id: str, request: TokenRequest):
         raise
     except Exception as e:
         logger.error(f"Error getting message metadata: {str(e)}")
-        raise HTTPException(status_code=500, detail={CODE: ErrorCodes.SERVER_ERROR.value})
+        raise HTTPException(status_code=500, detail={"code": MessageErrorCodes.SERVER_ERROR.value})

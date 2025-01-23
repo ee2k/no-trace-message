@@ -1,7 +1,6 @@
 from datetime import datetime
 import json
 from pathlib import Path
-import sys
 
 # Get the backend directory (root of the program)
 BACKEND_ROOT = Path(__file__).parent.parent

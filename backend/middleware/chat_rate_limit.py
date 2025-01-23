@@ -5,7 +5,6 @@ from collections import defaultdict
 from constants import CONTENT_TYPE, APPLICATION_JSON
 from utils.chat_error_codes import STATUS_CODES
 from utils.error_codes import CommonErrorCodes
-from utils.constants import detail, application_json, code, message
 import logging
 from typing import Optional
 
@@ -80,8 +79,8 @@ class ChatRateLimiter(BaseHTTPMiddleware):
             logger.error(f"Error in chat rate limiter: {str(e)}", exc_info=True)
             raise HTTPException(
                 status_code=STATUS_CODES[CommonErrorCodes.SERVER_ERROR],
-                detail={code: CommonErrorCodes.SERVER_ERROR, message: "Internal server error"},
-                headers={CONTENT_TYPE: application_json}
+                detail={"code": CommonErrorCodes.SERVER_ERROR, "message": "Internal server error"},
+                headers={CONTENT_TYPE: APPLICATION_JSON}
             )
 
     def _get_operation_type(self, path: str) -> Optional[str]:

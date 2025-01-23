@@ -1,6 +1,5 @@
 from enum import Enum, auto
 from .status_codes import COMMON_STATUS_CODES
-from constants import code, message
 
 class ChatErrorCodes(str, Enum):
     def _generate_next_value_(name, start, count, last_values):
@@ -46,6 +45,6 @@ STATUS_CODES = {
 
 # Example usage in error handling
 error_response = {
-    code: ChatErrorCodes.INVALID_ROOM_ID,
-    message: "Invalid room ID provided"
+    "code": ChatErrorCodes.INVALID_ROOM_ID,
+    "message": "Invalid room ID provided"
 }
