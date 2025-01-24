@@ -31,7 +31,7 @@ async def create_private_room(request: CreateRoomRequest):
         if "Token" in str(e):
             error_code = ChatErrorCodes.INVALID_TOKEN
         elif "hint" in str(e):
-            error_code = ChatErrorCodes.INVALID_TOKEN
+            error_code = ChatErrorCodes.INVALID_TOKEN_HINT
             
         raise HTTPException(
             status_code=STATUS_CODES[error_code],
@@ -122,7 +122,7 @@ async def join_private_room(request: JoinRequest):
                 detail={"code": ChatErrorCodes.ROOM_FULL.value}
             )
             
-        return {"status": "ok", "room_id": request.room_id}
+        return JoinResponse(status="ok", room_id=room.room_id)
         
     except HTTPException:
         # Propagate the HTTPException with the original error code
@@ -142,6 +142,7 @@ async def leave_private_room(room_id: str, username: str):
 
 @router.delete("/{room_id}", response_model=DeleteResponse)
 async def delete_private_room(room_id: str):
+    # check privilege first
     if not await private_room_manager.delete_private_room(room_id):
         raise HTTPException(status_code=404, detail="Room not found")
     return {"status": "ok"}

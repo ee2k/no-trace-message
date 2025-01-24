@@ -10,6 +10,11 @@ h1 {
     gap: 0.5rem;
 }
 
+h1 a {
+    display: inline-flex;
+    align-items: center;
+}
+
 .subtitle {
     color: var(--text-secondary);
     margin: 0.5rem 0 0.5rem;

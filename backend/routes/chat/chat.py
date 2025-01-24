@@ -1,29 +1,31 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from auth.dependencies import get_current_user
-from utils.chat_error_codes import ChatErrorCodes, STATUS_CODES
+from utils.chat_error_codes import STATUS_CODES
 from utils.exceptions import APIException
 from .websocket import websocket_endpoint
-from utils.constants import code, message, status, ok, Authorization, CONTENT_TYPE
+from constants import AUTH_HEADER, CONTENT_TYPE, APPLICATION_JSON
+from services.chat.chatroom_manager import RoomNotFoundError, ChatroomManager
+from models.chat.chatroom import ValidateAccessRequest
 
 router = APIRouter()
 
-# Register WebSocket route
-router.websocket("/ws/{room_id}")(websocket_endpoint)
+def get_chatroom_manager():
+    return ChatroomManager()
 
-@router.get("/{room_id}/history", headers={Authorization: "Bearer token"})
+@router.get("/{room_id}/history", headers={AUTH_HEADER: "Bearer token"})
 async def get_chat_history(room_id: str, user = Depends(get_current_user)):
     """Get chat history"""
     try:
         # History implementation
         return JSONResponse(
-            content={status: ok},
-            headers={CONTENT_TYPE: "application/json"}
+            content={"status": "ok"},
+            headers={CONTENT_TYPE: APPLICATION_JSON}
         )
     except APIException as e:
         raise HTTPException(
             status_code=STATUS_CODES.get(e.code, 500),
-            detail={code: e.code, message: e.message}
+            detail={"code": e.code, "message": e.message}
         )
 
 @router.put("/{room_id}/messages/{message_id}/read")
@@ -32,13 +34,13 @@ async def update_read_status(room_id: str, message_id: str, user = Depends(get_c
     try:
         # Read status implementation
         return JSONResponse(
-            content={status: ok},
-            headers={CONTENT_TYPE: "application/json"}
+            content={"status": "ok"},
+            headers={CONTENT_TYPE: APPLICATION_JSON}
         )
     except APIException as e:
         raise HTTPException(
             status_code=STATUS_CODES.get(e.code, 500),
-            detail={code: e.code, message: e.message}
+            detail={"code": e.code, "message": e.message}
         )
 
 @router.post("/{room_id}/typing")
@@ -47,13 +49,42 @@ async def update_typing_status(room_id: str, user = Depends(get_current_user)):
     try:
         # Typing status implementation
         return JSONResponse(
-            content={status: ok},
-            headers={CONTENT_TYPE: "application/json"}
+            content={"status": "ok"},
+            headers={CONTENT_TYPE: APPLICATION_JSON}
         )
     except APIException as e:
         raise HTTPException(
             status_code=STATUS_CODES.get(e.code, 500),
-            detail={code: e.code, message: e.message}
+            detail={"code": e.code, "message": e.message}
+        )
+
+@router.post("/validate_access")
+async def validate_access(
+    request: ValidateAccessRequest,
+    chatroom_manager: ChatroomManager = Depends(get_chatroom_manager)
+):
+    try:
+        room = await chatroom_manager.get_room(request.room_id)
+        
+        # If room requires token but none provided
+        if room.room_token and not request.token:
+            raise HTTPException(
+                status_code=400,
+                detail={"code": "TOKEN_REQUIRED", "message": "This room requires a token"}
+            )
+            
+        # If token is provided but invalid
+        if request.token and not await chatroom_manager.validate_room_token(request.room_id, request.token):
+            raise HTTPException(
+                status_code=400,
+                detail={"code": "INVALID_TOKEN", "message": "Invalid access token"}
+            )
+            
+        return {"status": "ok"}
+    except RoomNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "ROOM_NOT_FOUND", "message": "Room not found"}
         )
 
 # Error handler
@@ -62,5 +93,5 @@ async def http_exception_handler(request, exc):
     return JSONResponse(
         status_code=exc.status_code,
         content=exc.detail,
-        headers={CONTENT_TYPE: "application/json"}
+        headers={CONTENT_TYPE: APPLICATION_JSON}
     )

@@ -9,6 +9,7 @@ class ChatErrorCodes(str, Enum):
     INVALID_ROOM_ID = auto()
     ROOM_ID_EXISTS = auto()
     INVALID_TOKEN = auto()
+    INVALID_TOKEN_HINT = auto()
     ROOM_NOT_FOUND = auto()
     ROOM_FULL = auto()
     ROOM_EXPIRED = auto()
@@ -26,6 +27,7 @@ STATUS_CODES = {
     ChatErrorCodes.INVALID_ROOM_ID: 400,
     ChatErrorCodes.ROOM_ID_EXISTS: 400,
     ChatErrorCodes.INVALID_TOKEN: 400,
+    ChatErrorCodes.INVALID_TOKEN_HINT: 400,
     ChatErrorCodes.INVALID_USERNAME: 400,
     
     # Not found -> 404

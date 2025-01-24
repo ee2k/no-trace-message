@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
                 
                 alert(errorMessage);
-                throw new Error(responseData.detail.code);
+                return;
             }
 
             const data = await response.json();

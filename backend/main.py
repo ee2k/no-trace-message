@@ -17,6 +17,7 @@ import traceback
 from dotenv import load_dotenv
 from middleware.security_headers import SecurityHeadersMiddleware
 from middleware.unmatched_request_limiter import UnmatchedRequestLimiter
+from routes.chat.websocket import router as websocket_router
 
 # Load environment variables from .env file
 load_dotenv()
@@ -79,7 +80,7 @@ def get_cors_origins() -> List[str]:
 app.add_middleware(
     MessageRateLimiter,
     limits={
-        "/message/": {"ip_limit": 10, "window_size": 60}
+        "/message/create": {"ip_limit": 6, "window_size": 60}
     }
 )
 
@@ -90,9 +91,9 @@ app.add_middleware(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=get_cors_origins(),
+    allow_origins=["*"],  # Adjust this for production
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -102,6 +103,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 # Include routers
 # app.include_router(pages_router)
 app.include_router(api_router, prefix="/api")
+app.include_router(websocket_router)
 
 # Error handling - Order matters!
 @app.exception_handler(HTTPException)

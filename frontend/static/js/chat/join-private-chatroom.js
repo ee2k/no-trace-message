@@ -132,13 +132,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            const data = await response.json();
+            const data = await response.json();            
+            // Redirect to the chatroom page
             window.location.href = `/chatroom/${data.room_id}`;
         } catch (error) {
             console.error('Error joining room:', error);
-            if (!error.message || !['INVALID_TOKEN', 'ROOM_NOT_FOUND', 'ROOM_FULL'].includes(error.message)) {
-                alert('Failed to join room. Please try again.');
-            }
+            alert('Failed to join room. Please try again.');
         }
     });
 });

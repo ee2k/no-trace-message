@@ -9,9 +9,9 @@
 /* Header Styles */
 .chat-header {
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
     align-items: center;
-    padding: 0.6rem 1rem;
+    padding: 1.5rem 1rem;
     background-color: var(--input-bg);
     border-bottom: 1px solid var(--border-color);
     position: relative;
@@ -28,8 +28,10 @@
 }
 
 .actions {
-    display: flex;
-    gap: 1rem;
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
     z-index: 1;
 }
 
@@ -218,28 +220,6 @@
     text-align: center;
 }
 
-/* Mobile Responsiveness */
-@media (max-width: 768px) {
-    .chat-header {
-        padding: 0.5rem;
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .message {
-        max-width: 85%;
-    }
-
-    .chat-input {
-        padding: 1rem;
-    }
-
-    .share-dialog {
-        width: 95%;
-        padding: 1.5rem;
-    }
-}
-
 /* Menu Styles */
 .menu-container {
     position: relative;
@@ -264,8 +244,8 @@
 
 /* Add styles for the new menu icon */
 .menu-button .menu-icon {
-    width: 28px;
-    height: 28px;
+    /* width: 28px;
+    height: 28px; */
     opacity: 0.8;
 }
 
@@ -433,8 +413,8 @@
 }
 
 .menu-icon {
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
     flex-shrink: 0;
 }
 
@@ -500,21 +480,70 @@
     to { transform: rotate(360deg); }
 }
 
-.connecting::before {
-    content: "";
-    display: inline-block;
+#roomStatus {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.9em;
+}
+
+#roomStatus .status-line {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+#roomStatus .status-icon {
     width: 12px;
     height: 12px;
-    border: 2px solid var(--text-color);
     border-radius: 50%;
+    margin-right: 4px;
+}
+
+#roomStatus .status-icon.connecting {
+    background-color: transparent;
+    border: 2px solid var(--text-color);
     border-right-color: transparent;
-    margin-right: 6px;
-    vertical-align: middle;
     animation: spin 0.8s linear infinite;
 }
 
-#roomStatus {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
+#roomStatus .status-icon.disconnected {
+    background-color: #dc3545;
+    animation: pulse 1.2s infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+/* Mobile Responsiveness, always put this at the bottom */
+@media (max-width: 600px) {
+    .room-info {
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    
+    .actions {
+        right: 0.5rem;
+        transform: translateY(-50%);
+    }
+
+    .message {
+        max-width: 85%;
+    }
+
+    .chat-input {
+        padding: 1rem;
+    }
+
+    .share-dialog {
+        width: 95%;
+        padding: 1.5rem;
+    }
 }

@@ -1,0 +1,4 @@
+class WebSocketErrorCodes:
+    INVALID_TOKEN = 4003
+    USER_ID_REQUIRED = 4001
+    ROOM_NOT_FOUND = 4004

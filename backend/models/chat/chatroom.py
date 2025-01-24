@@ -29,6 +29,7 @@ class InviteResponse(BaseModel):
 
 class JoinResponse(BaseModel):
     status: str
+    room_id: str
 
 class LeaveResponse(BaseModel):
     status: str
@@ -125,3 +126,7 @@ class PrivateRoom(BaseModel):
             "participant_count": len(self.participants),
             "message_count": len(self.messages)
         }
+
+class ValidateAccessRequest(BaseModel):
+    room_id: str
+    token: Optional[str] = None

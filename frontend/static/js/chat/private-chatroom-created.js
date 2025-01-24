@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Setup join button
     $('#joinBtn').addEventListener('click', () => {
-        window.location.href = `/chatroom/${roomId}`;
+        window.location.href = `/join-private-chatroom/${roomId}`;
     });
 
     // Clean up sessionStorage after successful load

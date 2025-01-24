@@ -19,6 +19,23 @@ class ChatRoom {
         this.plusBtn = $('#plusBtn');
         this.plusMenu = $('#plusMenu');
         this.MAX_MESSAGE_LENGTH = 2000;
+        this.messageQueue = [];
+        this.isConnected = false;
+        this.pingInterval = null;
+        this.lastPong = null;
+        this.pendingMessages = new Map();
+        this.messageCounter = 0;
+        this.messageTimestamps = [];
+        this.RATE_LIMIT = 5; // Max 10 messages per 10 seconds
+        this.RATE_LIMIT_WINDOW = 10000; // 10 second window
+        this.connectionQuality = 'good';
+        this.allowedOrigins = new Set([
+            window.location.origin,
+            // Add other allowed origins here
+        ]);
+        this.MAX_TEXT_LENGTH = 2000; // Characters
+        this.MAX_IMAGE_SIZE = 3 * 1024 * 1024; // 3MB
+        this.hasSentFirstMessage = false; // Track if first message has been sent
         
         this.init();
         this.setupMenu();
@@ -34,10 +51,12 @@ class ChatRoom {
     }
 
     init() {
-        // Parse URL parameters
-        const params = new URLSearchParams(window.location.search);
-        this.roomId = params.get('room');
-        this.token = params.get('token');
+        // Get room ID from URL path
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        this.roomId = pathParts[pathParts.length - 1];
+        
+        // Get token from sessionStorage instead of URL
+        this.token = sessionStorage.getItem(`room_token_${this.roomId}`);
 
         // Temporarily disable redirect
         // if (!this.roomId) {
@@ -59,79 +78,175 @@ class ChatRoom {
 
     connectWebSocket() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        this.ws = new WebSocket(`${protocol}//${window.location.host}/ws/chat`);
+        // Only include token parameter if it exists
+        const wsUrl = `${protocol}//${window.location.host}/room/${this.roomId}` + 
+            (this.token ? `?token=${encodeURIComponent(this.token)}` : '');
+        console.log('Connecting to WebSocket:', wsUrl);
+        this.ws = new WebSocket(wsUrl);
 
         this.ws.onopen = () => {
-            // Join room
-            this.ws.send(JSON.stringify({
+            console.log('WebSocket connection established');
+            this.isConnected = true;
+            this.connectionQuality = 'good';
+            this.updateRoomStatus();
+            
+            // Only send token if it exists
+            const joinMessage = JSON.stringify({
                 type: 'join',
                 room: this.roomId,
-                token: this.token
-            }));
-            const roomStatus = $('#roomStatus');
-            roomStatus.textContent = 'Connected';
-            roomStatus.removeClass('connecting');
+                ...(this.token && { token: this.token }) // Conditionally add token
+            });
+            this.ws.send(joinMessage);
         };
 
+        this.ws.binaryType = 'arraybuffer';
+
         this.ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            this.handleMessage(data);
+            try {
+                this.verifyOrigin(event);
+                const data = this.decodeMessage(event.data);
+                if (data.type === 'pong') {
+                    this.lastPong = Date.now();
+                } else {
+                    this.handleMessage(data);
+                }
+            } catch (error) {
+                this.addSystemMessage('Error processing message');
+                console.error('Message processing error:', error);
+            }
+        };
+
+        this.ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            this.connectionQuality = 'poor';
+            this.updateRoomStatus();
+            this.ws.close();
         };
 
         this.ws.onclose = () => {
-            // Update room status with animated dots
-            const roomStatus = $('#roomStatus');
-            roomStatus.textContent = 'Reconnecting';
-            roomStatus.classList.add('connecting');
+            console.log('WebSocket connection closed');
+            this.isConnected = false;
+            this.connectionQuality = 'connecting';
+            this.updateRoomStatus();
+            clearInterval(this.pingInterval);
             setTimeout(() => this.connectWebSocket(), 3000);
         };
     }
 
-    handleMessage(data) {
-        switch (data.type) {
-            case 'join_success':
-                this.username = data.username;
-                $('#roomId').text(`Room: ${this.roomId}`);
-                
-                // Show share dialog if requested
-                if (this.showShareDialogOnConnect) {
-                    this.showShareDialogOnConnect = false;
-                    setTimeout(() => this.showShareDialog(), 500); // Small delay for smoother UX
-                }
-                break;
-
-            case 'chat':
-                this.addChatMessage(data.username, data.message);
-                break;
-
-            case 'system':
-                this.addSystemMessage(data.message);
-                break;
-
-            case 'room_closed':
-                alert('Room has been closed');
-                // window.location.href = '/';
-                break;
+    verifyOrigin(event) {
+        if (!this.allowedOrigins.has(event.origin)) {
+            throw new Error('Unauthorized origin');
         }
     }
 
-    sendMessage() {
+    handleMessage(data) {
+        if (data.type === 'ack') {
+            // Message acknowledged, remove from pending
+            this.pendingMessages.delete(data.messageId);
+        } else {
+            switch (data.type) {
+                case 'join_success':
+                    this.username = data.username;
+                    $('#roomId').text(`Room: ${this.roomId}`);
+                    
+                    // Show share dialog if requested
+                    if (this.showShareDialogOnConnect) {
+                        this.showShareDialogOnConnect = false;
+                        setTimeout(() => this.showShareDialog(), 500); // Small delay for smoother UX
+                    }
+                    break;
+
+                case 'chat':
+                    this.addChatMessage(data.username, data.message);
+                    break;
+
+                case 'system':
+                    this.addSystemMessage(data.message);
+                    break;
+
+                case 'room_closed':
+                    alert('Room has been closed');
+                    // window.location.href = '/';
+                    break;
+            }
+        }
+    }
+
+    async compressMessage(message) {
+        if (message.length > 1024) { // Only compress large messages
+            const stream = new Blob([message]).stream();
+            const compressedStream = stream.pipeThrough(new CompressionStream('gzip'));
+            const compressedBlob = await new Response(compressedStream).blob();
+            return compressedBlob;
+        }
+        return message;
+    }
+
+    validateMessage(message) {
+        if (typeof message !== 'string' && !(message instanceof Blob)) {
+            throw new Error('Invalid message type');
+        }
+
+        if (typeof message === 'string') {
+            // Text message validation
+            if (message.length > this.MAX_TEXT_LENGTH) {
+                throw new Error(`Text message too long (max ${this.MAX_TEXT_LENGTH} characters)`);
+            }
+        } else if (message instanceof Blob) {
+            // Image message validation
+            if (message.size > this.MAX_IMAGE_SIZE) {
+                throw new Error(`Image too large (max ${this.MAX_IMAGE_SIZE / 1024 / 1024}MB)`);
+            }
+        }
+    }
+
+    async sendMessage() {
         const message = this.messageInput.value.trim();
         if (!message) return;
 
         // Check length before sending
         if (message.length > this.MAX_MESSAGE_LENGTH) {
-            // Optionally show an error message to user
             return;
         }
 
-        this.ws.send(JSON.stringify({
-            type: 'chat',
-            message: message
-        }));
+        // First message validation
+        if (!this.hasSentFirstMessage) {
+            try {
+                // Validate access before sending first message
+                const response = await fetch('/api/chat/validate_access', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        room_id: this.roomId,
+                        token: this.token || null
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail?.message || 'Access validation failed');
+                }
+
+                this.hasSentFirstMessage = true;
+            } catch (error) {
+                this.addSystemMessage(`Error: ${error.message}`);
+                return;
+            }
+        }
+
+        try {
+            this.validateMessage(message);
+            await this.sendMessage(JSON.stringify({
+                type: 'chat',
+                message: message
+            }));
+        } catch (error) {
+            this.addSystemMessage(`Error: ${error.message}`);
+        }
 
         this.messageInput.value = '';
-        // Reset counter and styles
         this.charCounter.style.display = 'none';
         this.charCounter.classList.remove('warning', 'error');
         this.messageInput.classList.remove('near-limit', 'error');
@@ -277,6 +392,137 @@ class ChatRoom {
                 this.plusMenu.classList.remove('visible');
             }
         });
+    }
+
+    generateMessageId() {
+        // Using crypto.randomUUID() which is supported in modern browsers
+        return crypto.randomUUID();
+    }
+
+    async sendMessage(message) {
+        try {
+            // Check rate limit
+            const now = Date.now();
+            this.messageTimestamps = this.messageTimestamps.filter(
+                ts => now - ts < this.RATE_LIMIT_WINDOW
+            );
+
+            if (this.messageTimestamps.length >= this.RATE_LIMIT) {
+                this.addSystemMessage('Message rate limit exceeded. Please wait a moment.');
+                return;
+            }
+
+            // Record new timestamp
+            this.messageTimestamps.push(now);
+
+            // Generate unique message ID
+            const messageId = this.generateMessageId();
+            const messageWithId = {
+                ...message,
+                messageId,
+                timestamp: Date.now()
+            };
+
+            // Encode and send message
+            const encoded = this.encodeMessage(messageWithId);
+            
+            if (this.isConnected) {
+                this.ws.send(encoded);
+                this.pendingMessages.set(messageId, encoded);
+            } else {
+                this.messageQueue.push(encoded);
+            }
+
+            // Set timeout for message acknowledgment
+            setTimeout(() => {
+                if (this.pendingMessages.has(messageId)) {
+                    // Message not acknowledged, retry
+                    this.retryMessage(messageId);
+                }
+            }, 5000); // 5 second timeout
+
+        } catch (error) {
+            this.addSystemMessage(`Error: ${error.message}`);
+            console.error('Message sending error:', error);
+        }
+    }
+
+    retryMessage(messageId) {
+        const message = this.pendingMessages.get(messageId);
+        if (message) {
+            this.sendMessage(message);
+        }
+    }
+
+    processMessageQueue() {
+        while (this.messageQueue.length > 0) {
+            const message = this.messageQueue.shift();
+            this.ws.send(JSON.stringify(message));
+        }
+    }
+
+    updateRoomStatus() {
+        const statusElement = $('#roomStatus');
+        
+        // Clear existing content
+        statusElement.innerHTML = '';
+
+        // Create status lines
+        const roomInfo = document.createElement('div');
+        roomInfo.className = 'status-line';
+        roomInfo.textContent = `Private Chatroom, ${this.participantCount} people`;
+        
+        const connectionStatus = document.createElement('div');
+        connectionStatus.className = 'status-line';
+        
+        // Add status icon only for non-connected states
+        if (!this.isConnected) {
+            const statusIcon = document.createElement('div');
+            statusIcon.className = 'status-icon';
+            
+            if (this.connectionQuality === 'connecting') {
+                statusIcon.classList.add('connecting');
+                connectionStatus.textContent = 'Connecting...';
+            } else {
+                statusIcon.classList.add('disconnected');
+                connectionStatus.textContent = 'Disconnected. Reconnecting...';
+            }
+            
+            connectionStatus.prepend(statusIcon);
+        }
+
+        // Append elements
+        statusElement.appendChild(roomInfo);
+        if (!this.isConnected) {
+            statusElement.appendChild(connectionStatus);
+        }
+    }
+
+    encodeMessage(message) {
+        try {
+            const encoder = new TextEncoder();
+            return encoder.encode(JSON.stringify(message));
+        } catch (error) {
+            console.error('Message encoding error:', error);
+            throw new Error('Failed to encode message');
+        }
+    }
+
+    decodeMessage(data) {
+        try {
+            const decoder = new TextDecoder();
+            const message = JSON.parse(decoder.decode(data));
+            
+            // Basic message validation
+            if (!message || typeof message !== 'object') {
+                throw new Error('Invalid message format');
+            }
+            
+            return message;
+        } catch (error) {
+            console.error('Message decoding error:', error);
+            throw new Error('Failed to decode message');
+        }
     }
 }
 
