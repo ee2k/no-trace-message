@@ -9,12 +9,14 @@
 /* Header Styles */
 .chat-header {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    padding: 1.5rem 1rem;
+    justify-content: center;
+    padding: 0.2rem;
     background-color: var(--input-bg);
     border-bottom: 1px solid var(--border-color);
     position: relative;
+    height: auto;
 }
 
 .room-info {
@@ -32,7 +34,6 @@
     right: 1rem;
     top: 50%;
     transform: translateY(-50%);
-    z-index: 1;
 }
 
 /* Menu Styles */
@@ -442,7 +443,7 @@
 }
 
 .char-counter.error {
-    color: #ef4444;  /* Red color */
+    color: #ef4444;
     opacity: 1;
 }
 
@@ -480,48 +481,57 @@
     to { transform: rotate(360deg); }
 }
 
-#roomStatus {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    font-size: 0.9em;
+#roomInfo {
+    font-size: 1em;
+    text-align: center;
+    margin-bottom: 0.2rem;
 }
 
-#roomStatus .status-line {
+#roomStatus {
     display: flex;
     align-items: center;
     gap: 4px;
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    text-align: center;
+    height: 1.2rem;
 }
 
-#roomStatus .status-icon {
-    width: 12px;
-    height: 12px;
+/* Status Icon Styles */
+.status-icon {
+    width: 0.8rem;
+    height: 0.8rem;
     border-radius: 50%;
-    margin-right: 4px;
+    position: relative;
+    display: none;
 }
 
-#roomStatus .status-icon.connecting {
-    background-color: transparent;
-    border: 2px solid var(--text-color);
-    border-right-color: transparent;
-    animation: spin 0.8s linear infinite;
+.status-icon.connecting {
+    display: inline-block;
+    border: 2px solid var(--text-secondary);
+    border-top-color: transparent; /* Create a gap */
+    animation: spin 1s linear infinite;
 }
 
-#roomStatus .status-icon.disconnected {
-    background-color: #dc3545;
-    animation: pulse 1.2s infinite;
+.status-icon.disconnected {
+    display: inline-block;
+    background-color: var(--text-secondary);
+    border: 2px solid var(--text-secondary);
+    animation: flicker 1s infinite;
 }
 
+/* Spin Animation */
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
-@keyframes pulse {
-    0% { opacity: 1; }
+/* Flicker Animation */
+@keyframes flicker {
+    0%, 100% { opacity: 1; }
     50% { opacity: 0.5; }
-    100% { opacity: 1; }
 }
+
 /* Mobile Responsiveness, always put this at the bottom */
 @media (max-width: 600px) {
     .room-info {

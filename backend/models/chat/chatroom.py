@@ -127,6 +127,10 @@ class PrivateRoom(BaseModel):
             "message_count": len(self.messages)
         }
 
+    def requires_token(self) -> bool:
+        """Check if this room requires a token for access"""
+        return self.room_token is not None
+
 class ValidateAccessRequest(BaseModel):
     room_id: str
     token: Optional[str] = None

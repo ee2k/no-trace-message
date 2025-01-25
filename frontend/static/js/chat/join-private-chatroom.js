@@ -22,18 +22,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     initSvgIcons();
     
     // Setup character counter for Room ID
-    setupCounter($('#roomId'), $('#roomIdCounter'), 70);
+    const roomIdInput = $('#roomId');
+    const roomIdCounter = $('#roomIdCounter');
+    setupCounter(roomIdInput, roomIdCounter, 70);
 
     // Get room ID from URL path
     const url = new URL(window.location.href);
-    const pathParts = url.pathname.split('/').filter(Boolean); // Remove empty parts
-    
-    // Check if the path is exactly "/join-private-chatroom" or has a room ID
+    const pathParts = url.pathname.split('/').filter(Boolean);
     const isBaseRoute = pathParts.length === 1 && pathParts[0] === 'join-private-chatroom';
     const roomId = isBaseRoute ? null : pathParts[pathParts.length - 1];
 
     if (roomId) {
-        $('#roomId').value = roomId;
+        roomIdInput.value = roomId; // The counter will update automatically
         
         try {
             // Fetch room metadata

@@ -7,6 +7,7 @@ from utils.singleton import singleton
 import json
 from pydantic import ValidationError
 import uuid
+from starlette.websockets import WebSocketState
 
 router = APIRouter()
 
@@ -22,7 +23,6 @@ class WebSocketManager:
         self.pending_messages: dict[str, list[Message]] = {}
 
     async def connect(self, websocket: WebSocket, room_id: str, user_id: str):
-        await websocket.accept()
         self.active_connections[user_id] = websocket
         self.room_participants.setdefault(room_id, set()).add(user_id)
         
@@ -58,64 +58,56 @@ websocket_manager = WebSocketManager()
 
 @router.websocket("/chatroom/{room_id}")
 async def websocket_endpoint(websocket: WebSocket, room_id: str):
-    user_id = None  # Initialize user_id here
+    user_id = None
     try:
         await websocket.accept()
         
-        # Get token only if required for the room
+        # Validate room exists
+        room = await chatroom_manager.get_room(room_id)
+        if not room:
+            await websocket.close(code=4004, reason="Room not found")
+            return
+
+        # Get token if required
         token = None
-        if await chatroom_manager.room_requires_token(room_id):
-            token = websocket.query_params.get("token") or websocket.cookies.get("chat_token")
-            if not token:
-                await websocket.close(code=4003, reason="Token required for this room")
-                return
-            if not await chatroom_manager.validate_room_token(room_id, token):
-                await websocket.close(code=4003, reason="Invalid token")
+        if room.requires_token():
+            token = websocket.query_params.get("token")
+            if not token or not await chatroom_manager.validate_room_token(room_id, token):
+                await websocket.close(code=4003, reason="Token required/invalid")
                 return
 
-        # Get or create user ID
-        user_id = websocket.query_params.get("user_id")
-        if not user_id:
-            user_id = str(uuid.uuid4())  # Generate new user ID
-            await websocket.send_json({
-                "type": "user_created",
-                "user_id": user_id
-            })
+        # Generate user ID
+        user_id = str(uuid.uuid4())
+        await websocket.send_json({
+            "type": "auth",
+            "user_id": user_id
+        })
 
         await websocket_manager.connect(websocket, room_id, user_id)
         
         # Main message loop
         while True:
-            data = await websocket.receive_text()
-            message = Message.model_validate_json(data)
-            
-            # Validate message ownership
-            if message.sender_id != user_id:
-                await websocket.send_json({
-                    "error": "User ID mismatch",
-                    "code": "AUTH_FAILURE"
-                })
-                continue
+            try:
+                data = await websocket.receive_text()
+                message = Message.model_validate_json(data)
                 
-            # Broadcast to room participants
-            await websocket_manager.send_message(room_id, message)
+                if message.sender_id != user_id:
+                    continue
+                    
+                await websocket_manager.send_message(room_id, message)
+            except WebSocketDisconnect:
+                break
+            except Exception as e:
+                logger.error(f"Error processing message: {str(e)}")
+                continue
 
-    except WebSocketDisconnect:
-        print(f"Client {user_id} disconnected from room {room_id}")
-    except json.JSONDecodeError:
-        await websocket.send_json({
-            "error": "Invalid message format",
-            "code": "INVALID_PAYLOAD"
-        })
-    except ValidationError as e:
-        await websocket.send_json({
-            "error": "Message validation failed",
-            "details": str(e),
-            "code": "VALIDATION_ERROR"
-        })
     except Exception as e:
-        print(f"Unexpected error in room {room_id}: {str(e)}")
-        await websocket.close(code=1011, reason="Internal server error")
+        logger.error(f"WebSocket error: {str(e)}")
     finally:
-        await websocket_manager.disconnect(user_id, room_id)
-        await websocket.close() 
+        try:
+            if user_id:
+                await websocket_manager.disconnect(user_id, room_id)
+            if websocket.client_state != WebSocketState.DISCONNECTED:
+                await websocket.close()
+        except Exception as e:
+            logger.error(f"Error during cleanup: {str(e)}") 

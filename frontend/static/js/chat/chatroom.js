@@ -11,6 +11,7 @@ class ChatRoom {
         this.roomId = null;
         this.username = null;
         this.token = null;
+        this.participantCount = 0;
         this.messageInput = $('#messageInput');
         this.messages = $('#messages');
         this.shareDialog = $('#shareDialog');
@@ -28,7 +29,7 @@ class ChatRoom {
         this.messageTimestamps = [];
         this.RATE_LIMIT = 5; // Max 10 messages per 10 seconds
         this.RATE_LIMIT_WINDOW = 10000; // 10 second window
-        this.connectionQuality = 'good';
+        this.connectionQuality = 'disconnected';
         this.allowedOrigins = new Set([
             window.location.origin,
             // Add other allowed origins here
@@ -36,8 +37,11 @@ class ChatRoom {
         this.MAX_TEXT_LENGTH = 2000; // Characters
         this.MAX_IMAGE_SIZE = 3 * 1024 * 1024; // 3MB
         this.hasSentFirstMessage = false; // Track if first message has been sent
+        this.reconnectAttempts = 0; // Track reconnection attempts
+        this.reconnectTimeout = null; // Track reconnection timeout
+        this.RECONNECT_BASE_DELAY = 1000; // Base delay for reconnection (1 second)
+        this.MAX_RECONNECT_DELAY = 6000; // Max delay for reconnection (6 seconds)
         
-        this.init();
         this.setupMenu();
         this.setupMessageInput();
         this.setupPlusMenu();
@@ -48,42 +52,54 @@ class ChatRoom {
         this.charCounter.style.display = 'none';
         $('.chat-input').append(this.charCounter);
 
+        this.statusIcon = document.createElement('div');
+        this.statusIcon.className = 'status-icon';
+        $('#roomStatus').appendChild(this.statusIcon);
+        this.currentStatus = null; // Track the current status
     }
 
-    init() {
-        // Get user ID from sessionStorage or generate new
-        this.userId = sessionStorage.getItem('current_user_id') || `user_${Date.now()}`;
-        sessionStorage.setItem('current_user_id', this.userId);
+    async connect() {
+        try {
+            // Get room ID from URL path
+            const pathParts = window.location.pathname.split('/').filter(Boolean);
+            this.roomId = pathParts[pathParts.length - 1];
+            
+            // Get token from sessionStorage
+            this.token = sessionStorage.getItem(`room_token_${this.roomId}`) || undefined;
 
+            // Connect to WebSocket
+            this.connectWebSocket();
+
+            // Wait for WebSocket to open
+            await new Promise((resolve, reject) => {
+                this.ws.onopen = resolve;
+                this.ws.onerror = reject;
+            });
+
+            // The backend will now handle user authentication and ID assignment
+            // We'll receive the user ID through the WebSocket connection
+        } catch (error) {
+            console.error('Error connecting to chat:', error);
+            this.showConnectionError();
+        }
+    }
+
+    async init() {
         // Get room ID from URL path
         const pathParts = window.location.pathname.split('/').filter(Boolean);
         this.roomId = pathParts[pathParts.length - 1];
-        
-        // Get token from sessionStorage
-        this.token = sessionStorage.getItem(`room_token_${this.roomId}`) || null;
 
-        // Temporarily disable redirect
-        // if (!this.roomId) {
-        //     window.location.href = '/';
-        //     return;
-        // }
+        // Initialize WebSocket connection
+        await this.connectWebSocket();
 
-        // Setup event listeners
-        $('#sendBtn').addEventListener('click', () => this.sendMessage());
-        $('#shareBtn').addEventListener('click', () => this.showShareDialog());
-        $('#leaveBtn').addEventListener('click', () => this.leaveRoom());
-        this.messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.sendMessage();
-        });
-
-        // Setup WebSocket
-        this.connectWebSocket();
+        // Update room status after WebSocket is initialized
+        this.updateRoomStatus();
     }
 
     connectWebSocket() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const encodedToken = encodeURIComponent(this.token);
-        const wsUrl = `${protocol}//${window.location.host}/ws/chatroom/${this.roomId}?token=${encodedToken}&user_id=${this.userId}`;
+        const encodedToken = this.token ? encodeURIComponent(this.token) : '';
+        const wsUrl = `${protocol}//${window.location.host}/ws/chatroom/${this.roomId}?${this.token ? `token=${encodedToken}` : ''}`;
         
         console.log('[WebSocket] Connecting to:', wsUrl);
         console.log('[WebSocket] Using token:', this.token ? 'Yes' : 'No');
@@ -95,21 +111,38 @@ class ChatRoom {
             console.log('[WebSocket] Connection established');
             this.isConnected = true;
             this.connectionQuality = 'good';
+            this.reconnectAttempts = 0; // Reset reconnection attempts
+            clearTimeout(this.reconnectTimeout); // Clear any pending reconnection
             this.updateRoomStatus();
-            
-            // Only send token if it exists
-            const joinMessage = JSON.stringify({
-                type: 'join',
-                room: this.roomId,
-                ...(this.token && { token: this.token }) // Conditionally add token
-            });
-            this.ws.send(joinMessage);
+        };
+
+        this.ws.onclose = () => {
+            console.log('[WebSocket] Connection closed');
+            this.isConnected = false;
+            this.connectionQuality = 'disconnected';
+            this.updateRoomStatus();
+            this.attemptReconnect();
+        };
+
+        this.ws.onerror = () => {
+            console.log('[WebSocket] Connection error');
+            this.isConnected = false;
+            this.connectionQuality = 'poor';
+            this.updateRoomStatus();
         };
 
         this.ws.binaryType = 'arraybuffer';
 
         this.ws.onmessage = (event) => {
             try {
+                const message = JSON.parse(event.data);
+                
+                if (message.type === 'auth') {
+                    this.userId = message.user_id;
+                    sessionStorage.setItem('current_user_id', this.userId);
+                    return;
+                }
+                
                 this.verifyOrigin(event);
                 const data = this.decodeMessage(event.data);
                 if (data.type === 'pong') {
@@ -118,29 +151,9 @@ class ChatRoom {
                     this.handleMessage(data);
                 }
             } catch (error) {
-                this.addSystemMessage('Error processing message');
                 console.error('Message processing error:', error);
+                this.addSystemMessage('Error processing message');
             }
-        };
-
-        this.ws.onerror = (error) => {
-            console.error('[WebSocket] Error event details:', {
-                readyState: this.ws.readyState,
-                url: this.ws.url,
-                error: error
-            });
-            this.connectionQuality = 'poor';
-            this.updateRoomStatus();
-            this.ws.close();
-        };
-
-        this.ws.onclose = (event) => {
-            console.log('[WebSocket] Closed with code:', event.code, 'reason:', event.reason);
-            this.isConnected = false;
-            this.connectionQuality = 'connecting';
-            this.updateRoomStatus();
-            clearInterval(this.pingInterval);
-            setTimeout(() => this.connectWebSocket(), 3000);
         };
     }
 
@@ -178,6 +191,11 @@ class ChatRoom {
                 case 'room_closed':
                     alert('Room has been closed');
                     // window.location.href = '/';
+                    break;
+
+                case 'participant_update':
+                    this.participantCount = data.count;
+                    this.updateRoomStatus();
                     break;
             }
         }
@@ -473,39 +491,41 @@ class ChatRoom {
     }
 
     updateRoomStatus() {
-        const statusElement = $('#roomStatus');
-        
-        // Clear existing content
-        statusElement.innerHTML = '';
+        // Format room ID - show first 3 and last 3 characters
+        const roomIdLength = this.roomId.length;
+        const formattedRoomId = roomIdLength > 6 ? 
+            `${this.roomId.substring(0, 3)}...${this.roomId.substring(roomIdLength - 3)}` : 
+            this.roomId;
 
-        // Create status lines
-        const roomInfo = document.createElement('div');
-        roomInfo.className = 'status-line';
-        roomInfo.textContent = `Private Chatroom, ${this.participantCount} people`;
-        
-        const connectionStatus = document.createElement('div');
-        connectionStatus.className = 'status-line';
-        
-        // Add status icon only for non-connected states
+        // Update roomInfo with room ID and participant count
+        $('#roomInfo').textContent = `${formattedRoomId}, ${this.participantCount || 0} people`;
+
+        // Determine the new status
+        let newStatus;
         if (!this.isConnected) {
-            const statusIcon = document.createElement('div');
-            statusIcon.className = 'status-icon';
-            
-            if (this.connectionQuality === 'connecting') {
-                statusIcon.classList.add('connecting');
-                connectionStatus.textContent = 'Connecting...';
-            } else {
-                statusIcon.classList.add('disconnected');
-                connectionStatus.textContent = 'Disconnected. Reconnecting...';
-            }
-            
-            connectionStatus.prepend(statusIcon);
+            newStatus = this.connectionQuality === 'connecting' ? 'connecting' : 'disconnected';
+        } else {
+            newStatus = 'connected';
         }
 
-        // Append elements
-        statusElement.appendChild(roomInfo);
-        if (!this.isConnected) {
-            statusElement.appendChild(connectionStatus);
+        // Only update if the status has changed
+        if (newStatus !== this.currentStatus) {
+            this.currentStatus = newStatus; // Update the current status
+            this.statusIcon.className = 'status-icon'; // Reset classes
+            $('#roomStatus').innerHTML = ''; // Clear content
+
+            if (newStatus === 'connecting') {
+                this.statusIcon.classList.add('connecting');
+                $('#roomStatus').appendChild(this.statusIcon);
+                $('#roomStatus').append(document.createTextNode(' Connecting...'));
+            } else if (newStatus === 'disconnected') {
+                this.statusIcon.classList.add('disconnected');
+                $('#roomStatus').appendChild(this.statusIcon);
+                $('#roomStatus').append(document.createTextNode(' Disconnected'));
+            } else {
+                // Connected: Clear roomStatus content
+                $('#roomStatus').textContent = '';
+            }
         }
     }
 
@@ -535,9 +555,21 @@ class ChatRoom {
             throw new Error('Failed to decode message');
         }
     }
+
+    attemptReconnect() {
+        // Calculate delay: increase by 1 second each time, capped at 6 seconds
+        const delay = Math.min(this.RECONNECT_BASE_DELAY + this.reconnectAttempts * 1000, this.MAX_RECONNECT_DELAY);
+        console.log(`[WebSocket] Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts + 1})`);
+
+        this.reconnectTimeout = setTimeout(() => {
+            this.reconnectAttempts++;
+            this.connectWebSocket();
+        }, delay);
+    }
 }
 
 // Initialize chat when page loads
-document.addEventListener('DOMContentLoaded', () => {
-    new ChatRoom();
+document.addEventListener('DOMContentLoaded', async () => {
+    const chatRoom = new ChatRoom();
+    await chatRoom.init();
 });
