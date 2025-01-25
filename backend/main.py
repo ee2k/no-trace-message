@@ -103,7 +103,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 # Include routers
 # app.include_router(pages_router)
 app.include_router(api_router, prefix="/api")
-app.include_router(websocket_router)
+app.include_router(websocket_router, prefix="/ws")
 
 # Error handling - Order matters!
 @app.exception_handler(HTTPException)

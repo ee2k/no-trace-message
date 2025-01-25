@@ -10,8 +10,7 @@ from models.chat.chatroom import ValidateAccessRequest
 
 router = APIRouter()
 
-def get_chatroom_manager():
-    return ChatroomManager()
+chatroom_manager = ChatroomManager()
 
 @router.get("/{room_id}/history", headers={AUTH_HEADER: "Bearer token"})
 async def get_chat_history(room_id: str, user = Depends(get_current_user)):
@@ -59,10 +58,7 @@ async def update_typing_status(room_id: str, user = Depends(get_current_user)):
         )
 
 @router.post("/validate_access")
-async def validate_access(
-    request: ValidateAccessRequest,
-    chatroom_manager: ChatroomManager = Depends(get_chatroom_manager)
-):
+async def validate_access(request: ValidateAccessRequest):
     try:
         room = await chatroom_manager.get_room(request.room_id)
         

@@ -51,12 +51,16 @@ class ChatRoom {
     }
 
     init() {
+        // Get user ID from sessionStorage or generate new
+        this.userId = sessionStorage.getItem('current_user_id') || `user_${Date.now()}`;
+        sessionStorage.setItem('current_user_id', this.userId);
+
         // Get room ID from URL path
         const pathParts = window.location.pathname.split('/').filter(Boolean);
         this.roomId = pathParts[pathParts.length - 1];
         
-        // Get token from sessionStorage instead of URL
-        this.token = sessionStorage.getItem(`room_token_${this.roomId}`);
+        // Get token from sessionStorage
+        this.token = sessionStorage.getItem(`room_token_${this.roomId}`) || null;
 
         // Temporarily disable redirect
         // if (!this.roomId) {
@@ -78,14 +82,17 @@ class ChatRoom {
 
     connectWebSocket() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        // Only include token parameter if it exists
-        const wsUrl = `${protocol}//${window.location.host}/room/${this.roomId}` + 
-            (this.token ? `?token=${encodeURIComponent(this.token)}` : '');
-        console.log('Connecting to WebSocket:', wsUrl);
+        const encodedToken = encodeURIComponent(this.token);
+        const wsUrl = `${protocol}//${window.location.host}/ws/chatroom/${this.roomId}?token=${encodedToken}&user_id=${this.userId}`;
+        
+        console.log('[WebSocket] Connecting to:', wsUrl);
+        console.log('[WebSocket] Using token:', this.token ? 'Yes' : 'No');
+        console.log('[WebSocket] Room ID:', this.roomId);
+        
         this.ws = new WebSocket(wsUrl);
 
         this.ws.onopen = () => {
-            console.log('WebSocket connection established');
+            console.log('[WebSocket] Connection established');
             this.isConnected = true;
             this.connectionQuality = 'good';
             this.updateRoomStatus();
@@ -117,14 +124,18 @@ class ChatRoom {
         };
 
         this.ws.onerror = (error) => {
-            console.error('WebSocket error:', error);
+            console.error('[WebSocket] Error event details:', {
+                readyState: this.ws.readyState,
+                url: this.ws.url,
+                error: error
+            });
             this.connectionQuality = 'poor';
             this.updateRoomStatus();
             this.ws.close();
         };
 
-        this.ws.onclose = () => {
-            console.log('WebSocket connection closed');
+        this.ws.onclose = (event) => {
+            console.log('[WebSocket] Closed with code:', event.code, 'reason:', event.reason);
             this.isConnected = false;
             this.connectionQuality = 'connecting';
             this.updateRoomStatus();

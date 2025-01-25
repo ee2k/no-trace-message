@@ -8,6 +8,7 @@ from models.chat.message import Message, MessageType
 from models.chat.user import User
 from fastapi import HTTPException
 from utils.chat_error_codes import ChatErrorCodes, STATUS_CODES
+from utils.singleton import singleton
 
 class RoomError(Exception):
     """Base exception for room operations"""
@@ -29,16 +30,8 @@ class MemoryLimitError(RoomError):
     """Memory limit reached"""
     pass
 
+@singleton
 class ChatroomManager:
-    _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(ChatroomManager, cls).__new__(cls)
-            # Initialize your instance here
-            cls._instance.rooms = {}
-        return cls._instance
-
     def __init__(self):
         self._id_chars = string.ascii_letters + string.digits
         self._max_collision_attempts = 3
@@ -49,6 +42,7 @@ class ChatroomManager:
         self._max_image_size_bytes = 3 * 1024 * 1024  # 3MB
         self._max_messages_per_room = 100
         self.ALLOWED_IMAGE_TYPES = {'image/jpeg', 'image/png', 'image/gif', 'image/webp'}
+        self.rooms = {}
 
     async def create_private_room(self, room_id: Optional[str] = None, room_token: Optional[str] = None, room_token_hint: Optional[str] = None) -> PrivateRoom:
         """Create a private chat room with optional custom ID"""
@@ -68,9 +62,12 @@ class ChatroomManager:
     async def validate_room_token(self, room_id: str, token: str) -> bool:
         """Validate room token"""
         try:
-            room = await self.get_room(room_id)
-            return room.room_token == token
-        except (RoomNotFoundError, RoomExpiredError):
+            room = self.get_room(room_id)
+            is_valid = secrets.compare_digest(token, room.room_token)
+            print(f"[Token Validation] Room: {room_id}, Token Match: {is_valid}")
+            return is_valid
+        except RoomNotFoundError:
+            print(f"[Token Validation] Room not found: {room_id}")
             return False
 
     def generate_private_room_token(self, room_id: str, expiry_minutes: int = 60) -> str:
@@ -196,3 +193,11 @@ class ChatroomManager:
         if room.is_expired():
             raise RoomExpiredError(f"Room {room_id} has expired")
         return room
+
+    async def room_requires_token(self, room_id: str) -> bool:
+        """Check if room requires a token"""
+        try:
+            room = self.get_room(room_id)
+            return bool(room.room_token)
+        except RoomNotFoundError:
+            return False

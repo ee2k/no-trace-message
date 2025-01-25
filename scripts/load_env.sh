@@ -33,9 +33,16 @@ if [[ "$PYTHON_VERSION" != "Python 3.11.7" ]]; then
 fi
 
 # Install requirements if needed
-if [ ! -f "$PROJECT_ROOT/venv/lib/python3.11/site-packages/uvicorn" ]; then
+if ! pip show uvicorn > /dev/null 2>&1 || ! pip show websockets > /dev/null 2>&1; then
     echo "Installing requirements..."
     pip install -r "$PROJECT_ROOT/requirements.txt"
+    pip install 'uvicorn[standard]'  # Add WebSocket support
+fi
+
+# After installation
+if ! pip show websockets > /dev/null 2>&1; then
+    echo "Error: websockets package not installed"
+    exit 1
 fi
 
 # Check if ENVIRONMENT is set

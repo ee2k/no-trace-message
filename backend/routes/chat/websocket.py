@@ -2,12 +2,19 @@ from fastapi import WebSocket, WebSocketDisconnect
 import logging
 from models.chat.message import Message
 from fastapi import APIRouter, Depends
-from services.chat.chatroom_manager import ChatroomManager, get_chatroom_manager
+from services.chat.chatroom_manager import ChatroomManager
+from utils.singleton import singleton
+import json
+from pydantic import ValidationError
+import uuid
 
 router = APIRouter()
 
 logger = logging.getLogger(__name__)
 
+chatroom_manager = ChatroomManager()
+
+@singleton
 class WebSocketManager:
     def __init__(self):
         self.active_connections: dict[str, WebSocket] = {}
@@ -47,42 +54,68 @@ class WebSocketManager:
                     if msg.message_id != message.message_id
                 ]
 
-@router.websocket("/room/{room_id}")
-async def websocket_endpoint(
-    websocket: WebSocket, 
-    room_id: str,
-    chatroom_manager: ChatroomManager = Depends(get_chatroom_manager)
-):
-    # Get token from query params
-    token = websocket.query_params.get("token")
-    
-    if not token or not await chatroom_manager.validate_room_token(room_id, token):
-        await websocket.close(code=4003, reason="Invalid token")
-        return
+websocket_manager = WebSocketManager()
 
-    # Get user ID from query params or headers
-    user_id = websocket.query_params.get("user_id")  # Or extract from headers
-    
-    if not user_id:
-        await websocket.close(code=4001, reason="User ID required")
-        return
-
-    # Connect using WebSocketManager
-    await websocket_manager.connect(websocket, room_id, user_id)
-    
+@router.websocket("/chatroom/{room_id}")
+async def websocket_endpoint(websocket: WebSocket, room_id: str):
+    user_id = None  # Initialize user_id here
     try:
+        await websocket.accept()
+        
+        # Get token only if required for the room
+        token = None
+        if await chatroom_manager.room_requires_token(room_id):
+            token = websocket.query_params.get("token") or websocket.cookies.get("chat_token")
+            if not token:
+                await websocket.close(code=4003, reason="Token required for this room")
+                return
+            if not await chatroom_manager.validate_room_token(room_id, token):
+                await websocket.close(code=4003, reason="Invalid token")
+                return
+
+        # Get or create user ID
+        user_id = websocket.query_params.get("user_id")
+        if not user_id:
+            user_id = str(uuid.uuid4())  # Generate new user ID
+            await websocket.send_json({
+                "type": "user_created",
+                "user_id": user_id
+            })
+
+        await websocket_manager.connect(websocket, room_id, user_id)
+        
+        # Main message loop
         while True:
             data = await websocket.receive_text()
-            print(f"Received message: {data}")
+            message = Message.model_validate_json(data)
             
-            # Handle the message using WebSocketManager
-            # Example: Broadcast message to all participants
-            message = Message.parse_raw(data)
+            # Validate message ownership
+            if message.sender_id != user_id:
+                await websocket.send_json({
+                    "error": "User ID mismatch",
+                    "code": "AUTH_FAILURE"
+                })
+                continue
+                
+            # Broadcast to room participants
             await websocket_manager.send_message(room_id, message)
-            
+
+    except WebSocketDisconnect:
+        print(f"Client {user_id} disconnected from room {room_id}")
+    except json.JSONDecodeError:
+        await websocket.send_json({
+            "error": "Invalid message format",
+            "code": "INVALID_PAYLOAD"
+        })
+    except ValidationError as e:
+        await websocket.send_json({
+            "error": "Message validation failed",
+            "details": str(e),
+            "code": "VALIDATION_ERROR"
+        })
     except Exception as e:
-        print(f"WebSocket error: {e}")
+        print(f"Unexpected error in room {room_id}: {str(e)}")
+        await websocket.close(code=1011, reason="Internal server error")
     finally:
         await websocket_manager.disconnect(user_id, room_id)
-        await websocket.close()
-        print(f"WebSocket connection closed for user: {user_id} in room: {room_id}") 
+        await websocket.close() 

@@ -132,8 +132,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            const data = await response.json();            
-            // Redirect to the chatroom page
+            const data = await response.json();
+            // Store user ID and token
+            sessionStorage.setItem('current_user_id', data.user_id);
+            if (data.room_token) {
+                sessionStorage.setItem(`room_token_${data.room_id}`, data.room_token);
+            }
             window.location.href = `/chatroom/${data.room_id}`;
         } catch (error) {
             console.error('Error joining room:', error);

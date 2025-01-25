@@ -52,10 +52,10 @@ if [ -f "$PROJECT_ROOT/.pid/uvicorn.pid" ]; then
 fi
 
 # Check Python version
-REQUIRED_PYTHON="Python 3.11.7"
+REQUIRED_PYTHON="Python 3.11"
 CURRENT_PYTHON=$(python3 --version)
 
-if [ "$CURRENT_PYTHON" != "$REQUIRED_PYTHON" ]; then
+if [[ ! "$CURRENT_PYTHON" == *"$REQUIRED_PYTHON"* ]]; then
     error_exit "Wrong Python version. Required: $REQUIRED_PYTHON, Found: $CURRENT_PYTHON"
 fi
 
