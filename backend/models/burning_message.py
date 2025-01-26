@@ -9,7 +9,7 @@ class ImageData(BaseModel):
     content: str
     type: str
 
-class Message(BaseModel):
+class BurningMessage(BaseModel):
     id: str
     text: str | None = None
     images: list[ImageData] | None = None

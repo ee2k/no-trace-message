@@ -186,10 +186,7 @@ class ChatroomManager:
         """Get a room by its ID"""
         room = self.rooms.get(room_id)
         if not room:
-            raise HTTPException(
-                status_code=STATUS_CODES[ChatErrorCodes.ROOM_NOT_FOUND],
-                detail={"code": ChatErrorCodes.ROOM_NOT_FOUND.value}
-            )
+            return None
         if room.is_expired():
             raise RoomExpiredError(f"Room {room_id} has expired")
         return room

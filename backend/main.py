@@ -18,6 +18,8 @@ from dotenv import load_dotenv
 from middleware.security_headers import SecurityHeadersMiddleware
 from middleware.unmatched_request_limiter import UnmatchedRequestLimiter
 from routes.chat.websocket import router as websocket_router
+import asyncio
+from routes.chat.websocket import WebSocketManager
 
 # Load environment variables from .env file
 load_dotenv()
@@ -42,6 +44,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+websocket_manager = WebSocketManager()
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Handle startup and shutdown events"""
@@ -51,6 +55,7 @@ async def lifespan(app: FastAPI):
         from services.message_store import MessageStore
         await MessageStore().initialize()
         logger.info("Application startup complete")
+        asyncio.create_task(websocket_manager.check_connections())
         yield
     finally:
         # Shutdown: Cleanup resources

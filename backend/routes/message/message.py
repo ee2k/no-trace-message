@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Request
 from typing import List, Optional
-from models.message import Message
+from models.burning_message import BurningMessage
 from services.message_store import MessageStore
 from datetime import datetime, timedelta
 from utils.num_generator import generate_id
@@ -119,7 +119,7 @@ async def create_message(
         expires_at = datetime.now() + timedelta(minutes=EXPIRY_TIMES[expiry_index])
 
         # Create message object using our Message model
-        message_obj = Message(
+        message_obj = BurningMessage(
             id=message_id,
             text=message,
             images=image_data,

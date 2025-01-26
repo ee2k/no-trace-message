@@ -2,16 +2,25 @@ from pydantic import BaseModel, Field
 from datetime import datetime, UTC
 from enum import Enum, auto
 
-class MessageType(str, Enum):
+class ContentType(str, Enum):
     def _generate_next_value_(name, start, count, last_values):
         return name
-
     text = auto()
     image = auto()
 
+class MessageType(str, Enum):
+    def _generate_next_value_(name, start, count, last_values):
+        return name
+    chat = auto()
+    system = auto()
+    ping = auto()
+    pong = auto()
+    ack = auto()
+
 class Message(BaseModel):
     message_id: str
-    type: MessageType
+    message_type: MessageType
+    content_type: ContentType
     content: str
     sender: str
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))

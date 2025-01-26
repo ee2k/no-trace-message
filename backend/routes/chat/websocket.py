@@ -5,9 +5,13 @@ from fastapi import APIRouter, Depends
 from services.chat.chatroom_manager import ChatroomManager
 from utils.singleton import singleton
 import json
-from pydantic import ValidationError
 import uuid
 from starlette.websockets import WebSocketState
+import time
+import asyncio
+from utils.chat_error_codes import ChatErrorCodes
+from utils.error_codes import CommonErrorCodes
+from services.chat.chatroom_manager import RoomExpiredError
 
 router = APIRouter()
 
@@ -21,6 +25,7 @@ class WebSocketManager:
         self.active_connections: dict[str, WebSocket] = {}
         self.room_participants: dict[str, set[str]] = {}
         self.pending_messages: dict[str, list[Message]] = {}
+        self.last_pong_times: dict[str, float] = {}  # Track last pong times
 
     async def connect(self, websocket: WebSocket, room_id: str, user_id: str):
         self.active_connections[user_id] = websocket
@@ -54,6 +59,15 @@ class WebSocketManager:
                     if msg.message_id != message.message_id
                 ]
 
+    async def check_connections(self):
+        """Periodically check connection health"""
+        while True:
+            current_time = time.time()
+            for user_id, last_pong in list(self.last_pong_times.items()):
+                if current_time - last_pong > 60:  # 60 seconds timeout
+                    await self.disconnect(user_id)
+            await asyncio.sleep(30)  # Check every 30 seconds
+
 websocket_manager = WebSocketManager()
 
 @router.websocket("/chatroom/{room_id}")
@@ -64,7 +78,8 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
         
         # Validate room exists
         room = await chatroom_manager.get_room(room_id)
-        if not room:
+        if room is None:
+            logger.info(f"Room not found: {room_id}")
             await websocket.close(code=4004, reason="Room not found")
             return
 
@@ -89,20 +104,53 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
         while True:
             try:
                 data = await websocket.receive_text()
-                message = Message.model_validate_json(data)
+                message = json.loads(data)
                 
-                if message.sender_id != user_id:
+                # Handle ping/pong
+                if message.get('message_type') == 'ping':
+                    await websocket.send_json({
+                        'message_type': 'pong',
+                        'content_type': 'text',
+                        'content': ''
+                    })
                     continue
+            
+                # Validate message
+                validated_message = Message.model_validate_json(data)
+                
+                # Handle different message types
+                if validated_message.message_type == 'chat':
+                    # Process chat message
+                    if validated_message.sender_id != user_id:
+                        continue
+                    await websocket_manager.send_message(room_id, validated_message)
                     
-                await websocket_manager.send_message(room_id, message)
+                elif validated_message.message_type == 'system':
+                    # Process system message
+                    await websocket_manager.broadcast_system_message(
+                        room_id,
+                        validated_message.content
+                    )
             except WebSocketDisconnect:
                 break
             except Exception as e:
                 logger.error(f"Error processing message: {str(e)}")
                 continue
 
+    except RoomExpiredError as e:
+        logger.info(f"Room expired: {room_id}")
+        await websocket.send_json({
+            "type": "error",
+            "code": ChatErrorCodes.ROOM_EXPIRED,
+            "message": "The requested chat room has expired"
+        })
     except Exception as e:
         logger.error(f"WebSocket error: {str(e)}")
+        await websocket.send_json({
+            "type": "error",
+            "code": CommonErrorCodes.SERVER_ERROR,
+            "message": "An unexpected error occurred"
+        })
     finally:
         try:
             if user_id:
@@ -110,4 +158,4 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             if websocket.client_state != WebSocketState.DISCONNECTED:
                 await websocket.close()
         except Exception as e:
-            logger.error(f"Error during cleanup: {str(e)}") 
+            logger.error(f"Error during cleanup: {str(e)}")

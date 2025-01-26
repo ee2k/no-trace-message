@@ -1,6 +1,6 @@
 from typing import Dict, Optional, AsyncGenerator, Any
 import asyncio
-from models.message import Message
+from models.burning_message import BurningMessage
 import time
 from services.statistics import Statistics
 
@@ -37,11 +37,11 @@ class MessageStore:
             "cleanup_task_running": self.cleanup_task is not None and not self.cleanup_task.done()
         }
 
-    async def store_message(self, message: Message) -> None:
+    async def store_message(self, message: BurningMessage) -> None:
         self.messages[message.id] = message
         Statistics().increment_messages_created()
     
-    async def get_message(self, message_id: str, token: str) -> Optional[Message]:
+    async def get_message(self, message_id: str, token: str) -> Optional[BurningMessage]:
         message = self.messages.get(message_id)
         if not message:
             return None
@@ -69,7 +69,7 @@ class MessageStore:
                 print(f"Cleanup error: {e}")
                 await asyncio.sleep(60)
 
-    async def check_message(self, message_id: str) -> Optional[Message]:
+    async def check_message(self, message_id: str) -> Optional[BurningMessage]:
         """Check if message exists and return the Message object"""
         try:
             return self.messages.get(message_id)

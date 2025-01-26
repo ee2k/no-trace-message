@@ -51,7 +51,20 @@
 .secondary-button:hover {
     background: var(--bg-hover);
 }
+footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    padding: 10px 0;
+}
 
+footer p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9em;
+}
 @media (max-width: 600px) {
     .content {
         padding: 1rem;
