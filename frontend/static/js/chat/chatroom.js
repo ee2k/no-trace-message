@@ -55,6 +55,16 @@ class ChatRoom {
         this.setupMessageInput();
         this.setupPlusMenu();
 
+        // Add send button handler
+        $('#sendBtn').addEventListener('click', () => {
+            const content = this.messageInput.value.trim();
+            if (content) {
+                this.sendTextMessage(content);
+                this.messageInput.value = '';
+                this.messageInput.style.height = 'auto';
+            }
+        });
+
         // Create and insert character counter
         this.charCounter = document.createElement('div');
         this.charCounter.className = 'char-counter';
@@ -92,6 +102,7 @@ class ChatRoom {
             this.ws.onopen = () => {
                 console.log('[WebSocket] Connection established');
                 this.connectionState = this.connectionStates.CONNECTED;
+                this.isConnected = true; // Add this line
                 this.connectionQuality = 'good';
                 this.reconnectAttempts = 0;
                 clearTimeout(this.reconnectTimeout);
@@ -109,6 +120,7 @@ class ChatRoom {
             this.ws.onclose = (event) => {
                 console.log('[WebSocket] Connection closed:', event);
                 this.connectionState = this.connectionStates.DISCONNECTED;
+                this.isConnected = false; // Add this line
                 clearInterval(this.pingInterval);
                 
                 // Handle specific close codes
@@ -245,18 +257,58 @@ class ChatRoom {
         }
     }
 
-    async sendMessage(content, messageType = 'chat', contentType = 'text') {
-        const message = {
-            message_id: this.generateMessageId(),
-            message_type: messageType,
-            content_type: contentType,
-            content: content,
-            sender: this.userId,
-            timestamp: Date.now()
-        };
-        
-        // Send via WebSocket
-        await this.ws.send(JSON.stringify(message));
+    async sendMessage(message) {
+        try {
+            // Check rate limit
+            const now = Date.now();
+            this.messageTimestamps = this.messageTimestamps.filter(
+                ts => now - ts < this.RATE_LIMIT_WINDOW
+            );
+
+            if (this.messageTimestamps.length >= this.RATE_LIMIT) {
+                this.addSystemMessage('Message rate limit exceeded. Please wait a moment.');
+                return;
+            }
+
+            // Record new timestamp
+            this.messageTimestamps.push(now);
+
+            // Generate unique message ID if not present
+            if (!message.message_id) {
+                message.message_id = this.generateMessageId();
+            }
+
+            // Add timestamp if not present
+            if (!message.timestamp) {
+                message.timestamp = Date.now();
+            }
+
+            // Validate message content
+            this.validateMessage(message.content);
+
+            // Encode and send message
+            const encoded = this.encodeMessage(message);
+            
+            if (this.isConnected) {
+                await this.ws.send(encoded);
+                this.pendingMessages.set(message.message_id, message);
+                
+                // Set timeout for message acknowledgment
+                setTimeout(() => {
+                    if (this.pendingMessages.has(message.message_id)) {
+                        this.retryMessage(message.message_id);
+                    }
+                }, 5000);
+            } else {
+                this.messageQueue.push(message);
+                this.addSystemMessage('Message queued - waiting for connection');
+            }
+
+        } catch (error) {
+            this.addSystemMessage(`Error: ${error.message}`);
+            console.error('Message sending error:', error);
+            throw error;
+        }
     }
 
     sendPing() {
@@ -445,54 +497,6 @@ class ChatRoom {
         return crypto.randomUUID();
     }
 
-    async sendMessage(message) {
-        try {
-            // Check rate limit
-            const now = Date.now();
-            this.messageTimestamps = this.messageTimestamps.filter(
-                ts => now - ts < this.RATE_LIMIT_WINDOW
-            );
-
-            if (this.messageTimestamps.length >= this.RATE_LIMIT) {
-                this.addSystemMessage('Message rate limit exceeded. Please wait a moment.');
-                return;
-            }
-
-            // Record new timestamp
-            this.messageTimestamps.push(now);
-
-            // Generate unique message ID
-            const messageId = this.generateMessageId();
-            const messageWithId = {
-                ...message,
-                messageId,
-                timestamp: Date.now()
-            };
-
-            // Encode and send message
-            const encoded = this.encodeMessage(messageWithId);
-            
-            if (this.isConnected) {
-                this.ws.send(encoded);
-                this.pendingMessages.set(messageId, encoded);
-            } else {
-                this.messageQueue.push(encoded);
-            }
-
-            // Set timeout for message acknowledgment
-            setTimeout(() => {
-                if (this.pendingMessages.has(messageId)) {
-                    // Message not acknowledged, retry
-                    this.retryMessage(messageId);
-                }
-            }, 5000); // 5 second timeout
-
-        } catch (error) {
-            this.addSystemMessage(`Error: ${error.message}`);
-            console.error('Message sending error:', error);
-        }
-    }
-
     retryMessage(messageId) {
         const message = this.pendingMessages.get(messageId);
         if (message) {
@@ -503,7 +507,19 @@ class ChatRoom {
     processMessageQueue() {
         while (this.messageQueue.length > 0) {
             const message = this.messageQueue.shift();
-            this.ws.send(JSON.stringify(message));
+            // Messages in queue are already message objects, need to encode them
+            const encoded = this.encodeMessage(message);
+            this.ws.send(encoded);
+            
+            // Add to pending messages for acknowledgment tracking
+            this.pendingMessages.set(message.message_id, message);
+            
+            // Set timeout for acknowledgment
+            setTimeout(() => {
+                if (this.pendingMessages.has(message.message_id)) {
+                    this.retryMessage(message.message_id);
+                }
+            }, 5000);
         }
     }
 
@@ -609,18 +625,29 @@ class ChatRoom {
     }
 
     async sendTextMessage(content) {
-        if (!content.trim()) return;
+        if (!content || !content.trim()) {
+            return;
+        }
         
-        const message = {
-            message_id: this.generateMessageId(),
-            message_type: 'chat',
-            content_type: 'text',
-            content: content,
-            sender: this.userId,
-            timestamp: Date.now()
-        };
-        
-        await this.sendMessage(message);
+        try {
+            const message = {
+                message_id: this.generateMessageId(),
+                message_type: 'chat',
+                content_type: 'text',
+                content: content.trim(),
+                sender: this.userId,
+                timestamp: Date.now()
+            };
+            
+            await this.sendMessage(message);
+            
+            // Only clear input and reset height if message was sent successfully
+            this.messageInput.value = '';
+            this.messageInput.style.height = 'auto';
+        } catch (error) {
+            console.error('Failed to send message:', error);
+            this.addSystemMessage('Failed to send message. Please try again.');
+        }
     }
 
     async sendImageMessage(file) {
