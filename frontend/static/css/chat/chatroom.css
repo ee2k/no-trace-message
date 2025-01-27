@@ -537,6 +537,12 @@
     font-size: 0.9rem;
     color: var(--text-secondary);
 }
+.icon-resend {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+
 /* Spin Animation */
 @keyframes spin {
     0% { transform: rotate(0deg); }

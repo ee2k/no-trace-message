@@ -218,11 +218,7 @@ class MessageCreator {
             preview.className = 'image-preview';
             preview.innerHTML = `
                 <img src="${e.target.result}" alt="Preview">
-                <button class="remove-btn">
-                    <svg class="icon-primary" width="16" height="16">
-                        <use href="static/images/close.svg#icon"></use>
-                    </svg>
-                </button>
+                <button class="remove-btn"><svg><use href="static/images/close.svg#icon"></use></svg></button>
             `;
             
             $('.remove-btn', preview).addEventListener('click', () => {

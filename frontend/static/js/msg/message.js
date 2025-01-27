@@ -1,6 +1,6 @@
-import { FONT_SIZES, BURN_TIMES } from './constants.js';
-import { $ } from './utils/dom.js';
-import { i18n } from './utils/i18n.js';
+import { FONT_SIZES, BURN_TIMES } from '../constants.js';
+import { $ } from '../utils/dom.js';
+import { i18n } from '../utils/i18n.js';
 
 class MessagePage {
     static async initialize() {

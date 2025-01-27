@@ -51,6 +51,10 @@ class ChatRoom {
         };
         this.connectionState = this.connectionStates.DISCONNECTED;
         
+        // Add these to existing constructor
+        this.MAX_RETRIES = 3;
+        this.failedMessages = new Map(); // Store failed messages
+
         this.setupMenu();
         this.setupMessageInput();
         this.setupPlusMenu();
@@ -73,6 +77,118 @@ class ChatRoom {
 
         this.statusIcon = $('#roomStatus .status-icon');
         this.statusText = $('#roomStatus .status-text');
+    }
+
+    setupMenu() {
+        // Toggle menu on button click
+        this.menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.menuDropdown.hidden = !this.menuDropdown.hidden;
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', () => {
+            this.menuDropdown.hidden = true;
+        });
+
+        // Menu item handlers
+        $('#muteBtn').addEventListener('click', () => {
+            // Toggle mute logic here
+            this.menuDropdown.hidden = true;
+        });
+
+        $('#deleteRoomBtn').addEventListener('click', () => {
+            if (confirm('Are you sure to delete this room? This cannot be undone.')) {
+                this.ws.send(JSON.stringify({ type: 'delete_room' }));
+                // window.location.href = '/';
+            }
+            this.menuDropdown.hidden = true;
+        });
+    }
+
+    setupMessageInput() {
+        this.messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.sendTextMessage(this.messageInput.value);
+                this.messageInput.value = '';
+            }
+        });
+
+        this.messageInput.addEventListener('input', () => {
+            const currentLength = this.messageInput.value.length;
+            const remainingChars = this.MAX_MESSAGE_LENGTH - currentLength;
+            
+            // Only show counter when approaching limit (last 100 chars) or exceeding
+            if (remainingChars <= 100) {
+                this.charCounter.textContent = `${remainingChars}`;
+                this.charCounter.style.display = 'block';
+                
+                if (remainingChars < 0) {
+                    this.charCounter.classList.add('error');
+                    this.messageInput.classList.add('error');
+                    this.charCounter.classList.remove('warning');
+                    this.messageInput.classList.remove('near-limit');
+                } else {
+                    this.charCounter.classList.add('warning');
+                    this.messageInput.classList.add('near-limit');
+                    this.charCounter.classList.remove('error');
+                    this.messageInput.classList.remove('error');
+                }
+            } else {
+                // Hide counter when well below limit
+                this.charCounter.style.display = 'none';
+                this.charCounter.classList.remove('warning', 'error');
+                this.messageInput.classList.remove('near-limit', 'error');
+            }
+
+            // Auto-resize textarea
+            this.messageInput.style.height = 'auto';
+            this.messageInput.style.height = (this.messageInput.scrollHeight) + 'px';
+        });
+
+        // Prevent file picker dialog
+        this.messageInput.addEventListener('drop', (e) => {
+            e.preventDefault();
+        });
+
+        this.messageInput.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+    }
+
+    setupPlusMenu() {
+        this.plusBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.plusMenu.classList.toggle('visible');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!this.plusMenu.contains(e.target) && 
+                !this.plusBtn.contains(e.target) && 
+                this.plusMenu.classList.contains('visible')) {
+                this.plusMenu.classList.remove('visible');
+            }
+        });
+
+        // Add image upload handler
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.style.display = 'none';
+        document.body.appendChild(fileInput);
+
+        this.plusMenu.querySelector('.plus-menu-item').addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files[0]) {
+                this.sendImageMessage(e.target.files[0]);
+            }
+            fileInput.value = ''; // Reset input
+        });
     }
 
     async init() {
@@ -290,7 +406,7 @@ class ChatRoom {
             const encoded = this.encodeMessage(message);
             
             if (this.isConnected) {
-                await this.ws.send(encoded);
+                await this.ws.send(encoded);  // encoded is now a JSON string
                 this.pendingMessages.set(message.message_id, message);
                 
                 // Set timeout for message acknowledgment
@@ -321,7 +437,12 @@ class ChatRoom {
         this.ws.send(JSON.stringify(pingMessage));
     }
 
-    addChatMessage(username, message, contentType) {
+    generateMessageId() {
+        // Using crypto.randomUUID() which is supported in modern browsers
+        return crypto.randomUUID();
+    }
+
+    addChatMessage(username, message, contentType, status = 'sent') {
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${username === this.username ? 'own' : 'other'}`;
         
@@ -329,6 +450,9 @@ class ChatRoom {
             messageDiv.innerHTML = `
                 <span class="username">${username}</span>
                 <span class="text">${this.escapeHtml(message)}</span>
+                ${status === 'failed' ? `
+                    <button class="resend-btn" data-message-id="${message.message_id}"><svg class="icon-resend"><use href="/static/images/icons.svg#resend"></use></svg></button>
+                ` : ''}
             `;
         } else if (contentType === 'image') {
             messageDiv.innerHTML = `
@@ -341,166 +465,47 @@ class ChatRoom {
         
         this.messages.appendChild(messageDiv);
         this.scrollToBottom();
-    }
 
-    addSystemMessage(message) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'message system';
-        messageDiv.textContent = message;
-        this.messages.appendChild(messageDiv);
-        this.scrollToBottom();
-    }
-
-    showShareDialog() {
-        this.shareDialog.hidden = false;
-        
-        // Pre-generate share URL
-        const shareUrl = `${window.location.origin}/join?room=${this.roomId}`;
-        $('#shareUrl').val(shareUrl);
-        
-        // Optional: Auto-select the URL for easy copying
-        $('#shareUrl').select();
-    }
-
-    leaveRoom() {
-        if (confirm('Are you sure you want to leave this chat?')) {
-            clearTimeout(this.reconnectTimeout);
-            this.ws.close();
-            // window.location.href = '/';
+        // Add click handler for resend button if present
+        const resendBtn = messageDiv.querySelector('.resend-btn');
+        if (resendBtn) {
+            resendBtn.addEventListener('click', () => {
+                this.resendFailedMessage(message.message_id);
+            });
         }
     }
 
-    scrollToBottom() {
-        this.messages.scrollTop = this.messages.scrollHeight;
+    // Add new method for resending failed messages
+    async resendFailedMessage(messageId) {
+        const message = this.failedMessages.get(messageId);
+        if (message) {
+            // Remove from failed messages
+            this.failedMessages.delete(messageId);
+            // Reset retry count
+            message.retryCount = 0;
+            // Try sending again
+            await this.sendMessage(message);
+        }
     }
 
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    setupMenu() {
-        // Toggle menu on button click
-        this.menuBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.menuDropdown.hidden = !this.menuDropdown.hidden;
-        });
-
-        // Close menu when clicking outside
-        document.addEventListener('click', () => {
-            this.menuDropdown.hidden = true;
-        });
-
-        // Menu item handlers
-        $('#muteBtn').addEventListener('click', () => {
-            // Toggle mute logic here
-            this.menuDropdown.hidden = true;
-        });
-
-        $('#deleteRoomBtn').addEventListener('click', () => {
-            if (confirm('Are you sure to delete this room? This cannot be undone.')) {
-                this.ws.send(JSON.stringify({ type: 'delete_room' }));
-                // window.location.href = '/';
-            }
-            this.menuDropdown.hidden = true;
-        });
-    }
-
-    setupMessageInput() {
-        this.messageInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                this.sendTextMessage(this.messageInput.value);
-                this.messageInput.value = '';
-            }
-        });
-
-        this.messageInput.addEventListener('input', () => {
-            const currentLength = this.messageInput.value.length;
-            const remainingChars = this.MAX_MESSAGE_LENGTH - currentLength;
-            
-            // Only show counter when approaching limit (last 100 chars) or exceeding
-            if (remainingChars <= 100) {
-                this.charCounter.textContent = `${remainingChars}`;
-                this.charCounter.style.display = 'block';
-                
-                if (remainingChars < 0) {
-                    this.charCounter.classList.add('error');
-                    this.messageInput.classList.add('error');
-                    this.charCounter.classList.remove('warning');
-                    this.messageInput.classList.remove('near-limit');
-                } else {
-                    this.charCounter.classList.add('warning');
-                    this.messageInput.classList.add('near-limit');
-                    this.charCounter.classList.remove('error');
-                    this.messageInput.classList.remove('error');
-                }
-            } else {
-                // Hide counter when well below limit
-                this.charCounter.style.display = 'none';
-                this.charCounter.classList.remove('warning', 'error');
-                this.messageInput.classList.remove('near-limit', 'error');
-            }
-
-            // Auto-resize textarea
-            this.messageInput.style.height = 'auto';
-            this.messageInput.style.height = (this.messageInput.scrollHeight) + 'px';
-        });
-
-        // Prevent file picker dialog
-        this.messageInput.addEventListener('drop', (e) => {
-            e.preventDefault();
-        });
-
-        this.messageInput.addEventListener('dragover', (e) => {
-            e.preventDefault();
-        });
-    }
-
-    setupPlusMenu() {
-        this.plusBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.plusMenu.classList.toggle('visible');
-        });
-
-        // Close menu when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!this.plusMenu.contains(e.target) && 
-                !this.plusBtn.contains(e.target) && 
-                this.plusMenu.classList.contains('visible')) {
-                this.plusMenu.classList.remove('visible');
-            }
-        });
-
-        // Add image upload handler
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = 'image/*';
-        fileInput.style.display = 'none';
-        document.body.appendChild(fileInput);
-
-        this.plusMenu.querySelector('.plus-menu-item').addEventListener('click', () => {
-            fileInput.click();
-        });
-
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files[0]) {
-                this.sendImageMessage(e.target.files[0]);
-            }
-            fileInput.value = ''; // Reset input
-        });
-    }
-
-    generateMessageId() {
-        // Using crypto.randomUUID() which is supported in modern browsers
-        return crypto.randomUUID();
-    }
-
+    // Modify retryMessage method
     retryMessage(messageId) {
         const message = this.pendingMessages.get(messageId);
         if (message) {
-            this.sendMessage(message);
+            message.retryCount = (message.retryCount || 0) + 1;
+            
+            if (message.retryCount >= this.MAX_RETRIES) {
+                // Move to failed messages
+                this.failedMessages.set(messageId, message);
+                this.pendingMessages.delete(messageId);
+                
+                // Update message display to show failed status
+                this.addChatMessage(message.sender, message.content, message.content_type, 'failed');
+                this.addSystemMessage('Message failed to send. Click the retry button to try again.');
+            } else {
+                // Try sending again if under max retries
+                this.sendMessage(message);
+            }
         }
     }
 
@@ -574,8 +579,7 @@ class ChatRoom {
 
     encodeMessage(message) {
         try {
-            const encoder = new TextEncoder();
-            return encoder.encode(JSON.stringify(message));
+            return JSON.stringify(message);  // Simply stringify the message
         } catch (error) {
             console.error('Message encoding error:', error);
             throw new Error('Failed to encode message');

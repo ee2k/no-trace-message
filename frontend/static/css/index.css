@@ -1,11 +1,12 @@
 .content {
     margin: 0 auto;
-    padding: 2rem;
+    padding: 0.2rem 2rem;
 }
 
 .action-buttons {
     display: flex;
-    gap: 2.5rem;
+    flex-flow: column;
+    gap: 2.2rem;
     justify-content: center;
     flex-wrap: wrap;
 }
@@ -14,18 +15,23 @@
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    min-width: 300px;
 }
 
 .button-group h2 {
     text-align: center;
     color: var(--text-primary);
-    /* margin-bottom: 1rem; */
 }
 
-.primary-button, .secondary-button {
+.button-group .buttons {
+    display: flex;
+    flex-flow: column;
+    gap: 1.5rem;
+    margin: 0rem auto;
+}
+
+.link-button {
     display: block;
-    padding: 1rem 2rem;
+    padding: 1rem 4rem;
     border-radius: 8px;
     text-align: center;
     text-decoration: none;
@@ -33,31 +39,31 @@
     transition: background-color 0.2s;
 }
 
-.primary-button {
-    background: var(--accent-color);
-    color: white;
-}
-
-.primary-button:hover {
-    background: var(--accent-color-dark);
-}
-
-.secondary-button {
+.link-button {
     background: var(--bg-secondary);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
 }
 
-.secondary-button:hover {
+.link-button:hover {
     background: var(--bg-hover);
 }
+.index-hr {
+    border: none;
+    height: 0.1rem;
+    background-color: var(--bg-secondary);
+    margin: 0rem auto;
+    width: 50%;
+}
 footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
+    position: relative;
+    /* bottom: 0;
+    left: 0; */
     width: 100%;
     text-align: center;
     padding: 10px 0;
+    /* margin-top: auto; */
+    margin-bottom: 0;
 }
 
 footer p {
