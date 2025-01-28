@@ -224,7 +224,7 @@ footer {
     background: var(--accent-color-dark);
 }
 /* Add these styles */
-.url-box p, .token-box p {
+.url-box p, .room-box p, .token-box p {
     color: var(--text-secondary);
     margin: 0;
     min-width: 100px;  /* Ensure consistent width for labels */
@@ -251,12 +251,12 @@ footer {
         padding: 1rem;
     }
 
-    .url-box, .token-box {
+    .url-box, .room-box, .token-box {
         flex-direction: column;
         align-items: stretch;
     }
 
-    .url-box p, .token-box p {
+    .url-box p, .room-box p, .token-box p {
         margin-bottom: 0.5rem;
     }
 
@@ -292,7 +292,7 @@ footer {
         padding: 0.75rem;
     }
 
-    .url-box, .token-box {
+    .url-box, .room-box, .token-box {
         padding: 0.5rem;
     }
 

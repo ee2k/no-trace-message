@@ -54,6 +54,11 @@ class ChatRoom {
         // Add these to existing constructor
         this.MAX_RETRIES = 3;
         this.failedMessages = new Map(); // Store failed messages
+        this.messageStatuses = {
+            FAILED: 'failed',
+            SENT: 'sent',        // Delivered to server
+            DELIVERED: 'delivered' // Delivered to recipients
+        };
 
         this.setupMenu();
         this.setupMessageInput();
@@ -77,6 +82,18 @@ class ChatRoom {
 
         this.statusIcon = $('#roomStatus .status-icon');
         this.statusText = $('#roomStatus .status-text');
+
+        // Add to existing constructor
+        this.escapeHtml = (unsafe) => {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        };
+        this.username = sessionStorage.getItem('username');
+        this.userId = sessionStorage.getItem('current_user_id');
     }
 
     setupMenu() {
@@ -375,53 +392,39 @@ class ChatRoom {
 
     async sendMessage(message) {
         try {
-            // Check rate limit
-            const now = Date.now();
-            this.messageTimestamps = this.messageTimestamps.filter(
-                ts => now - ts < this.RATE_LIMIT_WINDOW
+            // Add message to UI immediately with 'sending' status
+            const messageId = this.addChatMessage(
+                message.sender, 
+                message.content, 
+                message.content_type, 
+                'sending'
             );
+            message.message_id = messageId;
 
-            if (this.messageTimestamps.length >= this.RATE_LIMIT) {
-                this.addSystemMessage('Message rate limit exceeded. Please wait a moment.');
-                return;
-            }
-
-            // Record new timestamp
-            this.messageTimestamps.push(now);
-
-            // Generate unique message ID if not present
-            if (!message.message_id) {
-                message.message_id = this.generateMessageId();
-            }
-
-            // Add timestamp if not present
-            if (!message.timestamp) {
-                message.timestamp = Date.now();
-            }
-
-            // Validate message content
-            this.validateMessage(message.content);
-
-            // Encode and send message
-            const encoded = this.encodeMessage(message);
+            let attempts = 0;
+            const maxAttempts = 3;
             
-            if (this.isConnected) {
-                await this.ws.send(encoded);  // encoded is now a JSON string
-                this.pendingMessages.set(message.message_id, message);
-                
-                // Set timeout for message acknowledgment
-                setTimeout(() => {
-                    if (this.pendingMessages.has(message.message_id)) {
-                        this.retryMessage(message.message_id);
+            while (attempts < maxAttempts) {
+                try {
+                    if (this.isConnected) {
+                        await this.ws.send(this.encodeMessage(message));
+                        // Message sent successfully
+                        this.updateMessageStatus(messageId, 'sent');
+                        return;
+                    } else {
+                        this.messageQueue.push(message);
+                        await new Promise(resolve => setTimeout(resolve, 2000));
                     }
-                }, 5000);
-            } else {
-                this.messageQueue.push(message);
-                this.addSystemMessage('Message queued - waiting for connection');
+                } catch (error) {
+                    attempts++;
+                    if (attempts === maxAttempts) {
+                        this.updateMessageStatus(messageId, 'failed');
+                        throw error;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+                }
             }
-
         } catch (error) {
-            this.addSystemMessage(`Error: ${error.message}`);
             console.error('Message sending error:', error);
             throw error;
         }
@@ -442,37 +445,54 @@ class ChatRoom {
         return crypto.randomUUID();
     }
 
-    addChatMessage(username, message, contentType, status = 'sent') {
+    addChatMessage(username, message, contentType, status = 'sending') {
         const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${username === this.username ? 'own' : 'other'}`;
+        const isOwnMessage = username === this.userId;
+        messageDiv.className = `message ${isOwnMessage ? 'own' : 'other'}`;
+        const messageId = message.message_id || this.generateMessageId();
         
+        let contentHtml;
         if (contentType === 'text') {
-            messageDiv.innerHTML = `
-                <span class="username">${username}</span>
-                <span class="text">${this.escapeHtml(message)}</span>
-                ${status === 'failed' ? `
-                    <button class="resend-btn" data-message-id="${message.message_id}"><svg class="icon-resend"><use href="/static/images/icons.svg#resend"></use></svg></button>
-                ` : ''}
-            `;
+            contentHtml = `<span class="text">${this.escapeHtml(message.content || message)}</span>`;
         } else if (contentType === 'image') {
-            messageDiv.innerHTML = `
-                <span class="username">${username}</span>
+            contentHtml = `
                 <div class="image-container">
-                    <img src="${message}" alt="User image" class="chat-image">
+                    <img src="${message.content || message}" alt="User image" class="chat-image">
                 </div>
             `;
         }
+
+        messageDiv.innerHTML = `
+            ${!isOwnMessage ? `<span class="username">User ${username.slice(0, 4)}</span>` : ''}
+            <div class="message-content">
+                <button class="message-retry ${status === 'failed' ? 'visible' : 'hidden'}">
+                    <svg class="icon-resend"><use href="/static/images/resend.svg#icon"></use></svg>
+                </button>
+                ${contentHtml}
+                ${isOwnMessage ? `
+                    <div class="message-status">
+                        <svg class="icon-check ${status === 'sent' ? 'visible' : 'hidden'}">
+                            <use href="/static/images/check.svg#icon"></use>
+                        </svg>
+                        <svg class="icon-double-check ${status === 'delivered' ? 'visible' : 'hidden'}">
+                            <use href="/static/images/d_check.svg#icon"></use>
+                        </svg>
+                    </div>
+                ` : ''}
+            </div>
+        `;
         
+        messageDiv.dataset.messageId = messageId;
         this.messages.appendChild(messageDiv);
         this.scrollToBottom();
-
-        // Add click handler for resend button if present
-        const resendBtn = messageDiv.querySelector('.resend-btn');
-        if (resendBtn) {
-            resendBtn.addEventListener('click', () => {
-                this.resendFailedMessage(message.message_id);
-            });
+    
+        // Add click handler for retry button
+        const retryButton = messageDiv.querySelector('.message-retry');
+        if (retryButton) {
+            retryButton.onclick = () => this.resendFailedMessage(messageId);
         }
+
+        return messageId;
     }
 
     // Add new method for resending failed messages
@@ -639,7 +659,7 @@ class ChatRoom {
                 message_type: 'chat',
                 content_type: 'text',
                 content: content.trim(),
-                sender: this.userId,
+                sender: this.userId,  // Using userId consistently
                 timestamp: Date.now()
             };
             
@@ -701,6 +721,45 @@ class ChatRoom {
     handleGenericError() {
         this.addSystemMessage('An error occurred');
         this.ws.close(); // Close the connection
+    }
+
+    updateMessageStatus(messageId, status) {
+        const messageDiv = this.messages.querySelector(`[data-message-id="${messageId}"]`);
+        if (!messageDiv) return;
+
+        const retryButton = messageDiv.querySelector('.message-retry');
+        const checkIcon = messageDiv.querySelector('.icon-check');
+        const doubleCheckIcon = messageDiv.querySelector('.icon-double-check');
+
+        // Reset all states
+        retryButton.classList.add('hidden');
+        checkIcon.classList.add('hidden');
+        doubleCheckIcon.classList.add('hidden');
+
+        switch (status) {
+            case this.messageStatuses.FAILED:
+                retryButton.classList.remove('hidden');
+                retryButton.onclick = () => this.resendFailedMessage(messageId);
+                break;
+            case this.messageStatuses.SENT:
+                checkIcon.classList.remove('hidden');
+                break;
+            case this.messageStatuses.DELIVERED:
+                doubleCheckIcon.classList.remove('hidden');
+                break;
+        }
+    }
+
+    addSystemMessage(message) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message system';
+        messageDiv.textContent = message;
+        this.messages.appendChild(messageDiv);
+        this.scrollToBottom();
+    }
+
+    scrollToBottom() {
+        this.messages.scrollTop = this.messages.scrollHeight;
     }
 }
 
