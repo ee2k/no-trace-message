@@ -1,7 +1,7 @@
 export default {
   create: {
     title: 'Burning Message - إنشاء',
-    subtitle: 'منصة <a href="{{global.opensource}}" class="hyperlink" target="_blank">مفتوحة المصدر</a> آمنة ومجهولة',
+    subtitle: 'منصة مفتوحة المصدر آمنة ومجهولة',
     features: {
       noHistory: 'لا سجل',
       noTracking: 'لا تتبع',

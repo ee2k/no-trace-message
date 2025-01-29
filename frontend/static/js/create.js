@@ -3,13 +3,11 @@ import { FONT_SIZES } from './constants.js';
 import { $ } from './utils/dom.js';
 import { setupSlider, updateCharCounter } from './utils/ui.js';
 import { i18n } from './utils/i18n.js';
-import { LanguageSelector } from './components/languageSelector.js';
 
 class MessageCreator {
     static async initialize() {
         await i18n.loadTranslations(i18n.currentLocale);
         i18n.updateTranslations();
-        new LanguageSelector('languageSelector');
         return new MessageCreator();
     }
 

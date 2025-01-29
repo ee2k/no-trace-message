@@ -32,7 +32,7 @@ class I18nManager {
     return lang || this.defaultLocale;
   }
 
-  async loadTranslations(locale) {
+  async loadTranslations(locale, i18nFile = null) {
     if (!this.translations.has(locale)) {
       try {
         // Load global translations
@@ -42,8 +42,8 @@ class I18nManager {
         const commonModule = await import(`../../i18n/${locale}/common.js`);
         
         // Load page-specific translations based on current page
-        const pageName = this.getCurrentPage();
-        const pageModule = await import(`../../i18n/${locale}/pages/${pageName}.js`);
+        const page = i18nFile || this.getCurrentPage();
+        const pageModule = await import(`../../i18n/${locale}/pages/${page}.js`);
         
         // Merge translations
         this.translations.set(locale, {
@@ -54,7 +54,7 @@ class I18nManager {
       } catch (error) {
         console.warn(`Failed to load translations for ${locale}, falling back to English`);
         if (locale !== this.defaultLocale) {
-          await this.loadTranslations(this.defaultLocale);
+          await this.loadTranslations(this.defaultLocale, i18nFile);
         }
       }
     }

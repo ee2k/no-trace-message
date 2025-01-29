@@ -1,7 +1,7 @@
 export default {
   create: {
     title: 'Burning Message - Créer',
-    subtitle: 'Une plateforme <a href="{{global.opensource}}" class="hyperlink" target="_blank">open source</a> sécurisée et anonyme',
+    subtitle: 'Une plateforme open source sécurisée et anonyme',
     features: {
       noHistory: 'Pas d\'historique',
       noTracking: 'Pas de traçage',

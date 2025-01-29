@@ -18,6 +18,15 @@ h1 a {
 .subtitle {
     color: var(--text-secondary);
     margin: 0.5rem 0 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+}
+
+.subtitle a {
+    display: flex;
+    align-items: center;
 }
 
 .features {
@@ -43,6 +52,13 @@ h1 a {
     width: 90%;
 }
 
+.github-icon {
+    width: 1.5rem;
+    aspect-ratio: 1;
+    border: none;
+    color: var(--text-secondary);
+    display: block;
+}
 /* For very small screens*/
 @media (max-width: 428px) {
     .subtitle {
