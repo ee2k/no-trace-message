@@ -60,6 +60,9 @@ class ChatRoom {
             DELIVERED: 'delivered' // Delivered to recipients
         };
 
+        // Add participant tracking
+        this.participants = new Map();  // userId -> {username, joinedAt}
+
         this.setupMenu();
         this.setupMessageInput();
         this.setupPlusMenu();
@@ -223,7 +226,8 @@ class ChatRoom {
     connectWebSocket() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const encodedToken = this.token ? encodeURIComponent(this.token) : '';
-        const wsUrl = `${protocol}//${window.location.host}/ws/chatroom/${this.roomId}?${this.token ? `token=${encodedToken}` : ''}`;
+        const encodedUsername = encodeURIComponent(this.username);
+        const wsUrl = `${protocol}//${window.location.host}/ws/chatroom/${this.roomId}?username=${encodedUsername}${this.token ? `&token=${encodedToken}` : ''}`;
         
         console.log('[WebSocket] Connecting to:', wsUrl);
         console.log('[WebSocket] Using token:', this.token ? 'Yes' : 'No');
@@ -286,9 +290,11 @@ class ChatRoom {
 
             this.ws.onmessage = (event) => {
                 try {
+                    console.log('Received message:', event.data);
                     const message = JSON.parse(event.data);
                     
                     if (message.type === 'auth') {
+                        console.log('Auth received, setting user ID:', message.user_id);
                         this.userId = message.user_id;
                         sessionStorage.setItem('current_user_id', this.userId);
                         return;
@@ -301,8 +307,10 @@ class ChatRoom {
                     } else {
                         this.handleMessage(data);
                     }
+                    console.log('Processing message:', message);
                 } catch (error) {
                     console.error('Message processing error:', error);
+                    console.log('Raw message:', event.data);
                     this.addSystemMessage('Error processing message');
                 }
             };
@@ -335,7 +343,15 @@ class ChatRoom {
     handleMessage(data) {
         switch (data.message_type) {
             case 'chat':
-                this.addChatMessage(data.sender, data.content, data.content_type);
+                // No need to check sender_id since backend won't send our messages back
+                this.addChatMessage(data.sender_id, data, data.content_type);
+                break;
+            
+            case 'ack':
+                if (data.message_id) {
+                    this.updateMessageStatus(data.message_id, data.status || this.messageStatuses.DELIVERED);
+                    this.pendingMessages.delete(data.message_id);
+                }
                 break;
             
             case 'system':
@@ -343,13 +359,38 @@ class ChatRoom {
                 break;
             
             case 'pong':
-                // Update last pong time for connection health
                 this.lastPong = Date.now();
                 break;
             
-            case 'ack':
-                // Message acknowledged, remove from pending
-                this.pendingMessages.delete(data.message_id);
+            case 'participant_list':
+                // Initialize participant list
+                data.participants.forEach(participant => {
+                    this.participants.set(participant.user_id, {
+                        username: participant.username,
+                        joinedAt: Date.now()
+                    });
+                });
+                this.updateParticipantDisplay();
+                break;
+            
+            case 'user_joined':
+                // Add new participant
+                this.participants.set(data.user.user_id, {
+                    username: data.user.username,
+                    joinedAt: Date.now()
+                });
+                this.addSystemMessage(`${data.user.username} joined the chat`);
+                this.updateParticipantDisplay();
+                break;
+            
+            case 'user_left':
+                // Remove participant
+                const leftUser = this.participants.get(data.user_id);
+                if (leftUser) {
+                    this.participants.delete(data.user_id);
+                    this.addSystemMessage(`${leftUser.username} left the chat`);
+                    this.updateParticipantDisplay();
+                }
                 break;
             
             case 'participant_update':
@@ -394,7 +435,7 @@ class ChatRoom {
         try {
             // Add message to UI immediately with 'sending' status
             const messageId = this.addChatMessage(
-                message.sender, 
+                message.sender_id, 
                 message.content, 
                 message.content_type, 
                 'sending'
@@ -407,7 +448,18 @@ class ChatRoom {
             while (attempts < maxAttempts) {
                 try {
                     if (this.isConnected) {
-                        await this.ws.send(this.encodeMessage(message));
+                        // Restructure message to match backend expectations
+                        const messageData = {
+                            message_id: message.message_id,
+                            message_type: message.message_type || 'chat',
+                            content_type: message.content_type || 'text',
+                            content: message.content,
+                            sender_id: this.userId,
+                            timestamp: Date.now()
+                        };
+                        
+                        console.log('Sending formatted message:', messageData);
+                        await this.ws.send(this.encodeMessage(messageData));
                         // Message sent successfully
                         this.updateMessageStatus(messageId, 'sent');
                         return;
@@ -445,53 +497,67 @@ class ChatRoom {
         return crypto.randomUUID();
     }
 
-    addChatMessage(username, message, contentType, status = 'sending') {
-        const messageDiv = document.createElement('div');
-        const isOwnMessage = username === this.userId;
-        messageDiv.className = `message ${isOwnMessage ? 'own' : 'other'}`;
-        const messageId = message.message_id || this.generateMessageId();
+    addChatMessage(sender_id, message, contentType, status = 'sending') {
+        const messageContainer = document.createElement('div');
+        const isOwnMessage = sender_id === this.userId;
+        messageContainer.className = `message-container ${isOwnMessage ? 'own' : 'other'}`;
+        const messageId = (typeof message === 'object' ? message.message_id : null) || this.generateMessageId();
         
-        let contentHtml;
-        if (contentType === 'text') {
-            contentHtml = `<span class="text">${this.escapeHtml(message.content || message)}</span>`;
-        } else if (contentType === 'image') {
-            contentHtml = `
-                <div class="image-container">
-                    <img src="${message.content || message}" alt="User image" class="chat-image">
-                </div>
-            `;
-        }
+        // Format timestamp
+        const timestamp = new Date(typeof message === 'object' ? message.timestamp : Date.now());
+        const timeString = timestamp.toLocaleString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+        
+        // Status icons for own messages
+        const statusHtml = isOwnMessage ? `
+            <svg class="icon-check ${status === 'sent' ? 'visible' : 'hidden'}">
+                <use href="/static/images/check.svg#icon"></use>
+            </svg>
+            <svg class="icon-double-check ${status === 'delivered' ? 'visible' : 'hidden'}">
+                <use href="/static/images/d_check.svg#icon"></use>
+            </svg>
+        ` : '';
 
-        messageDiv.innerHTML = `
-            ${!isOwnMessage ? `<span class="username">User ${username.slice(0, 4)}</span>` : ''}
-            <div class="message-content">
+        // Get sender's username from participants map or use ID
+        const sender = this.participants.get(sender_id);
+        const displayName = sender ? sender.username : `User ${sender_id.slice(0, 4)}`;
+        
+        messageContainer.innerHTML = `
+            ${isOwnMessage ? `
                 <button class="message-retry ${status === 'failed' ? 'visible' : 'hidden'}">
                     <svg class="icon-resend"><use href="/static/images/resend.svg#icon"></use></svg>
                 </button>
-                ${contentHtml}
-                ${isOwnMessage ? `
+            ` : ''}
+            <span class="username">${this.escapeHtml(displayName)}</span>
+            <div class="message">
+                <div class="message-content ${isOwnMessage ? 'own' : 'other'}">
+                    <span class="text">${this.escapeHtml(typeof message === 'object' ? message.content : message)}</span>
                     <div class="message-status">
-                        <svg class="icon-check ${status === 'sent' ? 'visible' : 'hidden'}">
-                            <use href="/static/images/check.svg#icon"></use>
-                        </svg>
-                        <svg class="icon-double-check ${status === 'delivered' ? 'visible' : 'hidden'}">
-                            <use href="/static/images/d_check.svg#icon"></use>
-                        </svg>
+                        <span class="message-time">${timeString}</span>
+                        ${statusHtml}
+                    </div>
+                </div>
+                ${contentType === 'image' ? `
+                    <div class="image-container">
+                        <img src="${typeof message === 'object' ? message.content : message}" alt="User image" class="chat-image">
                     </div>
                 ` : ''}
             </div>
         `;
         
-        messageDiv.dataset.messageId = messageId;
-        this.messages.appendChild(messageDiv);
+        messageContainer.dataset.messageId = messageId;
+        this.messages.appendChild(messageContainer);
         this.scrollToBottom();
-    
+        
         // Add click handler for retry button
-        const retryButton = messageDiv.querySelector('.message-retry');
+        const retryButton = messageContainer.querySelector('.message-retry');
         if (retryButton) {
             retryButton.onclick = () => this.resendFailedMessage(messageId);
         }
-
+        
         return messageId;
     }
 
@@ -520,7 +586,7 @@ class ChatRoom {
                 this.pendingMessages.delete(messageId);
                 
                 // Update message display to show failed status
-                this.addChatMessage(message.sender, message.content, message.content_type, 'failed');
+                this.addChatMessage(message.sender_id, message.content, message.content_type, 'failed');
                 this.addSystemMessage('Message failed to send. Click the retry button to try again.');
             } else {
                 // Try sending again if under max retries
@@ -659,10 +725,11 @@ class ChatRoom {
                 message_type: 'chat',
                 content_type: 'text',
                 content: content.trim(),
-                sender: this.userId,  // Using userId consistently
+                sender_id: this.userId,
                 timestamp: Date.now()
             };
             
+            console.log('Sending message:', message);
             await this.sendMessage(message);
             
             // Only clear input and reset height if message was sent successfully
@@ -685,20 +752,38 @@ class ChatRoom {
             return;
         }
 
-        const reader = new FileReader();
-        reader.onload = async (e) => {
+        try {
+            // Create form data for image upload
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            // Upload image first
+            const response = await fetch('/api/chat/upload-image', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to upload image');
+            }
+            
+            const { url } = await response.json();
+            
+            // Send message with image URL
             const message = {
                 message_id: this.generateMessageId(),
                 message_type: 'chat',
                 content_type: 'image',
-                content: e.target.result,
-                sender: this.userId,
+                content: url,
+                sender_id: this.userId,
                 timestamp: Date.now()
             };
             
             await this.sendMessage(message);
-        };
-        reader.readAsDataURL(file);
+        } catch (error) {
+            console.error('Failed to send image:', error);
+            this.addSystemMessage('Failed to send image. Please try again.');
+        }
     }
 
     handleRoomNotFound() {
@@ -724,12 +809,12 @@ class ChatRoom {
     }
 
     updateMessageStatus(messageId, status) {
-        const messageDiv = this.messages.querySelector(`[data-message-id="${messageId}"]`);
-        if (!messageDiv) return;
+        const messageContainer = this.messages.querySelector(`[data-message-id="${messageId}"]`);
+        if (!messageContainer) return;
 
-        const retryButton = messageDiv.querySelector('.message-retry');
-        const checkIcon = messageDiv.querySelector('.icon-check');
-        const doubleCheckIcon = messageDiv.querySelector('.icon-double-check');
+        const retryButton = messageContainer.querySelector('.message-retry');
+        const checkIcon = messageContainer.querySelector('.icon-check');
+        const doubleCheckIcon = messageContainer.querySelector('.icon-double-check');
 
         // Reset all states
         retryButton.classList.add('hidden');
@@ -760,6 +845,13 @@ class ChatRoom {
 
     scrollToBottom() {
         this.messages.scrollTop = this.messages.scrollHeight;
+    }
+
+    updateParticipantDisplay() {
+        // Update UI to show current participants
+        const participantCount = this.participants.size;
+        this.participantCount = participantCount;
+        this.updateRoomStatus();
     }
 }
 

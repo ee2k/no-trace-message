@@ -90,24 +90,50 @@
     gap: 1rem;
 }
 
-.message {
-    font-size: 0.9rem;
+.message-container {
+    display: flex;
+    flex-direction: column;
     max-width: 70%;
+    /* margin: 0.5rem 0; */
+}
+
+.message-container.own {
+    align-self: flex-end;
+    margin-right: 0.2rem;
+}
+
+.message-container.other {
+    align-self: flex-start;
+}
+
+.message {
+    display: flex;
+    flex-direction: column;
+}
+
+.message-content {
     padding: 0.8rem;
     border-radius: 8px;
     word-wrap: break-word;
-    opacity: 0.8;
-    position: relative;
+    background-color: var(--message-bg-other);
 }
 
-.message.own {
-    align-self: flex-end;
+.message-content.own {
     background-color: var(--message-bg-own);
 }
 
-.message.other {
-    align-self: flex-start;
-    background-color: var(--message-bg-other);
+.username {
+    font-size: 0.7rem;
+    opacity: 0.7;
+    margin-bottom: 0.2rem;
+}
+
+.message-container.own .username {
+    text-align: right;
+}
+
+.message-container.other .username {
+    text-align: left;
 }
 
 .message.system {
@@ -118,44 +144,26 @@
     padding: 0.5rem 1rem;
 }
 
-.message .username {
-    display: block;
-    font-size: 0.7rem;
-    margin-bottom: 0.2rem;
-    opacity: 0.7;
-}
-
-.message-content {
-    position: relative;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-}
-
-.text {
-    flex: 1;
-    min-width: 0;  /* Allows text to shrink below flex item's content size */
-    margin-right: 0.2rem;  /* Space for status icons on the same line */
-}
-
 .message-status {
     display: flex;
     align-items: center;
-    gap: 0.2rem;
-    margin-left: auto;  /* Pushes status to the right */
-    padding-left: 0.5rem;  /* Space between text and status */
+    gap: 0.3rem;
+    justify-content: flex-end;  /* Align to the right */
 }
 
-.icon-check, .icon-double-check, .icon-resend {
-    width: 0.9rem;  /* Slightly smaller icons */
-    height: 0.9rem;
-    fill: currentColor;
-    opacity: 0.7;  /* Slightly dimmed */
+.message-time {
+    font-size: 0.7rem;
+    opacity: 0.7;
+}
+
+.icon-check, .icon-double-check {
+    width: 1.2rem;
+    height: 1.2rem;
 }
 
 .message-retry {
+    left: -2.2rem; /* Adjust position for own messages */
     position: absolute;
-    left: -1.5rem;
     top: 50%;
     transform: translateY(-50%);
     display: none;
@@ -587,8 +595,9 @@
     color: var(--text-secondary);
 }
 .icon-resend {
-    width: 16px;
-    height: 16px;
+    width: 1.2rem;
+    aspect-ratio: 1;
+    /* height: 1.2rem; */
     fill: currentColor;
 }
 
@@ -607,11 +616,11 @@
     max-width: 100%;
     max-height: 300px;
     border-radius: 8px;
-    margin-top: 4px;
+    display: block;
 }
 
 .image-container {
-    margin-top: 4px;
+    margin-top: 0.5rem;  /* Space between message and image */
 }
 
 /* Mobile Responsiveness, always put this at the bottom */
@@ -626,9 +635,9 @@
         transform: translateY(-50%);
     }
 
-    .message {
+    /* .message {
         max-width: 85%;
-    }
+    } */
 
     .chat-input {
         padding: 0.3rem;

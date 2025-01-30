@@ -133,8 +133,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             const data = await response.json();
-            // Store user ID and token
+            // Store user ID, token, and username
             sessionStorage.setItem('current_user_id', data.user_id);
+            sessionStorage.setItem('username', username);
             if (data.room_token) {
                 sessionStorage.setItem(`room_token_${data.room_id}`, data.room_token);
             }

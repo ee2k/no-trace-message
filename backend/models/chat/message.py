@@ -22,7 +22,7 @@ class Message(BaseModel):
     message_type: MessageType
     content_type: ContentType
     content: str
-    sender: str
+    sender_id: str
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     delivered_to: set[str] = Field(default_factory=set)
 
