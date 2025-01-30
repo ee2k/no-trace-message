@@ -1,5 +1,9 @@
-from enum import Enum
+from enum import Enum, auto
 
 class APITags(str, Enum):
-    MESSAGE = "message"
-    CHAT = "chat"
+    def _generate_next_value_(name, start, count, last_values):
+        return name
+
+    message = auto
+    chat = auto
+    image = auto

@@ -340,11 +340,18 @@ class ChatRoom {
         return true;
     }
 
-    handleMessage(data) {
+    async handleMessage(data) {
         switch (data.message_type) {
             case 'chat':
-                // No need to check sender_id since backend won't send our messages back
-                this.addChatMessage(data.sender_id, data, data.content_type);
+                if (data.content_type === 'image') {
+                    // Add message with image
+                    this.addChatMessage(data.sender_id, {
+                        ...data,
+                        content: await this.fetchImage(data.content)
+                    }, 'image');
+                } else {
+                    this.addChatMessage(data.sender_id, data, data.content_type);
+                }
                 break;
             
             case 'ack':
@@ -503,28 +510,35 @@ class ChatRoom {
         messageContainer.className = `message-container ${isOwnMessage ? 'own' : 'other'}`;
         const messageId = (typeof message === 'object' ? message.message_id : null) || this.generateMessageId();
         
-        // Format timestamp
         const timestamp = new Date(typeof message === 'object' ? message.timestamp : Date.now());
-        const timeString = timestamp.toLocaleString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true
-        });
+        
+        // Add timestamp to container
+        messageContainer.dataset.timestamp = timestamp.getTime();
         
         // Status icons for own messages
         const statusHtml = isOwnMessage ? `
-            <svg class="icon-check ${status === 'sent' ? 'visible' : 'hidden'}">
-                <use href="/static/images/check.svg#icon"></use>
-            </svg>
-            <svg class="icon-double-check ${status === 'delivered' ? 'visible' : 'hidden'}">
-                <use href="/static/images/d_check.svg#icon"></use>
-            </svg>
+            <div class="message-status">
+                <svg class="icon-check ${status === 'sent' ? 'visible' : 'hidden'}">
+                    <use href="/static/images/check.svg#icon"></use>
+                </svg>
+                <svg class="icon-double-check ${status === 'delivered' ? 'visible' : 'hidden'}">
+                    <use href="/static/images/d_check.svg#icon"></use>
+                </svg>
+            </div>
         ` : '';
-
-        // Get sender's username from participants map or use ID
+    
+        // Get sender's username
         const sender = this.participants.get(sender_id);
         const displayName = sender ? sender.username : `User ${sender_id.slice(0, 4)}`;
         
+        // Handle content based on type
+        const messageContent = typeof message === 'object' ? message.content : message;
+        const contentHtml = contentType === 'image' ? `
+            <div class="image-container">
+                <img src="${messageContent}" class="chat-image">
+            </div>
+        ` : `<span class="text">${this.escapeHtml(messageContent || '')}</span>`;
+    
         messageContainer.innerHTML = `
             ${isOwnMessage ? `
                 <button class="message-retry ${status === 'failed' ? 'visible' : 'hidden'}">
@@ -532,24 +546,15 @@ class ChatRoom {
                 </button>
             ` : ''}
             <span class="username">${this.escapeHtml(displayName)}</span>
-            <div class="message">
-                <div class="message-content ${isOwnMessage ? 'own' : 'other'}">
-                    <span class="text">${this.escapeHtml(typeof message === 'object' ? message.content : message)}</span>
-                    <div class="message-status">
-                        <span class="message-time">${timeString}</span>
-                        ${statusHtml}
-                    </div>
-                </div>
-                ${contentType === 'image' ? `
-                    <div class="image-container">
-                        <img src="${typeof message === 'object' ? message.content : message}" alt="User image" class="chat-image">
-                    </div>
-                ` : ''}
+            <div class="message-content ${isOwnMessage ? 'own' : 'other'}">
+                ${contentHtml}
+                ${statusHtml}
             </div>
         `;
         
         messageContainer.dataset.messageId = messageId;
         this.messages.appendChild(messageContainer);
+        this.updateMessageTimes();
         this.scrollToBottom();
         
         // Add click handler for retry button
@@ -753,11 +758,30 @@ class ChatRoom {
         }
 
         try {
-            // Create form data for image upload
+            // Show image immediately
+            const reader = new FileReader();
+            const imageUrl = await new Promise((resolve) => {
+                reader.onload = (e) => resolve(e.target.result);
+                reader.readAsDataURL(file);
+            });
+
+            // Create message with temporary image
+            const finalMessage = {
+                message_id: this.generateMessageId(),
+                message_type: 'chat',
+                content_type: 'image',
+                content: imageUrl,
+                sender_id: this.userId,
+                timestamp: Date.now()
+            };
+
+            // Add message to UI with 'sending' status
+            const messageId = this.addChatMessage(this.userId, finalMessage, 'image', 'sending');
+            
+            // Upload image
             const formData = new FormData();
             formData.append('image', file);
             
-            // Upload image first
             const response = await fetch('/api/chat/upload-image', {
                 method: 'POST',
                 body: formData
@@ -767,21 +791,17 @@ class ChatRoom {
                 throw new Error('Failed to upload image');
             }
             
-            const { url } = await response.json();
+            const { image_id } = await response.json();
             
-            // Send message with image URL
-            const message = {
-                message_id: this.generateMessageId(),
-                message_type: 'chat',
-                content_type: 'image',
-                content: url,
-                sender_id: this.userId,
-                timestamp: Date.now()
-            };
+            // Update message with image ID
+            finalMessage.content = image_id;
+            await this.sendMessage(finalMessage);
             
-            await this.sendMessage(message);
+            // Update status to 'sent' (delivered to server)
+            this.updateMessageStatus(messageId, 'sent');
         } catch (error) {
             console.error('Failed to send image:', error);
+            this.updateMessageStatus(messageId, 'failed');
             this.addSystemMessage('Failed to send image. Please try again.');
         }
     }
@@ -812,26 +832,23 @@ class ChatRoom {
         const messageContainer = this.messages.querySelector(`[data-message-id="${messageId}"]`);
         if (!messageContainer) return;
 
-        const retryButton = messageContainer.querySelector('.message-retry');
         const checkIcon = messageContainer.querySelector('.icon-check');
         const doubleCheckIcon = messageContainer.querySelector('.icon-double-check');
-
-        // Reset all states
-        retryButton.classList.add('hidden');
-        checkIcon.classList.add('hidden');
-        doubleCheckIcon.classList.add('hidden');
-
-        switch (status) {
-            case this.messageStatuses.FAILED:
+        
+        if (status === 'sent') {
+            checkIcon?.classList.add('visible');
+            checkIcon?.classList.remove('hidden');
+        } else if (status === 'delivered') {
+            checkIcon?.classList.remove('visible');
+            checkIcon?.classList.add('hidden');
+            doubleCheckIcon?.classList.add('visible');
+            doubleCheckIcon?.classList.remove('hidden');
+        } else if (status === 'failed') {
+            const retryButton = messageContainer.querySelector('.message-retry');
+            if (retryButton) {
+                retryButton.classList.add('visible');
                 retryButton.classList.remove('hidden');
-                retryButton.onclick = () => this.resendFailedMessage(messageId);
-                break;
-            case this.messageStatuses.SENT:
-                checkIcon.classList.remove('hidden');
-                break;
-            case this.messageStatuses.DELIVERED:
-                doubleCheckIcon.classList.remove('hidden');
-                break;
+            }
         }
     }
 
@@ -852,6 +869,56 @@ class ChatRoom {
         const participantCount = this.participants.size;
         this.participantCount = participantCount;
         this.updateRoomStatus();
+    }
+
+    async fetchImage(imageId) {
+        try {
+            const response = await fetch(`/api/chat/get-image/${imageId}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch image');
+            }
+            const blob = await response.blob();
+            return URL.createObjectURL(blob);
+        } catch (error) {
+            console.error('Error fetching image:', error);
+            return null;
+        }
+    }
+
+    updateMessageContent(messageId, newContent) {
+        const messageContainer = this.messages.querySelector(`[data-message-id="${messageId}"]`);
+        if (messageContainer) {
+            const contentDiv = messageContainer.querySelector('.message-content');
+            if (contentDiv) {
+                contentDiv.innerHTML = newContent;
+            }
+        }
+    }
+
+    // Add this method to handle time display
+    updateMessageTimes() {
+        const messages = Array.from(this.messages.querySelectorAll('.message-container'));
+        let lastTime = null;
+        
+        // Remove existing time messages
+        this.messages.querySelectorAll('.message-time').forEach(el => el.remove());
+        
+        messages.forEach((message, index) => {
+            const timestamp = Number(message.dataset.timestamp);
+            const messageTime = new Date(timestamp);
+            
+            // Show time if it's the first message or 5 minutes after last time
+            if (!lastTime || messageTime - lastTime > 5 * 60 * 1000) {
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'message system message-time';
+                timeDiv.textContent = messageTime.toLocaleTimeString([], {
+                    hour: 'numeric',
+                    minute: '2-digit'
+                });
+                this.messages.insertBefore(timeDiv, message);
+                lastTime = messageTime;
+            }
+        });
     }
 }
 
