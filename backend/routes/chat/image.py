@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Form
 from fastapi.responses import StreamingResponse
 from datetime import datetime, timedelta
 from typing import Dict
@@ -14,7 +14,11 @@ MAX_IMAGE_SIZE = 3 * 1024 * 1024  # 3MB
 ALLOWED_MIME_TYPES = {'image/jpeg', 'image/png', 'image/gif', 'image/webp'}
 
 @router.post("/upload-image")
-async def upload_image(image: UploadFile = File(...)):
+async def upload_image(
+    image: UploadFile = File(...),
+    message_id: str = Form(...),
+    timestamp: str = Form(...)
+):
     try:
         # Validate image
         if image.content_type not in ALLOWED_MIME_TYPES:
@@ -32,16 +36,18 @@ async def upload_image(image: UploadFile = File(...)):
         image_store[image_id] = {
             'data': image_data,
             'content_type': image.content_type,
-            'expires_at': datetime.now() + timedelta(hours=1)
+            'expires_at': datetime.now() + timedelta(hours=1),
+            'message_id': message_id,
+            'timestamp': timestamp
         }
         
-        return {"image_id": image_id}
+        return {"success": True, "image_id": image_id}
     
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error uploading image: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to upload image")
+        return {"success": False, "reason": str(e)}
 
 @router.get("/get-image/{image_id}")
 async def get_image(image_id: str):

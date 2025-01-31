@@ -386,7 +386,7 @@ class ChatRoom {
                     username: data.user.username,
                     joinedAt: Date.now()
                 });
-                this.addSystemMessage(`${data.user.username} joined the chat`);
+                this.addSystemMessage(`${data.user.username} ⎆`);
                 this.updateParticipantDisplay();
                 break;
             
@@ -395,7 +395,7 @@ class ChatRoom {
                 const leftUser = this.participants.get(data.user_id);
                 if (leftUser) {
                     this.participants.delete(data.user_id);
-                    this.addSystemMessage(`${leftUser.username} left the chat`);
+                    this.addSystemMessage(`⇠ ${leftUser.username}`);
                     this.updateParticipantDisplay();
                 }
                 break;
@@ -518,6 +518,11 @@ class ChatRoom {
         // Status icons for own messages
         const statusHtml = isOwnMessage ? `
             <div class="message-status">
+                ${status === 'loading' ? `
+                    <svg class="icon-loading">
+                        <use href="/static/images/loading.svg#icon"></use>
+                    </svg>
+                ` : ''}
                 <svg class="icon-check ${status === 'sent' ? 'visible' : 'hidden'}">
                     <use href="/static/images/check.svg#icon"></use>
                 </svg>
@@ -758,47 +763,56 @@ class ChatRoom {
         }
 
         try {
-            // Show image immediately
+            // Generate message ID and timestamp
+            const messageId = this.generateMessageId();
+            const timestamp = Date.now();
+
+            // Create message with local image and loading icon
             const reader = new FileReader();
             const imageUrl = await new Promise((resolve) => {
                 reader.onload = (e) => resolve(e.target.result);
                 reader.readAsDataURL(file);
             });
 
-            // Create message with temporary image
-            const finalMessage = {
-                message_id: this.generateMessageId(),
+            const message = {
+                message_id: messageId,
                 message_type: 'chat',
                 content_type: 'image',
                 content: imageUrl,
                 sender_id: this.userId,
-                timestamp: Date.now()
+                timestamp: timestamp
             };
 
-            // Add message to UI with 'sending' status
-            const messageId = this.addChatMessage(this.userId, finalMessage, 'image', 'sending');
-            
-            // Upload image
+            // Add message to UI with loading state
+            this.addChatMessage(this.userId, message, 'image', 'loading');
+
+            // Upload image with message metadata
             const formData = new FormData();
             formData.append('image', file);
-            
+            formData.append('message_id', messageId);
+            formData.append('timestamp', timestamp.toString());
+
             const response = await fetch('/api/chat/upload-image', {
                 method: 'POST',
                 body: formData
             });
+
+            const result = await response.json();
             
-            if (!response.ok) {
-                throw new Error('Failed to upload image');
+            if (!result.success) {
+                throw new Error(result.reason || 'Image upload failed');
             }
-            
-            const { image_id } = await response.json();
-            
-            // Update message with image ID
-            finalMessage.content = image_id;
-            await this.sendMessage(finalMessage);
-            
-            // Update status to 'sent' (delivered to server)
+
+            // Update message status to sent
             this.updateMessageStatus(messageId, 'sent');
+
+            // Send message through WebSocket
+            const wsMessage = {
+                ...message,
+                content: result.image_id // Use server image ID for delivery
+            };
+            await this.sendMessage(wsMessage);
+
         } catch (error) {
             console.error('Failed to send image:', error);
             this.updateMessageStatus(messageId, 'failed');

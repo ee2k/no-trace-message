@@ -45,7 +45,10 @@ body {
   position: relative;
   max-width: 800px;
   margin: 0 auto;
-  padding: 1rem 1.5rem;
+  padding: 0rem 1.5rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 /* Global Input Styles */
 input {
@@ -80,4 +83,10 @@ button:hover {
 .hyperlink {
     color: var(--accent-color);
     text-decoration: none;
+}
+/* Mobile Responsiveness, always put this at the bottom */
+@media (max-width: 600px) {
+    .container {
+        padding: 0;
+      }
 }

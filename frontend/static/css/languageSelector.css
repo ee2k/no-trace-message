@@ -67,3 +67,9 @@
 .language-item.active {
     color: var(--accent-color);
 }
+@media (max-width: 600px) {
+    .language-selector-container {
+        top: 0.3rem;
+        right: 0.3rem;
+    }
+}

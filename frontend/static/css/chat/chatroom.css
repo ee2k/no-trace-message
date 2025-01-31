@@ -1,12 +1,13 @@
 .chat-container {
+    max-width: 800px;
     height: 100vh;
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
     background-color: var(--bg-color);
     color: var(--text-color);
 }
 
-/* Header Styles */
 .chat-header {
     display: flex;
     flex-direction: column;
@@ -138,7 +139,6 @@
 .message.system {
     align-self: center;
     background-color: var(--message-bg-system);
-    font-style: italic;
     font-size: 0.9rem;
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
@@ -633,6 +633,16 @@
     max-width: 100%;
 }
 
+.icon-loading {
+    width: 1rem;
+    height: 1rem;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
 /* Mobile Responsiveness, always put this at the bottom */
 @media (max-width: 600px) {
     .room-info {
