@@ -830,7 +830,7 @@ class ChatRoom {
     }
 
     updateMessageStatus(messageId, status) {
-        alert("updateMessageStatus: "+status)
+        // alert("updateMessageStatus: "+status)
         const messageContainer = $(`[data-message-id="${messageId}"]`);
         if (!messageContainer) return;
       
@@ -847,14 +847,14 @@ class ChatRoom {
                 case 'sending':
                     svgUse.setAttribute('href', '/static/images/loading.svg#icon');
                     break;
+                case 'failed':
+                    svgUse.setAttribute('href', '');
+                    break;
                 case 'sent':
                     svgUse.setAttribute('href', '/static/images/check.svg#icon');
                     break;
                 case 'delivered':
                     svgUse.setAttribute('href', '/static/images/d_check.svg#icon');
-                    break;
-                case 'failed':
-                    svgUse.setAttribute('href', '');
                     break;
                 default:
                     console.warn('Unknown status:', status);
