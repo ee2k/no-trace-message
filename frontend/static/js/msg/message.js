@@ -69,7 +69,7 @@ class MessagePage {
         this.imageContent = $('.image-content');
         this.messageImage = $('.message-image');
         this.lightbox = $('.lightbox');
-        this.lightboxImage = $('img', this.lightbox);
+        this.lightboxImage = this.lightbox.$('img');
         this.messageContent = $('.message-content');
         
         // Token related elements

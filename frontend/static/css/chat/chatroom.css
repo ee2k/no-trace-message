@@ -112,7 +112,7 @@
 }
 
 .message-content {
-    padding: 0.8rem;
+    padding: 0.5rem 1.5rem;
     border-radius: 8px;
     word-wrap: break-word;
     background-color: var(--message-bg-other);
@@ -138,6 +138,7 @@
 
 .message.system {
     align-self: center;
+    color: var(--text-secondary);
     background-color: var(--message-bg-system);
     font-size: 0.9rem;
     padding: 0.5rem 1rem;
@@ -147,12 +148,36 @@
 .message-status {
     display: flex;
     align-items: center;
-    gap: 0.3rem;
     justify-content: flex-end;
     margin-top: 0.3rem;
+    min-width: 1rem;
 }
 
-.message-time {
+.message-status-icon {
+    width: 1rem;
+    height: 1rem;
+    transition: opacity 0.2s ease;
+}
+
+.message-status-icon.loading {
+    /* animation: spin 1s linear infinite; */
+    opacity: 0.7;
+}
+
+.message-status-icon.visible {
+    opacity: 1;
+}
+
+.message-status-icon.hidden {
+    opacity: 0;
+}
+
+/* Remove individual icon classes */
+.icon-check, .icon-double-check, .icon-loading {
+    display: none; /* Remove these individual classes */
+}
+
+/* .message-time {
     text-align: center;
     font-size: 0.8rem;
     color: #666;
@@ -163,13 +188,13 @@
     max-width: 80%;
     margin-left: auto;
     margin-right: auto;
-}
+} */
 
-.icon-check, .icon-double-check {
+/* .icon-check, .icon-double-check, .icon-loading {
     width: 1rem;
     height: 1rem;
     margin-left: 0.3rem;
-}
+} */
 
 .message-retry {
     left: -2.2rem; /* Adjust position for own messages */
@@ -544,10 +569,6 @@
     stroke: var(--icon-disabled);
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
 #roomInfo {
     font-size: 1em;
     text-align: center;
@@ -607,14 +628,7 @@
 .icon-resend {
     width: 1.2rem;
     aspect-ratio: 1;
-    /* height: 1.2rem; */
     fill: currentColor;
-}
-
-/* Spin Animation */
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
 }
 
 /* Flicker Animation */
@@ -633,16 +647,11 @@
     max-width: 100%;
 }
 
-.icon-loading {
-    width: 1rem;
-    height: 1rem;
-    animation: spin 1s linear infinite;
-}
-
+/* Spin Animation */
 @keyframes spin {
-    from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
+
 /* Mobile Responsiveness, always put this at the bottom */
 @media (max-width: 600px) {
     .room-info {

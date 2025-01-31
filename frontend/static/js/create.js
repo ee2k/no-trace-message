@@ -1,4 +1,3 @@
-// import { initSvgIcons } from './global.js';
 import { FONT_SIZES } from './constants.js';
 import { $ } from './utils/dom.js';
 import { setupSlider, updateCharCounter } from './utils/ui.js';
@@ -11,9 +10,7 @@ class MessageCreator {
         return new MessageCreator();
     }
 
-    constructor() {
-        // initSvgIcons();
-        
+    constructor() {        
         this.messageInput = $('#messageContent');
         this.dropZone = $('#dropZone');
         this.fileInput = $('#fileInput');
@@ -105,13 +102,13 @@ class MessageCreator {
     
     setupExpirySlider() {
         const slider = $('#expiryTime');
-        const valueDisplay = $('.slider-value', slider.parentElement);
+        const valueDisplay = slider.parentElement.$('.slider-value');
         setupSlider(slider, valueDisplay, i18n.getExpiryTimes());
     }
     
     setupBurnTimeSlider() {
         const slider = $('#burnTime');
-        const valueDisplay = $('.slider-value', slider.parentElement);
+        const valueDisplay = slider.parentElement.$('.slider-value');
         setupSlider(slider, valueDisplay, i18n.getBurnTimes());
     }
     
@@ -219,7 +216,7 @@ class MessageCreator {
                 <button class="remove-btn"><svg><use href="static/images/close.svg#icon"></use></svg></button>
             `;
             
-            $('.remove-btn', preview).addEventListener('click', () => {
+            preview.$('.remove-btn').addEventListener('click', () => {
                 this.images.delete(file);
                 preview.remove();
                 this.fileInput.value = '';  // Reset file input

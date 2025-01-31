@@ -56,6 +56,7 @@ class ChatRoom {
         this.failedMessages = new Map(); // Store failed messages
         this.messageStatuses = {
             FAILED: 'failed',
+            SENDING: 'sending',
             SENT: 'sent',        // Delivered to server
             DELIVERED: 'delivered' // Delivered to recipients
         };
@@ -66,16 +67,6 @@ class ChatRoom {
         this.setupMenu();
         this.setupMessageInput();
         this.setupPlusMenu();
-
-        // Add send button handler
-        $('#sendBtn').addEventListener('click', () => {
-            const content = this.messageInput.value.trim();
-            if (content) {
-                this.sendTextMessage(content);
-                this.messageInput.value = '';
-                this.messageInput.style.height = 'auto';
-            }
-        });
 
         // Create and insert character counter
         this.charCounter = document.createElement('div');
@@ -127,6 +118,15 @@ class ChatRoom {
     }
 
     setupMessageInput() {
+        // Add send button handler
+        $('#sendBtn').addEventListener('click', () => {
+            const content = this.messageInput.value.trim();
+            if (content) {
+                this.sendTextMessage(content);
+                this.messageInput.value = '';
+                this.messageInput.style.height = 'auto';
+            }
+        });
         this.messageInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -199,7 +199,7 @@ class ChatRoom {
         fileInput.style.display = 'none';
         document.body.appendChild(fileInput);
 
-        this.plusMenu.querySelector('.plus-menu-item').addEventListener('click', () => {
+        this.plusMenu.$('.plus-menu-item').addEventListener('click', () => {
             fileInput.click();
         });
 
@@ -356,7 +356,7 @@ class ChatRoom {
             
             case 'ack':
                 if (data.message_id) {
-                    this.updateMessageStatus(data.message_id, data.status || this.messageStatuses.DELIVERED);
+                    this.updateMessageStatus(data.message_id, data.status);
                     this.pendingMessages.delete(data.message_id);
                 }
                 break;
@@ -445,7 +445,7 @@ class ChatRoom {
                 message.sender_id, 
                 message.content, 
                 message.content_type, 
-                'sending'
+                this.messageStatuses.SENDING
             );
             message.message_id = messageId;
 
@@ -504,7 +504,7 @@ class ChatRoom {
         return crypto.randomUUID();
     }
 
-    addChatMessage(sender_id, message, contentType, status = 'sending') {
+    addChatMessage(sender_id, message, contentType, status = this.messageStatuses.SENDING) {
         const messageContainer = document.createElement('div');
         const isOwnMessage = sender_id === this.userId;
         messageContainer.className = `message-container ${isOwnMessage ? 'own' : 'other'}`;
@@ -517,17 +517,9 @@ class ChatRoom {
         
         // Status icons for own messages
         const statusHtml = isOwnMessage ? `
-            <div class="message-status">
-                ${status === 'loading' ? `
-                    <svg class="icon-loading">
-                        <use href="/static/images/loading.svg#icon"></use>
-                    </svg>
-                ` : ''}
-                <svg class="icon-check ${status === 'sent' ? 'visible' : 'hidden'}">
-                    <use href="/static/images/check.svg#icon"></use>
-                </svg>
-                <svg class="icon-double-check ${status === 'delivered' ? 'visible' : 'hidden'}">
-                    <use href="/static/images/d_check.svg#icon"></use>
+            <div class="message-status" data-status="${status}">
+                <svg class="message-status-icon">
+                    <use href="/static/images/loading.svg#icon"></use>
                 </svg>
             </div>
         ` : '';
@@ -563,7 +555,7 @@ class ChatRoom {
         this.scrollToBottom();
         
         // Add click handler for retry button
-        const retryButton = messageContainer.querySelector('.message-retry');
+        const retryButton = messageContainer.$('.message-retry');
         if (retryButton) {
             retryButton.onclick = () => this.resendFailedMessage(messageId);
         }
@@ -668,7 +660,7 @@ class ChatRoom {
                 break;
             
             default:
-                this.statusIcon.classList.add('disconnected');
+                this.statusIcon.classList.add('connecting');
                 this.statusText.textContent = 'Reconnecting...';
         }
     }
@@ -784,7 +776,7 @@ class ChatRoom {
             };
 
             // Add message to UI with loading state
-            this.addChatMessage(this.userId, message, 'image', 'loading');
+            this.addChatMessage(this.userId, message, 'image', this.messageStatuses.SENDING);
 
             // setTimeout(() => {alert("before sending image");}, 0);
             // Upload image with message metadata
@@ -808,14 +800,6 @@ class ChatRoom {
 
             // Update message status to sent
             this.updateMessageStatus(messageId, 'sent');
-
-            // Send message through WebSocket
-            // const wsMessage = {
-            //     ...message,
-            //     content: result.image_id // Use server image ID for delivery
-            // };
-            // await this.sendMessage(wsMessage);
-
         } catch (error) {
             console.error('Failed to send image:', error);
             this.updateMessageStatus(messageId, 'failed');
@@ -846,26 +830,35 @@ class ChatRoom {
     }
 
     updateMessageStatus(messageId, status) {
-        const messageContainer = this.messages.querySelector(`[data-message-id="${messageId}"]`);
+        alert("updateMessageStatus: "+status)
+        const messageContainer = $(`[data-message-id="${messageId}"]`);
         if (!messageContainer) return;
-
-        const checkIcon = messageContainer.querySelector('.icon-check');
-        const doubleCheckIcon = messageContainer.querySelector('.icon-double-check');
-        
-        if (status === 'sent') {
-            checkIcon?.classList.add('visible');
-            checkIcon?.classList.remove('hidden');
-        } else if (status === 'delivered') {
-            checkIcon?.classList.remove('visible');
-            checkIcon?.classList.add('hidden');
-            doubleCheckIcon?.classList.add('visible');
-            doubleCheckIcon?.classList.remove('hidden');
-        } else if (status === 'failed') {
-            const retryButton = messageContainer.querySelector('.message-retry');
-            if (retryButton) {
-                retryButton.classList.add('visible');
-                retryButton.classList.remove('hidden');
-            }
+      
+        const statusDiv = messageContainer.$('.message-status');
+        if (!statusDiv) return;
+      
+        // Update the data-status attribute
+        statusDiv.dataset.status = status;
+      
+        // Update the SVG href based on the status
+        const svgUse = statusDiv.$('use');
+        if (svgUse) {
+            switch (status) {
+                case 'sending':
+                    svgUse.setAttribute('href', '/static/images/loading.svg#icon');
+                    break;
+                case 'sent':
+                    svgUse.setAttribute('href', '/static/images/check.svg#icon');
+                    break;
+                case 'delivered':
+                    svgUse.setAttribute('href', '/static/images/d_check.svg#icon');
+                    break;
+                case 'failed':
+                    svgUse.setAttribute('href', '');
+                    break;
+                default:
+                    console.warn('Unknown status:', status);
+          }
         }
     }
 
@@ -903,9 +896,9 @@ class ChatRoom {
     }
 
     updateMessageContent(messageId, newContent) {
-        const messageContainer = this.messages.querySelector(`[data-message-id="${messageId}"]`);
+        const messageContainer = this.messages.$(`[data-message-id="${messageId}"]`);
         if (messageContainer) {
-            const contentDiv = messageContainer.querySelector('.message-content');
+            const contentDiv = messageContainer.$('.message-content');
             if (contentDiv) {
                 contentDiv.innerHTML = newContent;
             }
@@ -914,11 +907,11 @@ class ChatRoom {
 
     // Add this method to handle time display
     updateMessageTimes() {
-        const messages = Array.from(this.messages.querySelectorAll('.message-container'));
+        const messages = Array.from(this.messages.$$('.message-container'));
         let lastTime = null;
         
         // Remove existing time messages
-        this.messages.querySelectorAll('.message-time').forEach(el => el.remove());
+        this.messages.$$('.message-time').forEach(el => el.remove());
         
         messages.forEach((message, index) => {
             const timestamp = Number(message.dataset.timestamp);

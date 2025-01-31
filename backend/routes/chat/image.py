@@ -7,6 +7,7 @@ import logging
 from fastapi import Depends
 from routes.chat.websocket import WebSocketManager, get_websocket_manager
 from models.chat.message import Message
+import asyncio
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -66,14 +67,13 @@ async def upload_image(
             timestamp=timestamp
         )
 
-        # Send message using send_message
-        await websocket_manager.send_message(room_id, message)
+        # Return success first
+        response = {"success": True, "image_id": image_id}
 
-        # Also send to sender
-        # if sender_id in websocket_manager.active_connections:
-        #     await websocket_manager.active_connections[sender_id].send_text(message.json())
+        # Schedule the WebSocket message to be sent after returning the response
+        asyncio.create_task(websocket_manager.send_message(room_id, message))
 
-        return {"success": True, "image_id": image_id}
+        return response
     
     except HTTPException:
         raise

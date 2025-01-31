@@ -1,4 +1,3 @@
-import { initSvgIcons } from './global.js';
 import { $, $$ } from './utils/dom.js';
 import { i18n } from './utils/i18n.js';
 
@@ -15,8 +14,6 @@ class SuccessPage {
     }
 
     constructor() {
-        initSvgIcons();
-        
         // Get message ID from sessionStorage
         this.messageId = sessionStorage.getItem('current_message_id');
         if (!this.messageId) {
@@ -53,8 +50,8 @@ class SuccessPage {
                 try {
                     await navigator.clipboard.writeText(text);
                     
-                    const normalContent = $('.btn-content', button);
-                    const copiedContent = $('.btn-content-copied', button);
+                    const normalContent = button.$('.btn-content');
+                    const copiedContent = button.$('.btn-content-copied');
                     
                     // Show copied state
                     normalContent.style.display = 'none';
