@@ -106,6 +106,26 @@ class WebSocketManager:
                     await self.disconnect(user_id)
             await asyncio.sleep(30)  # Check every 30 seconds
 
+    # async def broadcast_message(self, room_id: str, message: Message):
+    #     """Broadcast a message to all participants in a room"""
+    #     participants = self.room_participants.get(room_id, {})
+        
+    #     for user_id in participants:
+    #         if user_id in self.active_connections:
+    #             try:
+    #                 await self.active_connections[user_id].send_text(message.json())
+    #                 message.mark_delivered(user_id)
+    #             except Exception as e:
+    #                 logger.error(f"Error broadcasting message to {user_id}: {str(e)}")
+        
+    #     # Send acknowledgment to sender
+    #     if message.sender_id in self.active_connections:
+    #         await self.active_connections[message.sender_id].send_json({
+    #             "message_type": "ack",
+    #             "message_id": message.message_id,
+    #             "status": "delivered"
+    #         })
+
 websocket_manager = WebSocketManager()
 
 @router.websocket("/chatroom/{room_id}")
@@ -212,3 +232,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 await websocket.close()
         except Exception as e:
             logger.error(f"Error during cleanup: {str(e)}")
+
+def get_websocket_manager() -> WebSocketManager:
+    """Dependency to get WebSocketManager instance"""
+    return websocket_manager

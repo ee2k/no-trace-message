@@ -386,7 +386,7 @@ class ChatRoom {
                     username: data.user.username,
                     joinedAt: Date.now()
                 });
-                this.addSystemMessage(`${data.user.username} ⎆`);
+                this.addSystemMessage(`${data.user.username} ✋`);
                 this.updateParticipantDisplay();
                 break;
             
@@ -395,7 +395,7 @@ class ChatRoom {
                 const leftUser = this.participants.get(data.user_id);
                 if (leftUser) {
                     this.participants.delete(data.user_id);
-                    this.addSystemMessage(`⇠ ${leftUser.username}`);
+                    this.addSystemMessage(`⬅ ${leftUser.username}`);
                     this.updateParticipantDisplay();
                 }
                 break;
@@ -786,11 +786,14 @@ class ChatRoom {
             // Add message to UI with loading state
             this.addChatMessage(this.userId, message, 'image', 'loading');
 
+            // setTimeout(() => {alert("before sending image");}, 0);
             // Upload image with message metadata
             const formData = new FormData();
             formData.append('image', file);
             formData.append('message_id', messageId);
             formData.append('timestamp', timestamp.toString());
+            formData.append('room_id', this.roomId)
+            formData.append('sender_id', this.userId)
 
             const response = await fetch('/api/chat/upload-image', {
                 method: 'POST',
@@ -807,11 +810,11 @@ class ChatRoom {
             this.updateMessageStatus(messageId, 'sent');
 
             // Send message through WebSocket
-            const wsMessage = {
-                ...message,
-                content: result.image_id // Use server image ID for delivery
-            };
-            await this.sendMessage(wsMessage);
+            // const wsMessage = {
+            //     ...message,
+            //     content: result.image_id // Use server image ID for delivery
+            // };
+            // await this.sendMessage(wsMessage);
 
         } catch (error) {
             console.error('Failed to send image:', error);

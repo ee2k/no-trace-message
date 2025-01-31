@@ -62,19 +62,23 @@ footer {
     text-align: center;
     width: 100%;
     opacity: 0.7;
-}
-
-.footer-content {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 0.5rem;
+    gap: 1rem;
 }
 
 footer p {
     margin: 0;
     color: var(--text-secondary);
     font-size: 0.9em;
+}
+.github-icon {
+    width: 1.6rem;
+    aspect-ratio: 1;
+    border: none;
+    color: var(--text-secondary);
+    display: block;
 }
 @media (max-width: 600px) {
     .content {
