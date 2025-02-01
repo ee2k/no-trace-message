@@ -100,6 +100,8 @@ http {
         listen       80;
         server_name  localhost;
 
+        client_max_body_size 5M;
+
         # Root directory for static files - adjust path to your local project
         root /Path/to/burning-message/frontend;
 

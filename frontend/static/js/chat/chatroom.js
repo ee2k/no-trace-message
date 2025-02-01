@@ -1,10 +1,10 @@
-import { initSvgIcons } from '../global.js';
+// import { initSvgIcons } from '../global.js';
 import { $ } from '../utils/dom.js';
 
 class ChatRoom {
     constructor() {
         // Initialize global features
-        initSvgIcons();
+        // initSvgIcons();
         
         // Initialize chat features
         this.ws = null;
@@ -54,12 +54,18 @@ class ChatRoom {
         // Add these to existing constructor
         this.MAX_RETRIES = 3;
         this.failedMessages = new Map(); // Store failed messages
-        this.messageStatuses = {
-            FAILED: 'failed',
-            SENDING: 'sending',
-            SENT: 'sent',        // Delivered to server
-            DELIVERED: 'delivered' // Delivered to recipients
+        this.messageStatus = {
+            failed: 'failed',
+            sending: 'sending',
+            sent: 'sent',           // Delivered to server
+            delivered: 'delivered'  // Delivered to recipients
         };
+
+        // Create status hierarchy once during initialization
+        this.statusHierarchy = Object.keys(this.messageStatus).reduce((acc, status, index) => {
+            acc[status] = index;
+            return acc;
+        }, {});
 
         // Add participant tracking
         this.participants = new Map();  // userId -> {username, joinedAt}
@@ -344,10 +350,10 @@ class ChatRoom {
         switch (data.message_type) {
             case 'chat':
                 if (data.content_type === 'image') {
-                    // Add message with image
+                    // Add message immediately, image will load asynchronously
                     this.addChatMessage(data.sender_id, {
                         ...data,
-                        content: await this.fetchImage(data.content)
+                        content: data.content // Pass the image URL directly
                     }, 'image');
                 } else {
                     this.addChatMessage(data.sender_id, data, data.content_type);
@@ -445,7 +451,7 @@ class ChatRoom {
                 message.sender_id, 
                 message.content, 
                 message.content_type, 
-                this.messageStatuses.SENDING
+                this.messageStatus.sending
             );
             message.message_id = messageId;
 
@@ -504,7 +510,7 @@ class ChatRoom {
         return crypto.randomUUID();
     }
 
-    addChatMessage(sender_id, message, contentType, status = this.messageStatuses.SENDING) {
+    addChatMessage(sender_id, message, contentType, status = this.messageStatus.sending) {
         const isOwnMessage = sender_id === this.userId;
         const messageId = (typeof message === 'object' ? message.message_id : null) || this.generateMessageId();
         const timestamp = new Date(typeof message === 'object' ? message.timestamp : Date.now());
@@ -528,19 +534,32 @@ class ChatRoom {
         
         // Handle content based on type
         const messageContent = typeof message === 'object' ? message.content : message;
-        const contentHtml = contentType === 'image' ? `
-            <div class="image-container">
-                <img src="${messageContent}" class="chat-image">
-            </div>
-        ` : `<span class="text">${this.escapeHtml(messageContent || '')}</span>`;
+        let contentHtml = '';
+        
+        if (contentType === 'image') {
+            // Show loading state for images
+            contentHtml = `
+                <div class="image-container loading">
+                    <div class="image-loader"></div>
+                </div>
+            `;
+            
+            // Start loading the image asynchronously
+            if (typeof messageContent === 'string') {
+                this.loadImageForMessage(messageContainer, messageContent);
+            }
+        } else {
+            // First escape HTML, then convert newlines
+            const escapedContent = this.escapeHtml(messageContent || '');
+            const formattedContent = escapedContent
+                .replace(/\n/g, '<br>') // Convert newlines to <br> tags
+                .replace(/ /g, '&nbsp;'); // Preserve multiple spaces
+            contentHtml = `<span class="text">${formattedContent}</span>`;
+        }
         
         // Status icons for own messages
         const statusHtml = isOwnMessage ? `
-            <div class="message-status" data-status="${status}">
-                <svg class="message-status-icon">
-                    <use href="/static/images/loading.svg#icon"></use>
-                </svg>
-            </div>
+            <div class="message-status" data-status="${status}"></div>
         ` : '';
         
         // Only show username if it's a new user
@@ -572,6 +591,56 @@ class ChatRoom {
         }
         
         return messageId;
+    }
+
+    // Add new method for loading images
+    async loadImageForMessage(messageContainer, imageUrl) {
+        try {
+            // Check if it's a local data URL or needs to be fetched
+            if (imageUrl.startsWith('data:')) {
+                // Local data URL - use directly
+                const img = new Image();
+                img.src = imageUrl;
+                img.onload = () => {
+                    const imageContainer = messageContainer.$('.image-container');
+                    if (imageContainer) {
+                        imageContainer.classList.remove('loading');
+                        imageContainer.innerHTML = `
+                            <img src="${imageUrl}" class="chat-image">
+                        `;
+                    }
+                };
+            } else {
+                // Remote image - fetch from server
+                const response = await fetch(`/api/chat/get-image/${imageUrl}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch image');
+                }
+                const blob = await response.blob();
+                const objectUrl = URL.createObjectURL(blob);
+                
+                const img = new Image();
+                img.src = objectUrl;
+                img.onload = () => {
+                    const imageContainer = messageContainer.$('.image-container');
+                    if (imageContainer) {
+                        imageContainer.classList.remove('loading');
+                        imageContainer.innerHTML = `
+                            <img src="${objectUrl}" class="chat-image">
+                        `;
+                    }
+                };
+            }
+        } catch (error) {
+            console.error('Error loading image:', error);
+            const imageContainer = messageContainer.$('.image-container');
+            if (imageContainer) {
+                imageContainer.classList.remove('loading');
+                imageContainer.innerHTML = `
+                    <div class="image-error">⦰</div>
+                `;
+            }
+        }
     }
 
     // Add new method for resending failed messages
@@ -787,7 +856,7 @@ class ChatRoom {
             };
 
             // Add message to UI with loading state
-            this.addChatMessage(this.userId, message, 'image', this.messageStatuses.SENDING);
+            this.addChatMessage(this.userId, message, 'image', this.messageStatus.sending);
 
             // Upload image with message metadata
             const formData = new FormData();
@@ -839,37 +908,41 @@ class ChatRoom {
         this.ws.close(); // Close the connection
     }
 
-    updateMessageStatus(messageId, status) {
-        // alert("updateMessageStatus: "+status)
-        const messageContainer = $(`[data-message-id="${messageId}"]`);
-        if (!messageContainer) return;
-      
-        const statusDiv = messageContainer.$('.message-status');
-        if (!statusDiv) return;
-      
-        // Update the data-status attribute
-        statusDiv.dataset.status = status;
-      
-        // Update the SVG href based on the status
-        const svgUse = statusDiv.$('use');
-        if (svgUse) {
-            switch (status) {
-                case 'sending':
-                    svgUse.setAttribute('href', '/static/images/loading.svg#icon');
-                    break;
-                case 'failed':
-                    svgUse.setAttribute('href', '');
-                    break;
-                case 'sent':
-                    svgUse.setAttribute('href', '/static/images/check.svg#icon');
-                    break;
-                case 'delivered':
-                    svgUse.setAttribute('href', '/static/images/d_check.svg#icon');
-                    break;
-                default:
-                    console.warn('Unknown status:', status);
-          }
+    updateMessageStatus(messageId, newStatus) {
+        // Get current message status
+        const messageElement = this.messages.$(`[data-message-id="${messageId}"]`);
+        if (!messageElement) return;
+
+        const currentStatus = messageElement.$('.message-status')?.dataset.status;
+        if (!currentStatus) return;
+
+        // Check if new status is lower than current status
+        if (this.statusHierarchy[newStatus] < this.statusHierarchy[currentStatus]) {
+            return; // Don't update if new status is lower
         }
+
+        // Update status in UI
+        const statusElement = messageElement.$('.message-status');
+        if (statusElement) {
+            statusElement.dataset.status = newStatus;
+            statusElement.innerHTML = this.getStatusIcon(newStatus);
+        }
+
+        // Update status in pending messages map
+        if (this.pendingMessages.has(messageId)) {
+            const message = this.pendingMessages.get(messageId);
+            message.status = newStatus;
+        }
+    }
+
+    getStatusIcon(status) {
+        const icons = {
+            failed: '',
+            sending: '<svg class="message-status-icon"><use href="/static/images/loading.svg#icon"></use></svg>',
+            sent: '<svg class="message-status-icon"><use href="/static/images/check.svg#icon"></use></svg>',
+            delivered: '<svg class="message-status-icon"><use href="/static/images/d_check.svg#icon"></use></svg>'
+        };
+        return icons[status] || '';
     }
 
     addSystemMessage(message) {
