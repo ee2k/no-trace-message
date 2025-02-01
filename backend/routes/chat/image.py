@@ -70,8 +70,11 @@ async def upload_image(
         # Return success first
         response = {"success": True, "image_id": image_id}
 
+        async def delayed_send():
+            await asyncio.sleep(1)  # 1-second delay
+            await websocket_manager.send_message(room_id, message)
         # Schedule the WebSocket message to be sent after returning the response
-        asyncio.create_task(websocket_manager.send_message(room_id, message))
+        asyncio.create_task(delayed_send())
 
         return response
     

@@ -85,7 +85,7 @@ class WebSocketManager:
         # Send to all participants except the sender
         for user_id in participants:
             if user_id != message.sender_id and user_id in self.active_connections:
-                await self.active_connections[user_id].send_text(message.json())
+                await self.active_connections[user_id].send_text(message.model_dump_json())
                 message.mark_delivered(user_id)
         
         # Send delivery acknowledgment to sender

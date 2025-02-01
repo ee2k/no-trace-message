@@ -27,7 +27,7 @@ source "$PROJECT_ROOT/venv/bin/activate"
 
 # Verify Python version after activation
 PYTHON_VERSION=$(python3 --version)
-if [[ "$PYTHON_VERSION" != "Python 3.11.7" ]]; then
+if [[ "$PYTHON_VERSION" != "Python 3.11"* ]]; then
     echo "Error: Wrong Python version after venv activation. Found: $PYTHON_VERSION"
     exit 1
 fi

@@ -505,15 +505,34 @@ class ChatRoom {
     }
 
     addChatMessage(sender_id, message, contentType, status = this.messageStatuses.SENDING) {
-        const messageContainer = document.createElement('div');
         const isOwnMessage = sender_id === this.userId;
-        messageContainer.className = `message-container ${isOwnMessage ? 'own' : 'other'}`;
         const messageId = (typeof message === 'object' ? message.message_id : null) || this.generateMessageId();
-        
         const timestamp = new Date(typeof message === 'object' ? message.timestamp : Date.now());
         
-        // Add timestamp to container
+        // Get sender's username
+        const sender = this.participants.get(sender_id);
+        const displayName = sender ? sender.username : `User ${sender_id.slice(0, 4)}`;
+        
+        // Check if the last message was from the same user
+        const lastMessage = this.messages.lastElementChild;
+        const isSameUser = lastMessage && 
+            lastMessage.dataset.senderId === sender_id &&
+            !lastMessage.classList.contains('system');
+        
+        // Create message container
+        const messageContainer = document.createElement('div');
+        messageContainer.className = `message-container ${isOwnMessage ? 'own' : 'other'}`;
         messageContainer.dataset.timestamp = timestamp.getTime();
+        messageContainer.dataset.messageId = messageId;
+        messageContainer.dataset.senderId = sender_id;
+        
+        // Handle content based on type
+        const messageContent = typeof message === 'object' ? message.content : message;
+        const contentHtml = contentType === 'image' ? `
+            <div class="image-container">
+                <img src="${messageContent}" class="chat-image">
+            </div>
+        ` : `<span class="text">${this.escapeHtml(messageContent || '')}</span>`;
         
         // Status icons for own messages
         const statusHtml = isOwnMessage ? `
@@ -523,33 +542,25 @@ class ChatRoom {
                 </svg>
             </div>
         ` : '';
-    
-        // Get sender's username
-        const sender = this.participants.get(sender_id);
-        const displayName = sender ? sender.username : `User ${sender_id.slice(0, 4)}`;
         
-        // Handle content based on type
-        const messageContent = typeof message === 'object' ? message.content : message;
-        const contentHtml = contentType === 'image' ? `
-            <div class="image-container">
-                <img src="${messageContent}" class="chat-image">
-            </div>
-        ` : `<span class="text">${this.escapeHtml(messageContent || '')}</span>`;
-    
+        // Only show username if it's a new user
+        const usernameHtml = !isSameUser ? `
+            <span class="username">${this.escapeHtml(displayName)}</span>
+        ` : '';
+        
         messageContainer.innerHTML = `
             ${isOwnMessage ? `
                 <button class="message-retry ${status === 'failed' ? 'visible' : 'hidden'}">
                     <svg class="icon-resend"><use href="/static/images/resend.svg#icon"></use></svg>
                 </button>
             ` : ''}
-            <span class="username">${this.escapeHtml(displayName)}</span>
+            ${usernameHtml}
             <div class="message-content ${isOwnMessage ? 'own' : 'other'}">
                 ${contentHtml}
                 ${statusHtml}
             </div>
         `;
         
-        messageContainer.dataset.messageId = messageId;
         this.messages.appendChild(messageContainer);
         this.updateMessageTimes();
         this.scrollToBottom();
@@ -778,7 +789,6 @@ class ChatRoom {
             // Add message to UI with loading state
             this.addChatMessage(this.userId, message, 'image', this.messageStatuses.SENDING);
 
-            // setTimeout(() => {alert("before sending image");}, 0);
             // Upload image with message metadata
             const formData = new FormData();
             formData.append('image', file);
