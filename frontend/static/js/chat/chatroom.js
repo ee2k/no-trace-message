@@ -136,6 +136,16 @@ class ChatRoom {
         window.addEventListener('resize', this.handleViewportChange);
         window.addEventListener('orientationchange', this.handleViewportChange);
         this.handleViewportChange();
+
+        // Add touch listener for mobile scrolling
+        this.chatArea.addEventListener('touchstart', () => {
+            this.isUserScrolling = true;
+        });
+        
+        this.chatArea.addEventListener('touchend', () => {
+            this.isUserScrolling = false;
+            this.checkScrollPosition();
+        });
     }
 
     setupMenu() {
@@ -173,6 +183,9 @@ class ChatRoom {
                 this.sendTextMessage(content);
                 this.messageInput.value = '';
                 this.messageInput.style.height = 'auto';
+                if (this.isAtBottom) {
+                    this.scrollToBottom();
+                }
             }
         });
         this.messageInput.addEventListener('keydown', (e) => {
@@ -223,6 +236,15 @@ class ChatRoom {
         this.messageInput.addEventListener('dragover', (e) => {
             e.preventDefault();
         });
+
+        // Prevent scrollToBottom when focusing input
+        this.messageInput.addEventListener('focus', (e) => {
+            this.isInputFocused = true;
+        });
+
+        this.messageInput.addEventListener('blur', (e) => {
+            this.isInputFocused = false;
+        });
     }
 
     setupPlusMenu() {
@@ -269,6 +291,14 @@ class ChatRoom {
 
         // Update room status after WebSocket is initialized
         this.updateRoomStatus();
+
+        // Handle mobile viewport
+        this.handleViewportChange();
+        window.addEventListener('resize', () => this.handleViewportChange());
+        window.addEventListener('orientationchange', () => this.handleViewportChange());
+        
+        // Ensure initial scroll position
+        setTimeout(() => this.scrollToBottom(), 100);
     }
 
     connectWebSocket() {
@@ -658,51 +688,78 @@ class ChatRoom {
             retryButton.onclick = () => this.resendFailedMessage(messageId);
         }
         
+        // Mobile-specific handling
+        if (/Mobi|Android/i.test(navigator.userAgent)) {
+            this.chatArea.style.overflowY = 'hidden';
+            setTimeout(() => {
+                this.chatArea.style.overflowY = 'auto';
+                this.scrollToBottom(true);
+            }, 100);
+        }
+        
         return messageId;
     }
 
     // Add new method for loading images
     async loadImageForMessage(messageContainer, imageUrl) {
         try {
+            console.log('[Image Load] Starting image load for:', imageUrl);
+            
             // Check if it's a local data URL or needs to be fetched
             if (imageUrl.startsWith('data:')) {
-                // Local data URL - use directly
+                console.log('[Image Load] Loading local data URL');
                 const img = new Image();
                 img.src = imageUrl;
                 img.onload = () => {
+                    console.log('[Image Load] Local image loaded');
                     const imageContainer = messageContainer.$('.image-container');
                     if (imageContainer) {
+                        console.log('[Image Load] Updating image container');
                         imageContainer.classList.remove('loading');
                         imageContainer.innerHTML = `
                             <img src="${imageUrl}" class="chat-image">
                         `;
+                        
+                        // Scroll to bottom after image loads
+                        if (this.isAtBottom) {
+                            this.scrollToBottom();
+                        }
                     }
                 };
             } else {
-                // Remote image - fetch from server
+                console.log('[Image Load] Fetching remote image');
                 const response = await fetch(`/api/chat/get-image/${imageUrl}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch image');
                 }
                 const blob = await response.blob();
                 const objectUrl = URL.createObjectURL(blob);
+                console.log('[Image Load] Remote image fetched, object URL:', objectUrl);
                 
                 const img = new Image();
                 img.src = objectUrl;
                 img.onload = () => {
+                    console.log('[Image Load] Remote image loaded');
                     const imageContainer = messageContainer.$('.image-container');
                     if (imageContainer) {
+                        console.log('[Image Load] Updating image container');
                         imageContainer.classList.remove('loading');
                         imageContainer.innerHTML = `
                             <img src="${objectUrl}" class="chat-image">
                         `;
+                        
+                        // Scroll to bottom after image loads
+                        if (this.isAtBottom) {
+                            this.scrollToBottom();
+                        }
                     }
                 };
             }
         } catch (error) {
-            console.error('Error loading image:', error);
+            console.error('[Image Load] Error loading image:', error);
             const imageContainer = messageContainer.$('.image-container');
             if (imageContainer) {
+                console.log('[Image Load] Showing error state');
                 imageContainer.classList.remove('loading');
                 imageContainer.innerHTML = `
                     <div class="image-error">⦰</div>
@@ -1021,33 +1078,39 @@ class ChatRoom {
         this.scrollToBottom();
     }
 
-    scrollToBottom() {
-        if (this.scrollTimeout) {
-            clearTimeout(this.scrollTimeout);
-        }
+    scrollToBottom(force = false) {
+        if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
+        this.scrollingInProgress = true; // flag used to prevent indicator creation during scroll
 
         this.scrollTimeout = setTimeout(() => {
-            requestAnimationFrame(() => {
-                if (!this.chatArea) {
-                    console.error('Chat area container not found');
-                    return;
-                }
+            if (!this.chatArea) return;
+            
+            // Calculate the target scroll position.
+            const target = this.chatArea.scrollHeight - this.chatArea.clientHeight;
 
-                // Only scroll if we're not already at the bottom
-                if (!this.isAtBottom) {
-                    this.chatArea.scrollTo({
-                        top: this.chatArea.scrollHeight,
-                        behavior: 'smooth'
-                    });
-                    this.isAtBottom = true;
-                }
+            // If scroll is needed, adjust it.
+            if (Math.abs(this.chatArea.scrollTop - target) > 10) {
+                this.chatArea.scrollTop = target;
+            }
+            this.isAtBottom = true;
+            // Remove the new message indicator if present.
+            if (this.newMessageIndicator) {
+                this.newMessageIndicator.remove();
+                this.newMessageIndicator = null;
+            }
+            this.scrollingInProgress = false;
 
-                if (this.newMessageIndicator) {
-                    this.newMessageIndicator.remove();
-                    this.newMessageIndicator = null;
-                }
+            console.log('[Scroll] scrollToBottom executed', {
+                scrollTop: this.chatArea.scrollTop,
+                target,
+                diff: Math.abs(this.chatArea.scrollTop - target)
             });
-        }, 50); // 50ms delay to allow DOM updates
+
+            // After a short delay, recheck the scroll position (to catch any layout changes)
+            setTimeout(() => {
+                this.checkScrollPosition();
+            }, 100);
+        }, 50);
     }
 
     updateParticipantDisplay() {
@@ -1055,20 +1118,6 @@ class ChatRoom {
         const participantCount = this.participants.size;
         this.participantCount = participantCount;
         this.updateRoomStatus();
-    }
-
-    async fetchImage(imageId) {
-        try {
-            const response = await fetch(`/api/chat/get-image/${imageId}`);
-            if (!response.ok) {
-                throw new Error('Failed to fetch image');
-            }
-            const blob = await response.blob();
-            return URL.createObjectURL(blob);
-        } catch (error) {
-            console.error('Error fetching image:', error);
-            return null;
-        }
     }
 
     updateMessageContent(messageId, newContent) {
@@ -1108,35 +1157,53 @@ class ChatRoom {
     }
 
     checkScrollPosition() {
-        requestAnimationFrame(() => {
-            if (!this.chatArea) return;
-            
-            const { scrollTop, scrollHeight, clientHeight } = this.chatArea;
-            this.wasAtBottom = this.isAtBottom;
-            this.isAtBottom = Math.abs(scrollHeight - (scrollTop + clientHeight)) < 10;
-            
-            // Remove new message indicator if we've scrolled to bottom
-            if (this.isAtBottom && this.newMessageIndicator && !this.wasAtBottom) {
-                this.newMessageIndicator.remove();
-                this.newMessageIndicator = null;
-            }
+        if (!this.chatArea || this.scrollingInProgress) return;
+        
+        const buffer = 15; // small margin of error
+        const { scrollTop, clientHeight, scrollHeight } = this.chatArea;
+        this.isAtBottom = scrollTop + clientHeight >= scrollHeight - buffer;
+
+        console.log('[Scroll] checkScrollPosition', {
+            scrollTop,
+            clientHeight,
+            scrollHeight,
+            isAtBottom: this.isAtBottom,
+            condition: scrollTop + clientHeight >= scrollHeight - buffer
         });
+
+        // When NOT at the bottom, show the indicator (if not already present)
+        if (!this.isAtBottom && !this.newMessageIndicator) {
+            this.createNewMessageIndicator();
+        } 
+        // When at the bottom, remove any indicator if it exists
+        else if (this.isAtBottom && this.newMessageIndicator) {
+            this.newMessageIndicator.remove();
+            this.newMessageIndicator = null;
+        }
     }
 
     createNewMessageIndicator() {
         if (this.newMessageIndicator) return;
-        
+
         this.newMessageIndicator = document.createElement('button');
         this.newMessageIndicator.className = 'new-message-indicator';
         this.newMessageIndicator.textContent = '⬇';
         this.newMessageIndicator.addEventListener('click', () => {
             this.scrollToBottom();
-            this.newMessageIndicator.remove();
-            this.newMessageIndicator = null;
+            if (this.newMessageIndicator) {
+                this.newMessageIndicator.remove();
+                this.newMessageIndicator = null;
+            }
         });
-        
-        if (this.chatFooter) {
-            this.chatFooter.prepend(this.newMessageIndicator);
+
+        // Append indicator to the container that holds the messages.
+        // (Ensure that your chat area container element is not the footer.)
+        if (this.chatAreaContainer) {
+            this.chatAreaContainer.appendChild(this.newMessageIndicator);
+        } else if (this.chatArea) {
+            this.chatArea.appendChild(this.newMessageIndicator);
+        } else {
+            document.body.appendChild(this.newMessageIndicator);
         }
     }
 
@@ -1145,23 +1212,13 @@ class ChatRoom {
             this.scrollToBottom();
         }
     }
-
     handleViewportChange() {
-        const vh = window.innerHeight * 0.01;
-        document.documentElement.style.setProperty('--vh', `${vh}px`);
-        
-        // Force layout update
-        this.chatArea.style.display = 'none';
-        this.chatArea.offsetHeight; // Trigger reflow
-        this.chatArea.style.display = 'block';
-        
-        // Handle mobile keyboard appearance
-        if (window.innerWidth <= 600 && this.chatFooter) {
-            this.chatFooter.style.position = 'fixed';
-            this.chatFooter.style.bottom = '0';
-            this.chatFooter.style.left = '0';
-            this.chatFooter.style.right = '0';
-        }
+        // Mobile browsers need this hack to handle keyboard properly
+        setTimeout(() => {
+            if (this.isAtBottom) {
+                this.scrollToBottom(true);
+            }
+        }, 300);
     }
 }
 // Initialize chat when page loads
