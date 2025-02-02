@@ -638,7 +638,6 @@ class ChatRoom {
             <span class="username">${this.escapeHtml(displayName)}</span>
         ` : '';
         
-        // <svg class="icon-resend"><use href="/static/images/resend.svg#icon"></use></svg>
         messageContainer.innerHTML = `
             ${isOwnMessage ?
                 `<button class="message-retry ${status === 'failed' ? 'visible' : 'hidden'}">⇡</button>`
@@ -1066,7 +1065,6 @@ class ChatRoom {
             sending: '<span class="message-status-icon sending">•••</span>',
             sent: '<span class="message-status-icon sent">✓</span>',
             delivered: '<span class="message-status-icon delivered"><span class="check">✓</span><span class="check">✓</span></span>'
-            // delivered: '<svg class="message-status-icon"><use href="/static/images/d_check.svg#icon"></use></svg>'
         };
         return icons[status] || '';
     }
