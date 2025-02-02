@@ -6,8 +6,7 @@
 .chat-container {
     max-width: 800px;
     margin: 0 auto;
-    height: 100vh;
-    /* height: calc(var(--vh, 1vh) * 100); */
+    height: calc(var(--vh, 1vh) * 100);
     top: 0;
     left: 0;
     right: 0;
@@ -36,6 +35,7 @@
     overflow-y: auto;              /* Allow vertical scrolling */
     position: relative;            /* For positioning the new message indicator */
     box-sizing: border-box;        /* Ensure padding is included in height */
+    height: 100%;
 }
 .room-info {
     position: absolute;
@@ -128,16 +128,28 @@
     align-self: flex-start;
 }
 
+.message-container.own .username {
+    text-align: right;
+}
+
+.message-container.other .username {
+    text-align: left;
+}
+
 .message {
     display: flex;
     flex-direction: column;
 }
 
 .message-content {
+    position: relative;
     padding: 0.5rem 1.2rem;
     border-radius: 8px;
     word-wrap: break-word;
     background-color: var(--message-bg-other);
+}
+.message-container.own .message-content {
+    padding-bottom: 1.5rem;  /* Extra space for the message-status */
 }
 .message-content .text {
     white-space: pre-wrap; /* Preserve whitespace and wrap text */
@@ -153,14 +165,6 @@
     margin-bottom: 0.2rem;
 }
 
-.message-container.own .username {
-    text-align: right;
-}
-
-.message-container.other .username {
-    text-align: left;
-}
-
 .message.system {
     align-self: center;
     color: var(--text-secondary);
@@ -171,55 +175,64 @@
 }
 
 .message-status {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    margin-top: 0.3rem;
-    min-width: 1rem;
+    position: absolute;
+    bottom: 1rem;
+    right: 0.3rem;
+    font-size: 0.8rem;  /* adjust size as necessary */
+    pointer-events: none; /* so clicks pass through, if desired */
+    opacity: 0.6;
 }
 
 .message-status-icon {
-    width: 1rem;
-    height: 1rem;
-    transition: opacity 0.2s ease;
-}
-
-.message-status-icon.loading {
-    /* animation: spin 1s linear infinite; */
-    opacity: 0.7;
-}
-
-.message-status-icon.visible {
-    opacity: 1;
-}
-
-.message-status-icon.hidden {
+    display: inline-block;
+    backface-visibility: hidden;
+    /* Start with hidden opacity so that the animation is noticeable */
     opacity: 0;
+    animation: flipIn 0.5s ease-out forwards;
+}
+
+@keyframes flipIn {
+    0% {
+        transform: perspective(400px) rotateY(90deg);
+        opacity: 0;
+    }
+    50% {
+        /* Slight overshoot */
+        transform: perspective(400px) rotateY(-15deg);
+        opacity: 1;
+    }
+    100% {
+        transform: perspective(400px) rotateY(0deg);
+        opacity: 1;
+    }
+}
+
+/* For delivered messages, stack two check marks with a slight offset */
+.message-status-icon.delivered {
+    display: inline-block;
+    position: relative;
+    width: 1.25rem;  /* width to accommodate two overlapping checks */
+}
+
+.message-status-icon.delivered .check {
+    position: absolute;
+    top: 0;
+    font-size: inherit;
+    line-height: 1;
+}
+
+.message-status-iconicon.delivered .check:first-child {
+    left: 0;
+}
+
+.message-status-icon.delivered .check:last-child {
+    left: 0.3rem;  /* adjust this value to control how much the checks overlap */
 }
 
 /* Remove individual icon classes */
 .icon-check, .icon-double-check, .icon-loading {
     display: none; /* Remove these individual classes */
 }
-
-/* .message-time {
-    text-align: center;
-    font-size: 0.8rem;
-    color: #666;
-    padding: 0.5rem 1rem;
-    background-color: var(--message-bg-system);
-    border-radius: 12px;
-    display: inline-block;
-    max-width: 80%;
-    margin-left: auto;
-    margin-right: auto;
-} */
-
-/* .icon-check, .icon-double-check, .icon-loading {
-    width: 1rem;
-    height: 1rem;
-    margin-left: 0.3rem;
-} */
 
 .message-retry {
     left: -2.2rem; /* Adjust position for own messages */
@@ -232,6 +245,7 @@
     padding: 0;
     cursor: pointer;
     color: var(--error-color);
+    font-size: 1.5rem;
 }
 
 .visible {
@@ -775,22 +789,10 @@
     }
     
     .chat-area {
-        height: calc(100vh - 60px); /* Adjust based on your header/footer */
+        /* height: calc(100vh - 60px); */
+         /* Adjust based on your header/footer */
         -webkit-overflow-scrolling: touch;
         padding: 60px 0 0; /* Smaller padding for mobile */
     }
-    
-    /* .new-message-indicator {
-        position: fixed;
-        bottom: 60px;
-        left: 50%;
-        transform: translateX(-50%);
-        padding: 8px 16px;
-        border-radius: 20px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        z-index: 1000;
-    } */
+
 }

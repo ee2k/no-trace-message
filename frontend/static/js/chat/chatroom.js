@@ -1,11 +1,7 @@
-// import { initSvgIcons } from '../global.js';
 import { $ } from '../utils/dom.js';
 
 class ChatRoom {
     constructor() {
-        // Initialize global features
-        // initSvgIcons();
-        
         // Initialize chat features
         this.ws = null;
         this.roomId = null;
@@ -183,9 +179,9 @@ class ChatRoom {
                 this.sendTextMessage(content);
                 this.messageInput.value = '';
                 this.messageInput.style.height = 'auto';
-                if (this.isAtBottom) {
-                    this.scrollToBottom();
-                }
+                // if (this.isAtBottom) {
+                //     this.scrollToBottom();
+                // }
             }
         });
         this.messageInput.addEventListener('keydown', (e) => {
@@ -464,7 +460,7 @@ class ChatRoom {
                     username: data.user.username,
                     joinedAt: Date.now()
                 });
-                this.addSystemMessage(`${data.user.username} ✋`);
+                this.addSystemMessage(`${data.user.username} 🙋‍♀️`);
                 this.updateParticipantDisplay();
                 break;
             
@@ -473,7 +469,7 @@ class ChatRoom {
                 const leftUser = this.participants.get(data.user_id);
                 if (leftUser) {
                     this.participants.delete(data.user_id);
-                    this.addSystemMessage(`⬅ ${leftUser.username}`);
+                    this.addSystemMessage(`${leftUser.username} ✈️`);
                     this.updateParticipantDisplay();
                 }
                 break;
@@ -642,12 +638,11 @@ class ChatRoom {
             <span class="username">${this.escapeHtml(displayName)}</span>
         ` : '';
         
+        // <svg class="icon-resend"><use href="/static/images/resend.svg#icon"></use></svg>
         messageContainer.innerHTML = `
-            ${isOwnMessage ? `
-                <button class="message-retry ${status === 'failed' ? 'visible' : 'hidden'}">
-                    <svg class="icon-resend"><use href="/static/images/resend.svg#icon"></use></svg>
-                </button>
-            ` : ''}
+            ${isOwnMessage ?
+                `<button class="message-retry ${status === 'failed' ? 'visible' : 'hidden'}">⇡</button>`
+                : ''}
             ${usernameHtml}
             <div class="message-content ${isOwnMessage ? 'own' : 'other'}">
                 ${contentHtml}
@@ -670,31 +665,36 @@ class ChatRoom {
         this.messages.appendChild(messageContainer);
         this.updateMessageTimes();
 
-        // Wait for next animation frame before checking scroll position
+        // Use requestAnimationFrame to allow DOM updates, then:
         requestAnimationFrame(() => {
-            this.checkScrollPosition();
-            
-            // Scroll to bottom if we were at bottom before adding message
-            if (isOwnMessage || wasAtBottomBeforeAdd) {
+            // Recheck the scroll position after the new message element has been added.
+            this.checkScrollPosition();  // This will update this.isAtBottom
+
+            if (isOwnMessage) {
+                // Always scroll to bottom when sending a message.
                 this.scrollToBottom();
-            } else if (!this.isAtBottom) {
-                this.createNewMessageIndicator();
+            } else {
+                // For incoming messages:
+                // • If the chat was already at the bottom before, scroll automatically.
+                // • Otherwise, do not scroll (newMessageIndicator logic will kick in).
+                if (this.isAtBottom) {
+                    // If the chat was already at the bottom, auto-scroll.
+                    this.scrollToBottom();
+                } else {
+                    if (!this.newMessageIndicator) {
+                        this.createNewMessageIndicator();
+                    }
+                }
             }
+            // Otherwise, do not auto-scroll; let checkScrollPosition's logic handle showing
+            // the new-message indicator (which now appears only when new messages are dropped 
+            // into the chat while not at the bottom).
         });
         
         // Add click handler for retry button
         const retryButton = messageContainer.$('.message-retry');
         if (retryButton) {
             retryButton.onclick = () => this.resendFailedMessage(messageId);
-        }
-        
-        // Mobile-specific handling
-        if (/Mobi|Android/i.test(navigator.userAgent)) {
-            this.chatArea.style.overflowY = 'hidden';
-            setTimeout(() => {
-                this.chatArea.style.overflowY = 'auto';
-                this.scrollToBottom(true);
-            }, 100);
         }
         
         return messageId;
@@ -838,7 +838,7 @@ class ChatRoom {
             this.roomId;
 
         // Update roomInfo with room ID and participant count
-        $('#roomInfo').textContent = `${formattedRoomId} 👤 ${this.participantCount || 0}`;
+        $('#roomInfo').textContent = `${formattedRoomId} 👤﹡ ${this.participantCount || 0}`;
     }
 
     updateConnectionStatus() {
@@ -1063,9 +1063,10 @@ class ChatRoom {
     getStatusIcon(status) {
         const icons = {
             failed: '',
-            sending: '<svg class="message-status-icon"><use href="/static/images/loading.svg#icon"></use></svg>',
-            sent: '<svg class="message-status-icon"><use href="/static/images/check.svg#icon"></use></svg>',
-            delivered: '<svg class="message-status-icon"><use href="/static/images/d_check.svg#icon"></use></svg>'
+            sending: '<span class="message-status-icon sending">•••</span>',
+            sent: '<span class="message-status-icon sent">✓</span>',
+            delivered: '<span class="message-status-icon delivered"><span class="check">✓</span><span class="check">✓</span></span>'
+            // delivered: '<svg class="message-status-icon"><use href="/static/images/d_check.svg#icon"></use></svg>'
         };
         return icons[status] || '';
     }
@@ -1078,7 +1079,7 @@ class ChatRoom {
         this.scrollToBottom();
     }
 
-    scrollToBottom(force = false) {
+    scrollToBottom() {
         if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
         this.scrollingInProgress = true; // flag used to prevent indicator creation during scroll
 
@@ -1158,7 +1159,7 @@ class ChatRoom {
 
     checkScrollPosition() {
         if (!this.chatArea) return;
-        // If scroll-to-bottom is in progress, cancel pending indicator creation.
+        // Skip if a scroll-to-bottom is in progress.
         if (this.scrollingInProgress) {
             if (this.delayedIndicatorTimeout) {
                 clearTimeout(this.delayedIndicatorTimeout);
@@ -1170,8 +1171,9 @@ class ChatRoom {
         const buffer = 15; // small margin of error
         const { scrollTop, clientHeight, scrollHeight } = this.chatArea;
         this.isAtBottom = scrollTop + clientHeight >= scrollHeight - buffer;
+        // console.log("=== checkScrollPosition - isAtBottom ", this.isAtBottom);
 
-        // If at bottom, cancel any pending delayed indicator and remove existing indicator.
+        // If at bottom, clear any pending new-message-indicator
         if (this.isAtBottom) {
             if (this.delayedIndicatorTimeout) {
                 clearTimeout(this.delayedIndicatorTimeout);
@@ -1180,19 +1182,6 @@ class ChatRoom {
             if (this.newMessageIndicator) {
                 this.newMessageIndicator.remove();
                 this.newMessageIndicator = null;
-            }
-        } else {
-            // If not at bottom, delay indicator creation (if not already scheduled or created)
-            if (!this.newMessageIndicator && !this.delayedIndicatorTimeout) {
-                this.delayedIndicatorTimeout = setTimeout(() => {
-                    // Re-check conditions after the delay (500ms)
-                    const { scrollTop, clientHeight, scrollHeight } = this.chatArea;
-                    this.isAtBottom = scrollTop + clientHeight >= scrollHeight - buffer;
-                    if (!this.isAtBottom && !this.newMessageIndicator) {
-                        this.createNewMessageIndicator();
-                    }
-                    this.delayedIndicatorTimeout = null;
-                }, 500);
             }
         }
 
@@ -1249,3 +1238,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const chatRoom = new ChatRoom();
     await chatRoom.init();
 });
+
+function setVhVariable() {
+    // Use visualViewport if available (most modern mobile browsers support it)
+    const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--vh', `${vh * 0.01}px`);
+}
+// Update on resize and orientation change
+window.addEventListener('resize', setVhVariable);
+window.addEventListener('orientationchange', setVhVariable);
+setVhVariable();
+
