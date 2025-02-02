@@ -1,11 +1,18 @@
+:root {
+    --header-height: 60px; /* Adjust based on header height */
+    --footer-height: 60px; /* Adjust based on footer height */
+}
+
 .chat-container {
     max-width: 800px;
     height: 100vh;
+    height: calc(var(--vh, 1vh) * 100);
     margin: 0 auto;
     display: flex;
     flex-direction: column;
     background-color: var(--bg-color);
     color: var(--text-color);
+    overflow: hidden;
 }
 
 .chat-header {
@@ -16,8 +23,11 @@
     padding: 0.2rem;
     background-color: var(--input-bg);
     border-bottom: 1px solid var(--border-color);
-    position: relative;
-    height: auto;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg-color); /* Add your header background color */
+    flex-shrink: 0;
 }
 
 .room-info {
@@ -82,13 +92,15 @@
 .chat-area {
     flex: 1;
     overflow-y: auto;
-    padding: 1rem;
+    min-height: 0;
 }
 
 .messages {
     display: flex;
     flex-direction: column;
     gap: 0.7rem;
+    padding: 0.5rem;
+    min-height: min-content;
 }
 
 .message-container {
@@ -419,8 +431,8 @@
 
 /* Plus button and menu styles */
 .chat-footer {
-    background-color: var(--input-bg);
-    border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
+    background: var(--bg-color);
 }
 
 .plus-button {
@@ -693,6 +705,27 @@
     text-align: center;
 }
 
+.new-message-indicator {
+    position: absolute;
+    top: -3.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 2rem;
+    background-color: var(--bg-secondary);
+    border-radius: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    z-index: 100;
+    animation: slide-in 0.3s ease;
+}
+
+@keyframes slide-in {
+    from { transform: translateX(-50%) translateY(1rem); opacity: 0; }
+    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
 /* Mobile Responsiveness, always put this at the bottom */
 @media (max-width: 600px) {
     .room-info {
@@ -714,7 +747,28 @@
         width: 95%;
         padding: 1.5rem;
     }
+    .chat-container {
+        height: 100vh;
+        height: -webkit-fill-available;
+    }
+    
+    .chat-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+    }
+    
     .chat-area {
-        padding: 0.6rem;
+        height: calc(-webkit-fill-available - var(--header-height) - var(--footer-height));
+        padding-top: var(--header-height);
+        padding-bottom: var(--footer-height);
+    }
+    
+    .chat-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
     }
 }

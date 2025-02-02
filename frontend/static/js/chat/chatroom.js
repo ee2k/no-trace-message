@@ -13,12 +13,14 @@ class ChatRoom {
         this.token = null;
         this.participantCount = 0;
         this.messageInput = $('#messageInput');
+        this.chatArea = $('.chat-area');
         this.messages = $('#messages');
         this.shareDialog = $('#shareDialog');
         this.menuBtn = $('#menuBtn');
         this.menuDropdown = $('#menuDropdown');
         this.plusBtn = $('#plusBtn');
         this.plusMenu = $('#plusMenu');
+        this.chatFooter = $('.chat-footer');
         this.MAX_MESSAGE_LENGTH = 2000;
         this.messageQueue = [];
         this.isConnected = false;
@@ -94,6 +96,46 @@ class ChatRoom {
         };
         this.username = sessionStorage.getItem('username');
         this.userId = sessionStorage.getItem('current_user_id');
+
+        this.wasAtBottom = true;
+        this.newMessageIndicator = null;
+
+        let scrollTimeout = null;
+
+        this.chatArea.addEventListener('scroll', () => {
+            // Clear any existing timeout
+            if (scrollTimeout) {
+                clearTimeout(scrollTimeout);
+            }
+            
+            // Check position immediately
+            this.checkScrollPosition();
+            
+            // Set a timeout to check again after scrolling stops
+            scrollTimeout = setTimeout(() => {
+                this.checkScrollPosition();
+                scrollTimeout = null;
+            }, 100);
+        });
+
+        this.isWindowFocused = true;
+        
+        window.addEventListener('focus', () => {
+            this.isWindowFocused = true;
+            // Scroll to bottom if new messages arrived while unfocused
+            if (this.isAtBottom) {
+                this.scrollToBottom();
+            }
+        });
+        
+        window.addEventListener('blur', () => {
+            this.isWindowFocused = false;
+        });
+
+        this.handleViewportChange = this.handleViewportChange.bind(this);
+        window.addEventListener('resize', this.handleViewportChange);
+        window.addEventListener('orientationchange', this.handleViewportChange);
+        this.handleViewportChange();
     }
 
     setupMenu() {
@@ -414,6 +456,9 @@ class ChatRoom {
             default:
                 console.warn('Unknown message type:', data.message_type);
         }
+
+        // Handle pending scroll after message is processed
+        this.handlePendingScroll();
     }
 
     async compressMessage(message) {
@@ -580,9 +625,32 @@ class ChatRoom {
             </div>
         `;
         
+        // Check scroll position BEFORE adding message
+        this.checkScrollPosition();
+        const wasAtBottomBeforeAdd = this.isAtBottom;
+
+        console.log('Before adding message:', {
+            wasAtBottomBeforeAdd,
+            scrollHeight: this.chatArea.scrollHeight,
+            clientHeight: this.chatArea.clientHeight,
+            scrollTop: this.chatArea.scrollTop
+        });
+
+        // Add message to DOM
         this.messages.appendChild(messageContainer);
         this.updateMessageTimes();
-        this.scrollToBottom();
+
+        // Wait for next animation frame before checking scroll position
+        requestAnimationFrame(() => {
+            this.checkScrollPosition();
+            
+            // Scroll to bottom if we were at bottom before adding message
+            if (isOwnMessage || wasAtBottomBeforeAdd) {
+                this.scrollToBottom();
+            } else if (!this.isAtBottom) {
+                this.createNewMessageIndicator();
+            }
+        });
         
         // Add click handler for retry button
         const retryButton = messageContainer.$('.message-retry');
@@ -954,7 +1022,32 @@ class ChatRoom {
     }
 
     scrollToBottom() {
-        this.messages.scrollTop = this.messages.scrollHeight;
+        if (this.scrollTimeout) {
+            clearTimeout(this.scrollTimeout);
+        }
+
+        this.scrollTimeout = setTimeout(() => {
+            requestAnimationFrame(() => {
+                if (!this.chatArea) {
+                    console.error('Chat area container not found');
+                    return;
+                }
+
+                // Only scroll if we're not already at the bottom
+                if (!this.isAtBottom) {
+                    this.chatArea.scrollTo({
+                        top: this.chatArea.scrollHeight,
+                        behavior: 'smooth'
+                    });
+                    this.isAtBottom = true;
+                }
+
+                if (this.newMessageIndicator) {
+                    this.newMessageIndicator.remove();
+                    this.newMessageIndicator = null;
+                }
+            });
+        }, 50); // 50ms delay to allow DOM updates
     }
 
     updateParticipantDisplay() {
@@ -1013,8 +1106,64 @@ class ChatRoom {
             }
         });
     }
-}
 
+    checkScrollPosition() {
+        requestAnimationFrame(() => {
+            if (!this.chatArea) return;
+            
+            const { scrollTop, scrollHeight, clientHeight } = this.chatArea;
+            this.wasAtBottom = this.isAtBottom;
+            this.isAtBottom = Math.abs(scrollHeight - (scrollTop + clientHeight)) < 10;
+            
+            // Remove new message indicator if we've scrolled to bottom
+            if (this.isAtBottom && this.newMessageIndicator && !this.wasAtBottom) {
+                this.newMessageIndicator.remove();
+                this.newMessageIndicator = null;
+            }
+        });
+    }
+
+    createNewMessageIndicator() {
+        if (this.newMessageIndicator) return;
+        
+        this.newMessageIndicator = document.createElement('button');
+        this.newMessageIndicator.className = 'new-message-indicator';
+        this.newMessageIndicator.textContent = '⬇';
+        this.newMessageIndicator.addEventListener('click', () => {
+            this.scrollToBottom();
+            this.newMessageIndicator.remove();
+            this.newMessageIndicator = null;
+        });
+        
+        if (this.chatFooter) {
+            this.chatFooter.prepend(this.newMessageIndicator);
+        }
+    }
+
+    handlePendingScroll() {
+        if (this.isAtBottom && !this.isWindowFocused) {
+            this.scrollToBottom();
+        }
+    }
+
+    handleViewportChange() {
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+        
+        // Force layout update
+        this.chatArea.style.display = 'none';
+        this.chatArea.offsetHeight; // Trigger reflow
+        this.chatArea.style.display = 'block';
+        
+        // Handle mobile keyboard appearance
+        if (window.innerWidth <= 600 && this.chatFooter) {
+            this.chatFooter.style.position = 'fixed';
+            this.chatFooter.style.bottom = '0';
+            this.chatFooter.style.left = '0';
+            this.chatFooter.style.right = '0';
+        }
+    }
+}
 // Initialize chat when page loads
 document.addEventListener('DOMContentLoaded', async () => {
     const chatRoom = new ChatRoom();
