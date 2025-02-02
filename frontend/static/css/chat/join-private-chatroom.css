@@ -45,7 +45,7 @@ h1 a {
 }
 .nickname-form {
     width: 100%;
-    max-width: 50%;
+    max-width: 75%;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
@@ -92,13 +92,13 @@ footer {
     height: 2.5rem;
     background: transparent;
     border: none;
-    padding: 0.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0.8;
     cursor: pointer;
     color: var(--icon-primary);
+    font-size: 1.8rem;
 }
 
 .icon-button:hover {

@@ -54,27 +54,13 @@
     transform: translateY(-50%);
 }
 
-/* Menu Styles */
-.menu-item {
-    width: 100%;
-    height: 2.5rem;
-    padding: 0 1rem;
-    text-align: left;
-    background: none;
-    border: none;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 1rem;
-}
-
 /* Remove the invisible actions since we're using flex-end */
 .actions:first-child {
     display: none;
 }
 
 .actions button {
-    padding: 0.3rem 1rem;
+    padding: 0.3rem;
     border: none;
     border-radius: 4px;
     background-color: transparent;
@@ -94,7 +80,19 @@
 .actions button.danger:hover {
     background-color: #b91c1c;
 }
-
+/* Menu Styles */
+.actions .menu-dropdown button, .menu-item {
+    width: 100%;
+    height: 2.5rem;
+    padding: 0 1rem;
+    text-align: left;
+    background: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+}
 /* Chat Area Styles */
 .chat-area {
     height: calc(100vh - 60px);
@@ -408,7 +406,6 @@
     position: absolute;
     top: 100%;
     right: 0;
-    margin-top: 0.5rem;
     background-color: var(--input-bg);
     border: 1px solid var(--border-color);
     border-radius: 4px;

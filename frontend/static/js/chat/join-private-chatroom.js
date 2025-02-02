@@ -1,4 +1,3 @@
-import { initSvgIcons } from '../global.js';
 import { $ } from '../utils/dom.js';
 import { setupCounter } from '../utils/input.js';
 
@@ -18,9 +17,6 @@ const nouns = [
 ];
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Initialize global features
-    initSvgIcons();
-    
     // Setup character counter for Room ID
     const roomIdInput = $('#roomId');
     const roomIdCounter = $('#roomIdCounter');

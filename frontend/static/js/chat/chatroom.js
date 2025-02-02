@@ -156,12 +156,6 @@ class ChatRoom {
             this.menuDropdown.hidden = true;
         });
 
-        // Menu item handlers
-        $('#muteBtn').addEventListener('click', () => {
-            // Toggle mute logic here
-            this.menuDropdown.hidden = true;
-        });
-
         $('#deleteRoomBtn').addEventListener('click', () => {
             if (confirm('Are you sure to delete this room? This cannot be undone.')) {
                 this.ws.send(JSON.stringify({ type: 'delete_room' }));

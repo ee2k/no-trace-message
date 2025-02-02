@@ -2,6 +2,11 @@ header {
     text-align: center;
     margin-bottom: 1rem;
 }
+.char-success {
+    color: var(--success-color);
+    font-size: 2.6rem;
+    font-weight: bold;
+}
 h1 {
     display: flex;
     align-items: center;
@@ -121,15 +126,6 @@ footer {
     gap: 1rem;
     margin-bottom: 1.5rem;
     justify-content: center;
-}
-
-.checkmark-icon {
-    width: 48px;
-    height: 48px;
-}
-
-.icon-success {
-    color: var(--success-color, #22c55e);
 }
 
 .share-section {

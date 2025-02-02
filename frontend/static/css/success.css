@@ -2,12 +2,10 @@
     text-align: center;
     margin-bottom: 2rem;
 }
-.checkmark-icon {
-    width: 48px;
-    height: 48px;
-}
-.icon-success {
-    color: var(--success-color, #22c55e);
+.char-success {
+    color: var(--success-color);
+    font-size: 2.6rem;
+    font-weight: bold;
 }
 .highlight {
     color: var(--accent-color);
@@ -130,26 +128,6 @@
     flex: none;
     margin: 0 auto;
     display: block;
-}
-
-.share-btn {
-    display: flex;
-    align-items: center;
-    padding: 1rem 2rem;
-    border: none;
-    border-radius: 4px;
-    background: var(--accent-color);
-    color: white;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-.share-btn:hover {
-    background: var(--accent-color-dark);
-}
-.share-icon {
-    width: 16px;
-    height: 16px;
-    fill: currentColor;
 }
 
 .button-group {

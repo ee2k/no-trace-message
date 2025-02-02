@@ -14,9 +14,7 @@
         <main>
             <div class="success-message">
                 <div class="success-header">
-                    <svg class="checkmark-icon icon-success">
-                        <use href="static/images/checkmark.svg#icon"></use>
-                    </svg>
+                    <span class="char-success">✓</span>
                     <h2 data-i18n="success.header">Message created!</h2>
                 </div>
                 <p class="message-timing">
@@ -36,12 +34,10 @@
                                 <div class="btn-content">
                                     <svg class="copy-icon"><use href="static/images/copy.svg#icon"></use></svg>
                                 </div>
-                                <div class="btn-content-copied" style="display: none;">
-                                    <svg class="copy-icon"><use href="static/images/checkmark.svg#icon"></use></svg>
-                                </div>
+                                <div class="btn-content-copied" style="display: none;">✓</div>
                             </button>
                             <button class="share-btn" style="display: none;" title="Share" data-i18n-title="success.share.share">
-                                <svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg>
+                                <div class="btn-share"><svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg></div>
                             </button>
                         </div>
                     </div>
