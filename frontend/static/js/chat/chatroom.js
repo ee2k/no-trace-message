@@ -1157,29 +1157,52 @@ class ChatRoom {
     }
 
     checkScrollPosition() {
-        if (!this.chatArea || this.scrollingInProgress) return;
-        
+        if (!this.chatArea) return;
+        // If scroll-to-bottom is in progress, cancel pending indicator creation.
+        if (this.scrollingInProgress) {
+            if (this.delayedIndicatorTimeout) {
+                clearTimeout(this.delayedIndicatorTimeout);
+                this.delayedIndicatorTimeout = null;
+            }
+            return;
+        }
+
         const buffer = 15; // small margin of error
         const { scrollTop, clientHeight, scrollHeight } = this.chatArea;
         this.isAtBottom = scrollTop + clientHeight >= scrollHeight - buffer;
+
+        // If at bottom, cancel any pending delayed indicator and remove existing indicator.
+        if (this.isAtBottom) {
+            if (this.delayedIndicatorTimeout) {
+                clearTimeout(this.delayedIndicatorTimeout);
+                this.delayedIndicatorTimeout = null;
+            }
+            if (this.newMessageIndicator) {
+                this.newMessageIndicator.remove();
+                this.newMessageIndicator = null;
+            }
+        } else {
+            // If not at bottom, delay indicator creation (if not already scheduled or created)
+            if (!this.newMessageIndicator && !this.delayedIndicatorTimeout) {
+                this.delayedIndicatorTimeout = setTimeout(() => {
+                    // Re-check conditions after the delay (500ms)
+                    const { scrollTop, clientHeight, scrollHeight } = this.chatArea;
+                    this.isAtBottom = scrollTop + clientHeight >= scrollHeight - buffer;
+                    if (!this.isAtBottom && !this.newMessageIndicator) {
+                        this.createNewMessageIndicator();
+                    }
+                    this.delayedIndicatorTimeout = null;
+                }, 500);
+            }
+        }
 
         console.log('[Scroll] checkScrollPosition', {
             scrollTop,
             clientHeight,
             scrollHeight,
             isAtBottom: this.isAtBottom,
-            condition: scrollTop + clientHeight >= scrollHeight - buffer
+            buffer,
         });
-
-        // When NOT at the bottom, show the indicator (if not already present)
-        if (!this.isAtBottom && !this.newMessageIndicator) {
-            this.createNewMessageIndicator();
-        } 
-        // When at the bottom, remove any indicator if it exists
-        else if (this.isAtBottom && this.newMessageIndicator) {
-            this.newMessageIndicator.remove();
-            this.newMessageIndicator = null;
-        }
     }
 
     createNewMessageIndicator() {
