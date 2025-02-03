@@ -280,8 +280,7 @@
 
 .chat-input button {
     padding: 0.2rem;
-    min-width: 44px;
-    height: 42px;
+    min-width: 2.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -293,14 +292,14 @@
     background-color: transparent;
 }
 
+.chat-input button:hover .send-icon {
+    opacity: 1;
+}
+
 .send-icon {
     width: 24px;
     height: 24px;
     opacity: 0.8;
-}
-
-.chat-input button:hover .send-icon {
-    opacity: 1;
 }
 
 /* Share Dialog Styles */
@@ -461,25 +460,19 @@
     z-index: 10;
 }
 
-.plus-button {
+.chat-button {
     background: transparent;
     border: none;
-    padding: 0.8rem;
     opacity: 0.8;
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 2.6rem;
+    font-size: 1.8rem;
 }
 
-.plus-button:hover {
+.chat-button:hover {
     opacity: 1;
     background: transparent;
-}
-
-.plus-icon {
-    width: 24px;
-    height: 24px;
 }
 
 .plus-menu {
