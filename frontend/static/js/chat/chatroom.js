@@ -72,12 +72,6 @@ class ChatRoom {
         this.setupMessageInput();
         this.setupPlusMenu();
 
-        // Create and insert character counter
-        this.charCounter = document.createElement('div');
-        this.charCounter.className = 'char-counter';
-        this.charCounter.style.display = 'none';
-        $('.chat-input').append(this.charCounter);
-
         this.statusIcon = $('#roomStatus .status-icon');
         this.statusText = $('#roomStatus .status-text');
 
@@ -173,9 +167,6 @@ class ChatRoom {
                 this.sendTextMessage(content);
                 this.messageInput.value = '';
                 this.messageInput.style.height = 'auto';
-                // if (this.isAtBottom) {
-                //     this.scrollToBottom();
-                // }
             }
         });
         this.messageInput.addEventListener('keydown', (e) => {
@@ -187,32 +178,6 @@ class ChatRoom {
         });
 
         this.messageInput.addEventListener('input', () => {
-            const currentLength = this.messageInput.value.length;
-            const remainingChars = this.MAX_MESSAGE_LENGTH - currentLength;
-            
-            // Only show counter when approaching limit (last 100 chars) or exceeding
-            if (remainingChars <= 100) {
-                this.charCounter.textContent = `${remainingChars}`;
-                this.charCounter.style.display = 'block';
-                
-                if (remainingChars < 0) {
-                    this.charCounter.classList.add('error');
-                    this.messageInput.classList.add('error');
-                    this.charCounter.classList.remove('warning');
-                    this.messageInput.classList.remove('near-limit');
-                } else {
-                    this.charCounter.classList.add('warning');
-                    this.messageInput.classList.add('near-limit');
-                    this.charCounter.classList.remove('error');
-                    this.messageInput.classList.remove('error');
-                }
-            } else {
-                // Hide counter when well below limit
-                this.charCounter.style.display = 'none';
-                this.charCounter.classList.remove('warning', 'error');
-                this.messageInput.classList.remove('near-limit', 'error');
-            }
-
             // Auto-resize textarea
             this.messageInput.style.height = 'auto';
             this.messageInput.style.height = (this.messageInput.scrollHeight) + 'px';

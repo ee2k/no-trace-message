@@ -98,17 +98,11 @@ footer {
     opacity: 0.8;
     cursor: pointer;
     color: var(--icon-primary);
-    font-size: 1.8rem;
 }
 
 .icon-button:hover {
     opacity: 1;
     background: transparent;
-}
-
-.pencil-icon {
-    width: 20px;
-    height: 20px;
 }
 
 .icon-button svg.icon-primary {
@@ -129,6 +123,11 @@ footer {
 .icon-button .icon-disabled {
     fill: var(--icon-disabled);
     stroke: var(--icon-disabled);
+}
+.pencil-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    flex-shrink: 0;
 }
 
 .code-section {

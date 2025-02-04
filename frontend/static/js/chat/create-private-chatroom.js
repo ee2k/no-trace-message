@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const response = await fetch('/api/chat/private_room/create', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     room_id: customRoomId || undefined,
@@ -112,23 +112,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             if (!response.ok) {
-                const responseData = await response.json();
-                let errorMessage = 'Failed to create room. Please try again.';
-                
-                switch (responseData.detail.code) {
-                    case 'ROOM_ID_EXISTS':
-                        errorMessage = 'This room ID is already taken. Please choose a different one.';
-                        break;
-                    case 'INVALID_ROOM_ID':
-                        errorMessage = 'Invalid room ID format. Please try a different one.';
-                        break;
-                    case 'INVALID_TOKEN':
-                        errorMessage = 'Invalid token format. Please try a different one.';
-                        break;
-                    // Add more cases as needed
+                // Check if the response is JSON by inspecting the Content-Type header.
+                const contentType = response.headers.get('Content-Type') || '';
+                if (contentType.includes('application/json')) {
+                    const responseData = await response.json();
+                    let errorMessage = 'Failed to create room. Please try again.';
+                    
+                    switch (responseData.detail.code) {
+                        case 'ROOM_ID_EXISTS':
+                            errorMessage = 'This room ID is already taken. Please choose a different one.';
+                            break;
+                        case 'INVALID_ROOM_ID':
+                            errorMessage = 'Invalid room ID format. Please try a different one.';
+                            break;
+                        case 'INVALID_TOKEN':
+                            errorMessage = 'Invalid token format. Please try a different one.';
+                            break;
+                        // Add more cases as needed
+                    }
+                    alert(errorMessage);
+                } else {
+                    alert("Failed to create room. " + response.status + " " + response.statusText);
                 }
-                
-                alert(errorMessage);
                 return;
             }
 
@@ -144,10 +149,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.location.href = '/private-chatroom-created';
         } catch (error) {
             console.error('Error creating room:', error);
-            // Only show generic error if it's not a handled error code
-            if (!error.message || !['ROOM_ID_EXISTS', 'INVALID_ROOM_ID', 'INVALID_TOKEN'].includes(error.message)) {
-                alert('Failed to create room. Please try again.');
-            }
+            alert('Failed to create room. ' + error);
         }
     });
 });

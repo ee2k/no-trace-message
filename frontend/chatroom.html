@@ -46,9 +46,11 @@
         <!-- Input area -->
         <footer class="chat-footer">
             <div class="chat-input">
-                <button id="plusBtn" class="chat-button">⨁</button>
-                <textarea id="messageInput" placeholder="Type a message..." rows="1"></textarea>
-                <button id="sendBtn" class="chat-button">▶</button>
+                <button id="plusBtn" class="plus-button">⨁</button>
+                <textarea id="messageInput" placeholder="Type a message..." rows="1" maxlength="2000"></textarea>
+                <button id="sendBtn" class="send-button">
+                    <svg class="menu-icon icon-primary"><use href="static/images/send.svg#icon"></use></svg>
+                </button>
             </div>
             <div id="plusMenu" class="plus-menu">
                 <button class="plus-menu-item">

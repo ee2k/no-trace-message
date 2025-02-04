@@ -31,11 +31,13 @@
     flex-shrink: 0;
 }
 .chat-area-container {
-    flex: 1;                       /* Take up the remaining space */
-    overflow-y: auto;              /* Allow vertical scrolling */
-    position: relative;            /* For positioning the new message indicator */
-    box-sizing: border-box;        /* Ensure padding is included in height */
-    height: 100%;
+    flex: 1;
+    overflow-y: auto;
+    position: relative;
+    box-sizing: border-box;
+    height: calc(100% - 120px); /* Subtract header and footer height */
+    /* padding-bottom: 60px; */
+    /* Add padding equal to footer height */
 }
 .room-info {
     position: absolute;
@@ -95,11 +97,10 @@
 }
 /* Chat Area Styles */
 .chat-area {
-    height: calc(100vh - 60px);
+    height: 100%; /* Changed from calc(100vh - 60px) */
     flex: 1;
     overflow-y: auto;
-    min-height: 0; /* Crucial for proper scrolling */
-    padding: 70px 0 0; /* Top padding for header, bottom for footer */
+    min-height: 0;
     box-sizing: border-box;
 }
 
@@ -257,8 +258,8 @@
 /* Input Area Styles */
 .chat-input {
     display: flex;
-    gap: 1rem;
-    padding: 0.5rem 1rem;
+    gap: 0.5rem;
+    padding: 0.5rem;
     align-items: center;
     position: relative;
 }
@@ -378,8 +379,6 @@
 
 /* Add styles for the new menu icon */
 .menu-button .menu-icon {
-    /* width: 28px;
-    height: 28px; */
     opacity: 0.8;
 }
 
@@ -460,7 +459,7 @@
     z-index: 10;
 }
 
-.chat-button {
+.plus-button {
     background: transparent;
     border: none;
     opacity: 0.8;
@@ -470,11 +469,23 @@
     font-size: 1.8rem;
 }
 
-.chat-button:hover {
+.plus-button:hover {
     opacity: 1;
     background: transparent;
 }
+.send-button {
+    background: transparent;
+    border: none;
+    opacity: 0.8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
+.send-button:hover {
+    opacity: 1;
+    background: transparent;
+}
 .plus-menu {
     display: flex;
     justify-content: space-around;
@@ -540,46 +551,14 @@
 }
 
 .menu-icon {
-    width: 28px;
-    height: 28px;
+    width: 1.6rem;
+    height: 1.6rem;
     flex-shrink: 0;
 }
 
 /* Ensure menu is hidden by default */
 .plus-menu[hidden] {
     display: none;
-}
-
-/* Character Counter Styles */
-.char-counter {
-    position: absolute;
-    right: 4.5rem;  /* Space for send button */
-    bottom: 0.5rem;
-    font-size: 0.8rem;
-    color: var(--text-color);
-    opacity: 0.6;
-    padding: 0.2rem 0.4rem;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-}
-
-.char-counter.warning {
-    color: #fbbf24;  /* Amber color */
-    opacity: 1;
-}
-
-.char-counter.error {
-    color: #ef4444;
-    opacity: 1;
-}
-
-/* Style for near-limit textarea */
-.chat-input textarea.near-limit {
-    border-color: #fbbf24;
-}
-
-.chat-input textarea.error {
-    border-color: #ef4444;
 }
 
 /* Icon color classes */
@@ -779,10 +758,12 @@
     }
     
     .chat-area {
-        /* height: calc(100vh - 60px); */
-         /* Adjust based on your header/footer */
-        -webkit-overflow-scrolling: touch;
-        padding: 60px 0 0; /* Smaller padding for mobile */
+        height: 100%; /* Changed from calc(100vh - 60px) */
+        padding: 60px 0 0;
     }
 
+    .chat-area-container {
+        height: calc(100% - 120px); /* Adjust for mobile */
+        /* padding-bottom: 60px; */
+    }
 }
