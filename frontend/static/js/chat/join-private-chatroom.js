@@ -50,6 +50,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     $('#tokenHintSection').style.display = 'block';
                 }
             }
+
+            // Ensure user ID is stored correctly
+            if (data.user_id) {
+                sessionStorage.setItem('current_user_id', data.user_id.toString());
+            }
         } catch (error) {
             console.error('Error fetching room metadata:', error);
             alert('Failed to load room information. Please try again.');
@@ -129,12 +134,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             const data = await response.json();
-            // Store user ID, token, and username
+            // Store user ID and username
             sessionStorage.setItem('current_user_id', data.user_id);
             sessionStorage.setItem('username', username);
-            if (data.room_token) {
-                sessionStorage.setItem(`room_token_${data.room_id}`, data.room_token);
+            
+            // Store the token from user input (already validated by backend)
+            if (tokenValue) {
+                sessionStorage.setItem(`room_token_${roomIdValue}`, tokenValue);
+                console.log('Token stored from user input:', tokenValue);
             }
+            alert("pause");
             window.location.href = `/chatroom/${data.room_id}`;
         } catch (error) {
             console.error('Error joining room:', error);

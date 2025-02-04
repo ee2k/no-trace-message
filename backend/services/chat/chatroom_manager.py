@@ -62,7 +62,7 @@ class ChatroomManager:
     async def validate_room_token(self, room_id: str, token: str) -> bool:
         """Validate room token"""
         try:
-            room = self.get_room(room_id)
+            room = await self.get_room(room_id)
             is_valid = secrets.compare_digest(token, room.room_token)
             print(f"[Token Validation] Room: {room_id}, Token Match: {is_valid}")
             return is_valid

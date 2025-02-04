@@ -89,12 +89,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Validation checks only if the corresponding toggle is active
         if (isCustomIDActive && !customRoomId) {
-            alert('Please enter at least 1 char for Custom Chatroom ID.');
+            $('#customID').classList.add('input-error');
+            $('#customID').focus();
+            setTimeout(() => {
+                $('#customID').classList.remove('input-error');
+            }, 400);
             return;
         }
 
         if (isCustomTokenActive && !token) {
-            alert('Please enter at least 1 char for Access Token.');
+            $('#customToken').classList.add('input-error');
+            $('#customToken').focus();
+            setTimeout(() => {
+                $('#customToken').classList.remove('input-error');
+            }, 400);
             return;
         }
 

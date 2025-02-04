@@ -240,27 +240,77 @@ class ChatRoom {
         // Get room ID from URL path
         const pathParts = window.location.pathname.split('/').filter(Boolean);
         this.roomId = pathParts[pathParts.length - 1];
-
-        // Initialize WebSocket connection
-        await this.connectWebSocket();
-
-        // Update room status after WebSocket is initialized
-        this.updateRoomStatus();
-
-        // Handle mobile viewport
-        this.handleViewportChange();
-        window.addEventListener('resize', () => this.handleViewportChange());
-        window.addEventListener('orientationchange', () => this.handleViewportChange());
         
-        // Ensure initial scroll position
-        setTimeout(() => this.scrollToBottom(), 100);
+        try {
+            // Fetch room metadata
+            const response = await fetch(`/api/chat/private_room/${this.roomId}/meta`);
+            if (!response.ok) {
+                if (response.status === 404) {
+                    alert('Room not found. Please check the room ID.');
+                    window.location.href = '/join-private-chatroom';
+                    return;
+                }
+                throw new Error('Failed to fetch room metadata');
+            }
+            
+            const roomData = await response.json();
+            this.requiresToken = roomData.token_required;
+            
+            if (this.requiresToken) {
+                const allKeys = Object.keys(sessionStorage);
+                console.log('All sessionStorage keys:', allKeys);
+                console.log('Looking for key:', `room_token_${this.roomId}`);
+            }
+            
+            // Only require token if the room needs it
+            if (this.requiresToken) {
+                // Get token from sessionStorage
+                this.token = sessionStorage.getItem(`room_token_${this.roomId}`);
+                
+                if (!this.token) {
+                    alert("Token is required for this private room");
+                    console.error('Token is required for private rooms');
+                    window.location.href = '/join-private-chatroom';
+                    return;
+                }
+            }
+            
+            console.log('Token before WebSocket:', this.token);
+            console.log('SessionStorage before WebSocket:', JSON.stringify(sessionStorage));
+            
+            // Initialize WebSocket connection
+            await this.connectWebSocket();
+
+            // Move token removal to after successful WebSocket authentication
+            if (this.requiresToken && this.token) {
+                // Don't remove token here
+                // sessionStorage.removeItem(`room_token_${this.roomId}`);
+            }
+
+            // Update room status after WebSocket is initialized
+            this.updateRoomStatus();
+
+            // Handle mobile viewport
+            this.handleViewportChange();
+            window.addEventListener('resize', () => this.handleViewportChange());
+            window.addEventListener('orientationchange', () => this.handleViewportChange());
+            
+            // Ensure initial scroll position
+            setTimeout(() => this.scrollToBottom(), 100);
+
+            console.log('Retrieving token for room:', this.roomId);
+            console.log('SessionStorage on chatroom load:', JSON.stringify(sessionStorage));
+            console.log('Token retrieved:', sessionStorage.getItem(`room_token_${this.roomId}`));
+        } catch (error) {
+            console.error('Error initializing chat room:', error);
+            this.updateRoomStatus();
+        }
     }
 
-    connectWebSocket() {
+    async connectWebSocket() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const encodedToken = this.token ? encodeURIComponent(this.token) : '';
         const encodedUsername = encodeURIComponent(this.username);
-        const wsUrl = `${protocol}//${window.location.host}/ws/chatroom/${this.roomId}?username=${encodedUsername}${this.token ? `&token=${encodedToken}` : ''}`;
+        const wsUrl = `${protocol}//${window.location.host}/ws/chatroom/${this.roomId}?username=${encodedUsername}`;
         
         console.log('[WebSocket] Connecting to:', wsUrl);
         console.log('[WebSocket] Using token:', this.token ? 'Yes' : 'No');
@@ -271,8 +321,20 @@ class ChatRoom {
 
             this.ws.onopen = () => {
                 console.log('[WebSocket] Connection established');
+                
+                // Send token immediately after connection
+                if (this.requiresToken && this.token) {
+                    const authMessage = {
+                        type: 'auth',
+                        token: this.token,
+                        room_id: this.roomId
+                    };
+                    this.ws.send(JSON.stringify(authMessage));
+                    console.log('Auth message sent:', authMessage);
+                }
+                
                 this.connectionState = this.connectionStates.CONNECTED;
-                this.isConnected = true; // Add this line
+                this.isConnected = true;
                 this.connectionQuality = 'good';
                 this.reconnectAttempts = 0;
                 clearTimeout(this.reconnectTimeout);
@@ -290,24 +352,26 @@ class ChatRoom {
             this.ws.onclose = (event) => {
                 console.log('[WebSocket] Connection closed:', event);
                 this.connectionState = this.connectionStates.DISCONNECTED;
-                this.isConnected = false; // Add this line
+                this.isConnected = false;
                 clearInterval(this.pingInterval);
                 
-                // Handle specific close codes
-                switch (event.code) {
-                    case 4004: // ROOM_NOT_FOUND
-                        this.handleRoomNotFound();
-                        break;
-                    case 4003: // INVALID_TOKEN
-                        this.handleInvalidToken();
-                        break;
-                    case 1000: // NORMAL_CLOSURE
-                        this.addSystemMessage('Connection closed normally');
-                        break;
-                    default:
-                        if (!event.wasClean) {
-                            this.attemptReconnect();
-                        }
+                // Only handle specific close codes if we were previously connected
+                if (this.connectionState === this.connectionStates.CONNECTED) {
+                    switch (event.code) {
+                        case 4004: // ROOM_NOT_FOUND
+                            this.handleRoomNotFound();
+                            break;
+                        case 4003: // INVALID_TOKEN
+                            this.handleInvalidToken();
+                            break;
+                        case 1000: // NORMAL_CLOSURE
+                            this.addSystemMessage('Connection closed normally');
+                            break;
+                        default:
+                            if (!event.wasClean) {
+                                this.attemptReconnect();
+                            }
+                    }
                 }
                 
                 this.updateRoomStatus();
@@ -323,13 +387,19 @@ class ChatRoom {
 
             this.ws.onmessage = (event) => {
                 try {
-                    console.log('Received message:', event.data);
                     const message = JSON.parse(event.data);
                     
+                    // Handle backend's initial auth response
                     if (message.type === 'auth') {
                         console.log('Auth received, setting user ID:', message.user_id);
                         this.userId = message.user_id;
                         sessionStorage.setItem('current_user_id', this.userId);
+                        return;
+                    }
+                    
+                    // Handle our own auth acknowledgment
+                    if (message.type === 'auth_ack') {
+                        console.log('Authentication successful');
                         return;
                     }
                     
@@ -347,6 +417,12 @@ class ChatRoom {
                     this.addSystemMessage('Error processing message');
                 }
             };
+
+            console.log('WebSocket auth message:', {
+                type: 'auth',
+                token: this.token,
+                room_id: this.roomId
+            });
         } catch (error) {
             console.error('WebSocket connection error:', error);
             if (error.message.includes('404')) {
@@ -979,6 +1055,11 @@ class ChatRoom {
     handleInvalidToken() {
         this.addSystemMessage('Invalid or missing access token');
         this.ws.close(); // Close the connection
+        
+        // Redirect to join-private-chatroom after 2 seconds
+        setTimeout(() => {
+            window.location.href = '/join-private-chatroom';
+        }, 2000);
     }
 
     handleServerError() {
@@ -1205,4 +1286,3 @@ function setVhVariable() {
 window.addEventListener('resize', setVhVariable);
 window.addEventListener('orientationchange', setVhVariable);
 setVhVariable();
-
