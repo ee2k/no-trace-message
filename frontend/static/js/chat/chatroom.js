@@ -246,11 +246,11 @@ class ChatRoom {
             const response = await fetch(`/api/chat/private_room/${this.roomId}/meta`);
             if (!response.ok) {
                 if (response.status === 404) {
-                    alert('Room not found. Please check the room ID.');
-                    window.location.href = '/join-private-chatroom';
+                    this.handleRoomNotFound();
                     return;
                 }
-                throw new Error('Failed to fetch room metadata');
+                // Handle other errors (including 500)
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
             
             const roomData = await response.json();
@@ -303,6 +303,7 @@ class ChatRoom {
             console.log('Token retrieved:', sessionStorage.getItem(`room_token_${this.roomId}`));
         } catch (error) {
             console.error('Error initializing chat room:', error);
+            this.handleRoomNotFound(); // Handle all errors as room not found
             this.updateRoomStatus();
         }
     }
@@ -1048,8 +1049,18 @@ class ChatRoom {
     handleRoomNotFound() {
         this.connectionState = this.connectionStates.ROOM_NOT_FOUND;
         this.updateRoomStatus();
-        this.addSystemMessage('Room not found. Please check the room ID and try again.');
-        this.ws.close();
+        this.addSystemMessage('Room not found.');
+        this.addSystemMessage('Redirecting...');
+        
+        // Clean up any existing connection
+        if (this.ws) {
+            this.ws.close();
+        }
+        
+        // Redirect after short delay
+        setTimeout(() => {
+            window.location.href = '/join-private-chatroom';
+        }, 3000);
     }
 
     handleInvalidToken() {

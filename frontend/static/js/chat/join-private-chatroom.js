@@ -1,8 +1,7 @@
 import { $ } from '../utils/dom.js';
-import { setupCounter } from '../utils/input.js';
 
 const adjectives = [
-    'Happy', 'Lucky', 'Sunny', 'Clever', 'Swift', 'Gloomy', 'Boring', 'Sleepy', 'Grumpy', 'Lazy', 'Dreamy', 'Silly', 'Witty', 'Clumsy', 'Brave', 'Shy', 'Wild', 'Calm', 'Quiet', 'Loud', 'Gentle', 'Bold', 'Wise', 'Fancy', 'Neat', 'Smart', 'Crazy', 'Smartass'
+    'Happy', 'Sad', 'Angry', 'Joyful', 'Fearful', 'Disgusted', 'Lucky', 'Sunny', 'Clever', 'Swift', 'Gloomy', 'Boring', 'Sleepy', 'Grumpy', 'Lazy', 'Dreamy', 'Silly', 'Witty', 'Clumsy', 'Brave', 'Shy', 'Wild', 'Calm', 'Quiet', 'Loud', 'Gentle', 'Bold', 'Wise', 'Fancy', 'Neat', 'Smart', 'Crazy', 'Smartass'
 ];
 
 const nouns = [
@@ -19,8 +18,6 @@ const nouns = [
 document.addEventListener('DOMContentLoaded', async () => {
     // Setup character counter for Room ID
     const roomIdInput = $('#roomId');
-    const roomIdCounter = $('#roomIdCounter');
-    setupCounter(roomIdInput, roomIdCounter, 70);
 
     // Get room ID from URL path
     const url = new URL(window.location.href);
@@ -98,6 +95,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        if (tokenSection.style.display !== 'none' && !tokenValue) {
+            // shake token input
+            $('#token').classList.add('input-error');
+            $('#token').focus();
+            setTimeout(() => {
+                $('#token').classList.remove('input-error');
+            }, 400);
+            return;
+        }
+
         try {
             const response = await fetch('/api/chat/private_room/join', {
                 method: 'POST',
@@ -125,7 +132,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         errorMessage = 'Room not found. Please check the room ID.';
                         break;
                     case 'ROOM_FULL':
-                        errorMessage = 'Room is full. Maximum 2 participants allowed.';
+                        errorMessage = 'Room is full. Maximum 6 participants allowed.';
                         break;
                 }
                 
@@ -143,7 +150,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 sessionStorage.setItem(`room_token_${roomIdValue}`, tokenValue);
                 console.log('Token stored from user input:', tokenValue);
             }
-            alert("pause");
             window.location.href = `/chatroom/${data.room_id}`;
         } catch (error) {
             console.error('Error joining room:', error);

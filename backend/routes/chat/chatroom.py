@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from models.chat.chatroom import CreateRoomRequest, CreateRoomResponse, RoomValidationRequest, RoomValidationResponse, RoomStatusResponse, InviteResponse, JoinResponse, LeaveResponse, DeleteResponse, JoinRequest
-from services.chat.chatroom_manager import ChatroomManager
+from services.chat.chatroom_manager import ChatroomManager, RoomNotFoundError
 from utils.chat_error_codes import ChatErrorCodes, STATUS_CODES
 import logging
 from utils.error_codes import CommonErrorCodes
@@ -147,25 +147,19 @@ async def delete_private_room(room_id: str):
         raise HTTPException(status_code=404, detail="Room not found")
     return {"status": "ok"}
 
-@router.get("/{room_id}/meta", response_model=dict)
-async def get_room_meta(room_id: str):
-    """Get room metadata including token requirement and hint"""
+@router.get("/{room_id}/meta")
+async def get_private_room_meta(room_id: str):
     try:
         room = await private_room_manager.get_room(room_id)
         if not room:
-            raise HTTPException(
-                status_code=STATUS_CODES[ChatErrorCodes.ROOM_NOT_FOUND],
-                detail={"code": ChatErrorCodes.ROOM_NOT_FOUND.value}
-            )
+            raise HTTPException(status_code=404, detail={"code": ChatErrorCodes.ROOM_NOT_FOUND.value})
             
         return {
-            "token_required": bool(room.room_token),
-            "token_hint": room.room_token_hint if room.room_token else None
+            "token_required": room.requires_token(),
+            "token_hint": room.room_token_hint if room.requires_token() else None
         }
-        
+    except RoomNotFoundError as e:
+        raise HTTPException(status_code=404, detail={"code": ChatErrorCodes.ROOM_NOT_FOUND.value})
     except Exception as e:
-        logger.error(f"Error getting room metadata: {str(e)}")
-        raise HTTPException(
-            status_code=STATUS_CODES[CommonErrorCodes.SERVER_ERROR],
-            detail={"code": CommonErrorCodes.SERVER_ERROR.value}
-        )
+        logger.error(f"Error fetching room metadata: {str(e)}")
+        raise HTTPException(status_code=500, detail={"code": CommonErrorCodes.SERVER_ERROR.value})

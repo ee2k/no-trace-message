@@ -160,33 +160,10 @@ footer {
     color: var(--text-secondary);
 }
 
-.code-row .char-counter {
-    position: absolute;
+/* .code-row {
     bottom: 0.5rem;
     right: 0.5rem;
-}
-
-.char-counter {
-    position: absolute;
-    bottom: 0.5rem;
-    right: 0.5rem;
-    font-size: 0.8rem;
-    color: var(--text-color);
-    opacity: 0.6;
-    padding: 0.2rem 0.8rem;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-}
-
-.char-counter.warning {
-    color: #fbbf24;  /* Amber color */
-    opacity: 1;
-}
-
-.char-counter.error {
-    color: #ef4444;  /* Red color */
-    opacity: 1;
-}
+} */
 
 .id-input-container, .token-input-container {
     display: flex;
