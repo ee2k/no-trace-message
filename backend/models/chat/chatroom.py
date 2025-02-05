@@ -30,6 +30,7 @@ class InviteResponse(BaseModel):
 class JoinResponse(BaseModel):
     status: str
     room_id: str
+    user_id: str
 
 class LeaveResponse(BaseModel):
     status: str

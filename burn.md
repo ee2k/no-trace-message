@@ -1,4 +1,4 @@
-# Burn after read service
+# Burn after reading service
 
 ## Creation page design
 

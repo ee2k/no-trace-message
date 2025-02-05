@@ -4,6 +4,8 @@ from services.chat.chatroom_manager import ChatroomManager, RoomNotFoundError
 from utils.chat_error_codes import ChatErrorCodes, STATUS_CODES
 import logging
 from utils.error_codes import CommonErrorCodes
+import uuid
+from models.chat.user import User
 
 logger = logging.getLogger(__name__)
 
@@ -110,19 +112,23 @@ async def join_private_room(request: JoinRequest):
                 detail={"code": ChatErrorCodes.INVALID_TOKEN.value}
             )
         
+        # Create user with generated ID
+        user = User(
+            user_id=str(uuid.uuid4()),
+            username=request.user.username
+        )
+        
         # Add participant
         result = await private_room_manager.add_private_room_participant(
             request.room_id, 
-            request.user
+            user  # Pass the User object instead of request.user
         )
         
-        if not result:
-            raise HTTPException(
-                status_code=STATUS_CODES[ChatErrorCodes.ROOM_FULL],
-                detail={"code": ChatErrorCodes.ROOM_FULL.value}
-            )
-            
-        return JoinResponse(status="ok", room_id=room.room_id)
+        return JoinResponse(
+            status="ok", 
+            room_id=room.room_id,
+            user_id=user.user_id  # Add user_id to response
+        )
         
     except HTTPException:
         # Propagate the HTTPException with the original error code

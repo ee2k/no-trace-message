@@ -301,6 +301,9 @@ class ChatRoom {
             console.log('Retrieving token for room:', this.roomId);
             console.log('SessionStorage on chatroom load:', JSON.stringify(sessionStorage));
             console.log('Token retrieved:', sessionStorage.getItem(`room_token_${this.roomId}`));
+
+            // this.participantCount = roomData.participant_count || 0;
+            // this.updateParticipantDisplay();
         } catch (error) {
             console.error('Error initializing chat room:', error);
             this.handleRoomNotFound(); // Handle all errors as room not found
@@ -308,18 +311,32 @@ class ChatRoom {
         }
     }
 
-    async connectWebSocket() {
+    buildWebSocketUrl() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const encodedUsername = encodeURIComponent(this.username);
-        const wsUrl = `${protocol}//${window.location.host}/ws/chatroom/${this.roomId}?username=${encodedUsername}`;
+        const params = new URLSearchParams({
+            username: encodeURIComponent(this.username),
+            token: this.token || '',
+            user_id: sessionStorage.getItem('chat_session_id') || ''
+        });
         
-        console.log('[WebSocket] Connecting to:', wsUrl);
+        // Handle development ports
+        const isLocalhost = window.location.hostname === 'localhost';
+        const port = window.location.port ? `:${window.location.port}` : '';
+        const host = isLocalhost ? 
+            `${window.location.hostname}${port}` : 
+            window.location.host;
+
+        return `${protocol}//${host}/ws/chatroom/${this.roomId}?${params}`;
+    }
+
+    async connectWebSocket() {
+        this.ws = new WebSocket(this.buildWebSocketUrl());
+        
+        console.log('[WebSocket] Connecting to:', this.ws.url);
         console.log('[WebSocket] Using token:', this.token ? 'Yes' : 'No');
         console.log('[WebSocket] Room ID:', this.roomId);
         
         try {
-            this.ws = new WebSocket(wsUrl);
-
             this.ws.onopen = () => {
                 console.log('[WebSocket] Connection established');
                 
@@ -333,6 +350,11 @@ class ChatRoom {
                     this.ws.send(JSON.stringify(authMessage));
                     console.log('Auth message sent:', authMessage);
                 }
+                
+                // Request participant list after auth
+                this.ws.send(JSON.stringify({
+                    type: 'get_participants'
+                }));
                 
                 this.connectionState = this.connectionStates.CONNECTED;
                 this.isConnected = true;
@@ -472,6 +494,14 @@ class ChatRoom {
                 break;
             
             case 'system':
+                if (data.code === 'FAILED_JOIN_ATTEMPT') {
+                    username = data.username
+                    const message = `Join attempt by ${username} was unsuccessful`;
+                    // Use i18n to format the message
+                    // const message = i18n.t('chat.failed_join_attempt', { username: data.username });
+                    this.addSystemMessage(message);
+                    return;
+                }
                 this.addSystemMessage(data.content);
                 break;
             
@@ -480,39 +510,30 @@ class ChatRoom {
                 break;
             
             case 'participant_list':
-                // Initialize participant list
-                data.participants.forEach(participant => {
-                    this.participants.set(participant.user_id, {
-                        username: participant.username,
-                        joinedAt: Date.now()
-                    });
-                });
+                this.participants = new Map(data.participants.map(p => [p.user_id, p.username]));
                 this.updateParticipantDisplay();
                 break;
             
-            case 'user_joined':
-                // Add new participant
-                this.participants.set(data.user.user_id, {
-                    username: data.user.username,
-                    joinedAt: Date.now()
-                });
-                this.addSystemMessage(`${data.user.username} 🙋‍♀️`);
+            case 'participant_joined':
+                this.participants.set(message.user_id, message.username);
+                this.addSystemMessage(`${message.username} 🙋‍♀️`);
                 this.updateParticipantDisplay();
                 break;
             
-            case 'user_left':
-                // Remove participant
-                const leftUser = this.participants.get(data.user_id);
-                if (leftUser) {
-                    this.participants.delete(data.user_id);
-                    this.addSystemMessage(`${leftUser.username} ✈️`);
-                    this.updateParticipantDisplay();
-                }
+            case 'participant_left':
+                this.participants.delete(message.user_id);
+                this.addSystemMessage(`${message.username} ✈️`);
+                this.updateParticipantDisplay();
                 break;
             
-            case 'participant_update':
-                this.participantCount = data.count;
-                this.updateRoomStatus();
+            case 'connection_info':
+                sessionStorage.setItem('chat_session', JSON.stringify({
+                    id: data.user_id,
+                    username: this.username,
+                    room: this.roomId,
+                    token: this.token
+                }));
+                this.updateParticipantDisplay(data.participants);
                 break;
             
             default:
@@ -1164,9 +1185,9 @@ class ChatRoom {
     }
 
     updateParticipantDisplay() {
-        // Update UI to show current participants
-        const participantCount = this.participants.size;
-        this.participantCount = participantCount;
+        const count = this.participants.size;
+        const formattedRoomId = this.roomId.slice(0, 8) + '...';
+        $('#roomInfo').textContent = `${formattedRoomId} 👤 ${count}`;
         this.updateRoomStatus();
     }
 

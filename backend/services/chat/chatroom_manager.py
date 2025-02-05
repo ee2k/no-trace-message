@@ -9,6 +9,7 @@ from models.chat.user import User
 from fastapi import HTTPException
 from utils.chat_error_codes import ChatErrorCodes, STATUS_CODES
 from utils.singleton import singleton
+import time
 
 class RoomError(Exception):
     """Base exception for room operations"""
@@ -43,6 +44,7 @@ class ChatroomManager:
         self._max_messages_per_room = 100
         self.ALLOWED_IMAGE_TYPES = {'image/jpeg', 'image/png', 'image/gif', 'image/webp'}
         self.rooms = {}
+        self.recent_disconnects = {}  # {room_id: {user_id: (username, disconnect_time)}}
 
     async def create_private_room(self, room_id: Optional[str] = None, room_token: Optional[str] = None, room_token_hint: Optional[str] = None) -> PrivateRoom:
         """Create a private chat room with optional custom ID"""
@@ -198,3 +200,33 @@ class ChatroomManager:
             return bool(room.room_token)
         except RoomNotFoundError:
             return False
+
+    async def handle_disconnect(self, room_id: str, user_id: str, username: str):
+        """Track disconnected users"""
+        if room_id not in self.recent_disconnects:
+            self.recent_disconnects[room_id] = {}
+        
+        self.recent_disconnects[room_id][user_id] = (
+            username,
+            time.time()
+        )
+        # Cleanup old entries
+        self.recent_disconnects[room_id] = {
+            uid: (uname, t) 
+            for uid, (uname, t) in self.recent_disconnects[room_id].items()
+            if (time.time() - t) < 60  # 60-second window
+        }
+
+    async def validate_reconnection(self, room_id: str, user_id: str, username: str) -> bool:
+        """Check if user can reuse previous ID"""
+        room_disconnects = self.recent_disconnects.get(room_id, {})
+        record = room_disconnects.get(user_id)
+        
+        if not record:
+            return False
+        
+        stored_username, disconnect_time = record
+        return (
+            secrets.compare_digest(username, stored_username) and 
+            (time.time() - disconnect_time) < 60
+        )

@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const data = await response.json();
             // Store user ID and username
-            sessionStorage.setItem('current_user_id', data.user_id);
+            sessionStorage.setItem('current_user_id', data.user_id.toString());
             sessionStorage.setItem('username', username);
             
             // Store the token from user input (already validated by backend)
@@ -150,6 +150,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 sessionStorage.setItem(`room_token_${roomIdValue}`, tokenValue);
                 console.log('Token stored from user input:', tokenValue);
             }
+
+            const userData = {
+                id: data.user_id,
+                username: username,
+                room: roomIdValue,
+                token: tokenValue || null
+            };
+            sessionStorage.setItem('chat_session', JSON.stringify(userData));
+
             window.location.href = `/chatroom/${data.room_id}`;
         } catch (error) {
             console.error('Error joining room:', error);
