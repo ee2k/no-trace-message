@@ -1,9 +1,10 @@
 from fastapi import APIRouter, HTTPException
 from models.chat.chatroom import CreateRoomRequest, CreateRoomResponse, RoomValidationRequest, RoomValidationResponse, RoomStatusResponse, InviteResponse, JoinResponse, LeaveResponse, DeleteResponse, JoinRequest
-from services.chat.chatroom_manager import ChatroomManager, RoomNotFoundError
+from services.chat.chatroom_manager import ChatroomManager
 from utils.chat_error_codes import ChatErrorCodes, STATUS_CODES
 import logging
 from utils.error_codes import CommonErrorCodes
+from utils.error import Coded_Error
 import uuid
 from models.chat.user import User
 
@@ -95,44 +96,49 @@ async def generate_private_room_invite(room_id: str, creator_token: str):
 @router.post("/join", response_model=JoinResponse)
 async def join_private_room(request: JoinRequest):
     try:
-        # Validate room ID
+        # Validate room ID and get room
         if not request.room_id or len(request.room_id.strip()) < 1:
             raise HTTPException(
                 status_code=STATUS_CODES[ChatErrorCodes.INVALID_ROOM_ID],
                 detail={"code": ChatErrorCodes.INVALID_ROOM_ID.value}
             )
         
-        # Get room (this will raise HTTPException if room doesn't exist)
         room = await private_room_manager.get_room(request.room_id)
+
+        # Add a check for room existence
+        if room is None:
+            raise HTTPException(
+                status_code=STATUS_CODES[ChatErrorCodes.ROOM_NOT_FOUND],
+                detail={"code": ChatErrorCodes.ROOM_NOT_FOUND.value}
+            )
         
         # Validate token if required
-        if room.room_token and room.room_token != request.token:
+        if room.requires_token() and room.room_token != request.token:
             raise HTTPException(
                 status_code=STATUS_CODES[ChatErrorCodes.INVALID_TOKEN],
                 detail={"code": ChatErrorCodes.INVALID_TOKEN.value}
             )
         
-        # Create user with generated ID
+        # Create user and add participant
         user = User(
             user_id=str(uuid.uuid4()),
             username=request.user.username
         )
         
-        # Add participant
-        result = await private_room_manager.add_private_room_participant(
-            request.room_id, 
-            user  # Pass the User object instead of request.user
-        )
+        await private_room_manager.add_private_room_participant(request.room_id, user)
         
         return JoinResponse(
             status="ok", 
             room_id=room.room_id,
-            user_id=user.user_id  # Add user_id to response
+            user_id=user.user_id
         )
-        
     except HTTPException:
-        # Propagate the HTTPException with the original error code
         raise
+    except Coded_Error as e:
+        raise HTTPException(
+            status_code=e.status_code,
+            detail=e.to_dict()
+        )
     except Exception as e:
         logger.error(f"Error joining room {request.room_id}: {str(e)}")
         raise HTTPException(
@@ -164,8 +170,10 @@ async def get_private_room_meta(room_id: str):
             "token_required": room.requires_token(),
             "token_hint": room.room_token_hint if room.requires_token() else None
         }
-    except RoomNotFoundError as e:
-        raise HTTPException(status_code=404, detail={"code": ChatErrorCodes.ROOM_NOT_FOUND.value})
+    except HTTPException:
+        raise
+    except Coded_Error as e:
+        raise HTTPException(status_code=e.status_code, detail=e.to_dict())
     except Exception as e:
         logger.error(f"Error fetching room metadata: {str(e)}")
         raise HTTPException(status_code=500, detail={"code": CommonErrorCodes.SERVER_ERROR.value})

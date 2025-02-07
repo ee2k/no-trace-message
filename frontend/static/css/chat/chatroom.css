@@ -143,7 +143,7 @@
 .message-content {
     position: relative;
     padding: 0.5rem 1.2rem;
-    border-radius: 8px;
+    border-radius: 0.5rem;
     word-wrap: break-word;
     background-color: var(--message-bg-other);
 }
@@ -175,7 +175,7 @@
 
 .message-status {
     position: absolute;
-    bottom: 1rem;
+    /* bottom: 1rem; */
     right: 0.3rem;
     font-size: 0.8rem;  /* adjust size as necessary */
     pointer-events: none; /* so clicks pass through, if desired */

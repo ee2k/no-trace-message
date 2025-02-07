@@ -267,6 +267,11 @@ footer {
     margin: 0 auto;
 }
 
+.error-text {
+    color: #ff4444;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
 /* Always put screen size media queries at the end of the file */
 /* For very small screens and mobile devices */
 @media (max-width: 600px) {

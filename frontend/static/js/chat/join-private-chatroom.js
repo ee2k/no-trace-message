@@ -15,9 +15,92 @@ const nouns = [
     'Tree', 'Sequoia', 'Rose', 'Lily', 'Daisy', 'Sunflower', 'Tulip', 'Orchid', 'Daffodil', 'Iris', 'Hyacinth', 'Dahlia', 'Poppy', 'Marigold', 'Poppy',
 ];
 
+// NEW HELPER FUNCTIONS TO SHOW/REMOVE ERROR FOR ROOM ID
+function displayRoomIdError(message) {
+    const roomIdInput = $('#roomId');
+    roomIdInput.classList.add('input-error');
+    let errorElem = document.getElementById('roomIdError');
+    if (!errorElem) {
+        errorElem = document.createElement('div');
+        errorElem.id = 'roomIdError';
+        errorElem.className = 'error-text';
+        roomIdInput.parentNode.appendChild(errorElem);
+    }
+    errorElem.textContent = message;
+}
+
+function removeRoomIdError() {
+    const roomIdInput = $('#roomId');
+    roomIdInput.classList.remove('input-error');
+    let errorElem = document.getElementById('roomIdError');
+    if (errorElem) {
+        errorElem.remove();
+    }
+}
+
+// Helper function to fetch room metadata
+async function fetchRoomMetadata(roomId) {
+    try {
+        const response = await fetch(`/api/chat/private_room/${roomId}/meta`);
+        if (!response.ok) {
+            if (response.status === 404) {
+                displayRoomIdError('Room not found. Please check the room ID.');
+                // Hide token sections if they were previously displayed
+                $('#tokenSection').style.display = 'none';
+                $('#tokenHintSection').style.display = 'none';
+                return null;
+            }
+            throw new Error('Failed to fetch room metadata');
+        }
+        removeRoomIdError();
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching room metadata:', error);
+        displayRoomIdError('Failed to load room information. Please try again.');
+        // Hide token sections in case of error
+        $('#tokenSection').style.display = 'none';
+        $('#tokenHintSection').style.display = 'none';
+        return null;
+    }
+}
+
+// Helper function to update token section visibility
+function updateTokenSection(data) {
+    if (data.token_required) {
+        $('#tokenSection').style.display = 'block';
+        if (data.token_hint) {
+            $('#tokenHint').textContent = data.token_hint;
+            $('#tokenHintSection').style.display = 'block';
+        }
+    } else {
+        $('#tokenSection').style.display = 'none';
+        $('#tokenHintSection').style.display = 'none';
+    }
+}
+
+// Helper function to handle room metadata updates
+async function handleRoomMetadata(roomId) {
+    const data = await fetchRoomMetadata(roomId);
+    if (data) {
+        updateTokenSection(data);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Setup character counter for Room ID
     const roomIdInput = $('#roomId');
+    let fetchTimeout;
+
+    // Remove any error message as soon as the user types
+    roomIdInput.addEventListener('input', async () => {
+        removeRoomIdError();
+        clearTimeout(fetchTimeout);
+        fetchTimeout = setTimeout(async () => {
+            const roomIdValue = roomIdInput.value.trim();
+            if (!roomIdValue) return;
+            await handleRoomMetadata(roomIdValue);
+        }, 1000);
+    });
 
     // Get room ID from URL path
     const url = new URL(window.location.href);
@@ -26,37 +109,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const roomId = isBaseRoute ? null : pathParts[pathParts.length - 1];
 
     if (roomId) {
-        roomIdInput.value = roomId; // The counter will update automatically
-        
-        try {
-            // Fetch room metadata
-            const response = await fetch(`/api/chat/private_room/${roomId}/meta`);
-            if (!response.ok) {
-                if (response.status === 404) {
-                    alert('Room not found. Please check the room ID.');
-                    return;
-                }
-                throw new Error('Failed to fetch room metadata');
-            }
-
-            const data = await response.json();
-            if (data.token_required) {
-                $('#tokenSection').style.display = 'block';
-                if (data.token_hint) {
-                    $('#tokenHint').textContent = data.token_hint;
-                    $('#tokenHintSection').style.display = 'block';
-                }
-            }
-
-            // Ensure user ID is stored correctly
-            if (data.user_id) {
-                sessionStorage.setItem('current_user_id', data.user_id.toString());
-            }
-        } catch (error) {
-            console.error('Error fetching room metadata:', error);
-            alert('Failed to load room information. Please try again.');
-            return;
-        }
+        roomIdInput.value = roomId;
+        await handleRoomMetadata(roomId);
     }
 
     // Username input error handling
@@ -76,16 +130,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const roomIdValue = $('#roomId').value.trim();
         const tokenValue = $('#token').value.trim();
 
-        // Validate inputs
-        if (!username) {
-            $('#username').classList.add('input-error');
-            $('#username').focus();
-            setTimeout(() => {
-                $('#username').classList.remove('input-error');
-            }, 400);
-            return;
-        }
-
         if (!roomIdValue) {
             $('#roomId').classList.add('input-error');
             $('#roomId').focus();
@@ -95,12 +139,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        if (tokenSection.style.display !== 'none' && !tokenValue) {
-            // shake token input
+        if ($('#tokenSection').style.display !== 'none' && !tokenValue) {
+            // Shake token input
             $('#token').classList.add('input-error');
             $('#token').focus();
             setTimeout(() => {
                 $('#token').classList.remove('input-error');
+            }, 400);
+            return;
+        }
+
+        // Validate inputs
+        if (!username) {
+            $('#username').classList.add('input-error');
+            $('#username').focus();
+            setTimeout(() => {
+                $('#username').classList.remove('input-error');
             }, 400);
             return;
         }
@@ -132,7 +186,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         errorMessage = 'Room not found. Please check the room ID.';
                         break;
                     case 'ROOM_FULL':
-                        errorMessage = 'Room is full. Maximum 6 participants allowed.';
+                        errorMessage = 'Room is full.';
                         break;
                 }
                 
@@ -141,20 +195,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             const data = await response.json();
-            // Store user ID and username
-            sessionStorage.setItem('current_user_id', data.user_id.toString());
-            sessionStorage.setItem('username', username);
-            
-            // Store the token from user input (already validated by backend)
-            if (tokenValue) {
-                sessionStorage.setItem(`room_token_${roomIdValue}`, tokenValue);
-                console.log('Token stored from user input:', tokenValue);
-            }
 
             const userData = {
-                id: data.user_id,
+                user_id: data.user_id,
                 username: username,
-                room: roomIdValue,
+                room_id: roomIdValue,
                 token: tokenValue || null
             };
             sessionStorage.setItem('chat_session', JSON.stringify(userData));

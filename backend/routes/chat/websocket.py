@@ -2,7 +2,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 import logging
 from models.chat.message import Message
 from fastapi import APIRouter, Depends
-from services.chat.chatroom_manager import ChatroomManager, RoomExpiredError
+from services.chat.chatroom_manager import ChatroomManager
 from utils.singleton import singleton
 import json
 import uuid
@@ -25,22 +25,27 @@ chatroom_manager = ChatroomManager()
 class WebSocketManager:
     def __init__(self):
         self.rooms: dict[str, PrivateRoom] = {}  # room_id -> PrivateRoom
-        # self.active_connections: dict[str, WebSocket] = {}
-        # self.room_participants: dict[str, dict[str, dict]] = {}  # room_id -> {user_id -> user_info}
-        # self.pending_messages: dict[str, list[Message]] = {}
-        # self.last_pong_times: dict[str, float] = {}
-        # self.connection_states = {}  # user_id -> connection state
 
     async def connect(self, websocket: WebSocket, room_id: str, user: User):
-        # Set user's WebSocket connection
+        # Set user's WebSocket connection and mark active
         user.set_websocket(websocket)
         user.update_status(ParticipantStatus.ACTIVE)
-        
-        # Add to room if not already present
+
+        # Get the room (if not already present, fetch it)
         if room_id not in self.rooms:
             self.rooms[room_id] = await chatroom_manager.get_room(room_id)
+
+        room = self.rooms[room_id]
         
-        self.rooms[room_id].add_participant(user)
+        # Check if this user is already present in the room
+        existing = next((p for p in room.participants if p.user_id == user.user_id), None)
+        if existing:
+            # Update the existing participant's connection rather than adding a duplicate
+            existing.set_websocket(websocket)
+            existing.update_status(ParticipantStatus.ACTIVE)
+        else:
+            # Add the new participant for first-time join
+            room.add_participant(user)
 
     async def disconnect(self, user: User, room_id: str):
         if user.is_connected():
@@ -91,7 +96,7 @@ class WebSocketManager:
         if room:
             participants = [{"user_id": p.user_id, "username": p.username} for p in room.participants]
             await self.broadcast(room_id, {
-                "type": "participant_list",
+                "message_type": "participant_list",
                 "participants": participants
             })
 
@@ -147,7 +152,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
         
         # Notify client and participants
         await websocket.send_json({
-            "type": "connection_info",
+            "message_type": "connection_info",
             "user_id": user_id,
             "participants": [
                 {"user_id": p.user_id, "username": p.username}
@@ -157,7 +162,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
         
         # Broadcast join notification
         await websocket_manager.broadcast(room_id, {
-            "type": "participant_joined",
+            "message_type": "participant_joined",
             "user_id": user.user_id,
             "username": user.username
         })
@@ -168,21 +173,27 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 data = await websocket.receive_text()
                 message = json.loads(data)
 
-                # Handle ping/pong
-                if message.get('type') == 'ping':
-                    await websocket.send_json({'type': 'pong'})
+                # Check for ping messages using the proper key
+                if message.get("message_type") == "ping":
+                    await websocket.send_json({"message_type": "pong"})
                     continue
-
-                # Validate and process message
-                validated = Message.model_validate(message)
-                if validated.message_type == 'chat':
-                    if validated.sender_id != user_id:
-                        continue
-                    await websocket_manager.send_message(room_id, validated)
-                elif validated.message_type == 'system':
-                    await websocket_manager.broadcast_system_message(
-                        room_id, validated.content
-                    )
+                elif message.get("message_type") == "get_participants":
+                    await websocket_manager.send_participant_list(room_id)
+                    continue
+                else:
+                    try:
+                        # Now validate and process messages that are not ping messages
+                        validated = Message.model_validate(message)
+                        if validated.message_type == "chat":
+                            if validated.sender_id != user_id:
+                                continue
+                            await websocket_manager.send_message(room_id, validated)
+                        elif validated.message_type == "system":
+                            await websocket_manager.broadcast_system_message(
+                                room_id, validated.content
+                            )
+                    except ValidationError as e:
+                        logger.error(f"Invalid message: {str(e)}")
 
             except json.JSONDecodeError:
                 logger.error("Invalid JSON message")
@@ -196,7 +207,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             # Cleanup and notifications
             await websocket_manager.disconnect(user, room_id)
             await websocket_manager.broadcast(room_id, {
-                "type": "participant_left",
+                "message_type": "participant_left",
                 "user_id": user.user_id,
                 "username": user.username
             })

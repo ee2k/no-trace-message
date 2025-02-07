@@ -152,7 +152,7 @@ class ChatRoom {
 
         $('#deleteRoomBtn').addEventListener('click', () => {
             if (confirm('Are you sure to delete this room? This cannot be undone.')) {
-                this.ws.send(JSON.stringify({ type: 'delete_room' }));
+                this.ws.send(JSON.stringify({ message_type: 'delete_room' }));
                 // window.location.href = '/';
             }
             this.menuDropdown.hidden = true;
@@ -240,12 +240,29 @@ class ChatRoom {
         // Get room ID from URL path
         const pathParts = window.location.pathname.split('/').filter(Boolean);
         this.roomId = pathParts[pathParts.length - 1];
-        
+
+        // Retrieve chat session data from sessionStorage
+        const sessionData = sessionStorage.getItem('chat_session');
+        if (!sessionData) {
+            alert("Session not found. Please join a room.");
+            window.location.href = '/join-private-chatroom';
+            return;
+        }
+        const chatSession = JSON.parse(sessionData);
+        this.userId = chatSession.user_id;
+        this.username = chatSession.username;
+
+        // Optional: Check if the room in the session matches the URL.
+        if (chatSession.room_id !== this.roomId) {
+            console.warn(`Room ID mismatch: session room (${chatSession.room_id}) vs URL room (${this.roomId}).`);
+            // Optionally, you may want to update the session or redirect.
+        }
+
         try {
             // Fetch room metadata
             const response = await fetch(`/api/chat/private_room/${this.roomId}/meta`);
             if (!response.ok) {
-                if (response.status === 404) {
+                if (response.status === 404 && response.detail.code == 'ROOM_NOT_FOUND') {
                     this.handleRoomNotFound();
                     return;
                 }
@@ -256,36 +273,19 @@ class ChatRoom {
             const roomData = await response.json();
             this.requiresToken = roomData.token_required;
             
+            // If the room requires a token, get it from the session
             if (this.requiresToken) {
-                const allKeys = Object.keys(sessionStorage);
-                console.log('All sessionStorage keys:', allKeys);
-                console.log('Looking for key:', `room_token_${this.roomId}`);
-            }
-            
-            // Only require token if the room needs it
-            if (this.requiresToken) {
-                // Get token from sessionStorage
-                this.token = sessionStorage.getItem(`room_token_${this.roomId}`);
-                
+                this.token = chatSession.token;
                 if (!this.token) {
                     alert("Token is required for this private room");
-                    console.error('Token is required for private rooms');
+                    console.error("Token is required for private rooms");
                     window.location.href = '/join-private-chatroom';
                     return;
                 }
             }
             
-            console.log('Token before WebSocket:', this.token);
-            console.log('SessionStorage before WebSocket:', JSON.stringify(sessionStorage));
-            
             // Initialize WebSocket connection
             await this.connectWebSocket();
-
-            // Move token removal to after successful WebSocket authentication
-            if (this.requiresToken && this.token) {
-                // Don't remove token here
-                // sessionStorage.removeItem(`room_token_${this.roomId}`);
-            }
 
             // Update room status after WebSocket is initialized
             this.updateRoomStatus();
@@ -301,9 +301,6 @@ class ChatRoom {
             console.log('Retrieving token for room:', this.roomId);
             console.log('SessionStorage on chatroom load:', JSON.stringify(sessionStorage));
             console.log('Token retrieved:', sessionStorage.getItem(`room_token_${this.roomId}`));
-
-            // this.participantCount = roomData.participant_count || 0;
-            // this.updateParticipantDisplay();
         } catch (error) {
             console.error('Error initializing chat room:', error);
             this.handleRoomNotFound(); // Handle all errors as room not found
@@ -312,11 +309,13 @@ class ChatRoom {
     }
 
     buildWebSocketUrl() {
+        const chatSession = JSON.parse(sessionStorage.getItem('chat_session'));
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const params = new URLSearchParams({
-            username: encodeURIComponent(this.username),
+            // username: encodeURIComponent(this.username),
+            username: this.username,
             token: this.token || '',
-            user_id: sessionStorage.getItem('chat_session_id') || ''
+            user_id: chatSession.user_id || ''
         });
         
         // Handle development ports
@@ -340,10 +339,10 @@ class ChatRoom {
             this.ws.onopen = () => {
                 console.log('[WebSocket] Connection established');
                 
-                // Send token immediately after connection
+                // Send token immediately after connection using message_type
                 if (this.requiresToken && this.token) {
                     const authMessage = {
-                        type: 'auth',
+                        message_type: 'auth',
                         token: this.token,
                         room_id: this.roomId
                     };
@@ -351,9 +350,9 @@ class ChatRoom {
                     console.log('Auth message sent:', authMessage);
                 }
                 
-                // Request participant list after auth
+                // Request participant list using message_type
                 this.ws.send(JSON.stringify({
-                    type: 'get_participants'
+                    message_type: 'get_participants'
                 }));
                 
                 this.connectionState = this.connectionStates.CONNECTED;
@@ -370,6 +369,39 @@ class ChatRoom {
                         this.sendPing();
                     }
                 }, this.PING_INTERVAL);
+            };
+
+            this.ws.onmessage = (event) => {
+                try {
+                    const message = JSON.parse(event.data);
+                    
+                    // Handle backend's initial auth response by looking for message_type
+                    if (message.message_type === 'auth') {
+                        console.log('Auth received, setting user ID:', message.user_id);
+                        this.userId = message.user_id;
+                        sessionStorage.setItem('current_user_id', this.userId);
+                        return;
+                    }
+                    
+                    // Handle our own auth acknowledgment
+                    if (message.message_type === 'auth_ack') {
+                        console.log('Authentication successful');
+                        return;
+                    }
+                    
+                    this.verifyOrigin(event);
+                    const data = this.decodeMessage(event.data);
+                    if (data.message_type === 'pong') {
+                        this.lastPong = Date.now();
+                    } else {
+                        this.handleMessage(data);
+                    }
+                    console.log('Processing message:', message);
+                } catch (error) {
+                    console.error('Message processing error:', error);
+                    console.log('Raw message:', event.data);
+                    this.addSystemMessage('Error processing message');
+                }
             };
 
             this.ws.onclose = (event) => {
@@ -408,41 +440,8 @@ class ChatRoom {
                 this.attemptReconnect();
             };
 
-            this.ws.onmessage = (event) => {
-                try {
-                    const message = JSON.parse(event.data);
-                    
-                    // Handle backend's initial auth response
-                    if (message.type === 'auth') {
-                        console.log('Auth received, setting user ID:', message.user_id);
-                        this.userId = message.user_id;
-                        sessionStorage.setItem('current_user_id', this.userId);
-                        return;
-                    }
-                    
-                    // Handle our own auth acknowledgment
-                    if (message.type === 'auth_ack') {
-                        console.log('Authentication successful');
-                        return;
-                    }
-                    
-                    this.verifyOrigin(event);
-                    const data = this.decodeMessage(event.data);
-                    if (data.type === 'pong') {
-                        this.lastPong = Date.now();
-                    } else {
-                        this.handleMessage(data);
-                    }
-                    console.log('Processing message:', message);
-                } catch (error) {
-                    console.error('Message processing error:', error);
-                    console.log('Raw message:', event.data);
-                    this.addSystemMessage('Error processing message');
-                }
-            };
-
             console.log('WebSocket auth message:', {
-                type: 'auth',
+                message_type: 'auth',
                 token: this.token,
                 room_id: this.roomId
             });
@@ -511,33 +510,33 @@ class ChatRoom {
             
             case 'participant_list':
                 this.participants = new Map(data.participants.map(p => [p.user_id, p.username]));
-                this.updateParticipantDisplay();
+                this.updateRoomInfo();
                 break;
             
             case 'participant_joined':
-                this.participants.set(message.user_id, message.username);
-                this.addSystemMessage(`${message.username} 🙋‍♀️`);
-                this.updateParticipantDisplay();
+                this.participants.set(data.user_id, data.username);
+                this.addSystemMessage(`${data.username} 🎉`);
+                this.updateRoomInfo();
                 break;
             
             case 'participant_left':
-                this.participants.delete(message.user_id);
-                this.addSystemMessage(`${message.username} ✈️`);
-                this.updateParticipantDisplay();
+                this.participants.delete(data.user_id);
+                this.addSystemMessage(`${data.username} ✈️`);
+                this.updateRoomInfo();
                 break;
             
             case 'connection_info':
                 sessionStorage.setItem('chat_session', JSON.stringify({
-                    id: data.user_id,
+                    user_id: data.user_id,
                     username: this.username,
-                    room: this.roomId,
+                    room_id: this.roomId,
                     token: this.token
                 }));
-                this.updateParticipantDisplay(data.participants);
+                this.updateRoomInfo();
                 break;
             
             default:
-                console.warn('Unknown message type:', data.message_type);
+                console.warn('Unknown message type:', data, data.message_type);
         }
 
         // Handle pending scroll after message is processed
@@ -552,24 +551,6 @@ class ChatRoom {
             return compressedBlob;
         }
         return message;
-    }
-
-    validateMessage(message) {
-        if (typeof message !== 'string' && !(message instanceof Blob)) {
-            throw new Error('Invalid message type');
-        }
-
-        if (typeof message === 'string') {
-            // Text message validation
-            if (message.length > this.MAX_TEXT_LENGTH) {
-                throw new Error(`Text message too long (max ${this.MAX_TEXT_LENGTH} characters)`);
-            }
-        } else if (message instanceof Blob) {
-            // Image message validation
-            if (message.size > this.MAX_IMAGE_SIZE) {
-                throw new Error(`Image too large (max ${this.MAX_IMAGE_SIZE / 1024 / 1024}MB)`);
-            }
-        }
     }
 
     async sendMessage(message) {
@@ -644,8 +625,8 @@ class ChatRoom {
         const timestamp = new Date(typeof message === 'object' ? message.timestamp : Date.now());
         
         // Get sender's username
-        const sender = this.participants.get(sender_id);
-        const displayName = sender ? sender.username : `User ${sender_id.slice(0, 4)}`;
+        const senderName = this.participants.get(sender_id);
+        const displayName = senderName || `User ${sender_id.slice(0, 4)}`;
         
         // Check if the last message was from the same user
         const lastMessage = this.messages.lastElementChild;
@@ -893,8 +874,9 @@ class ChatRoom {
             `${this.roomId.substring(0, 4)}...${this.roomId.substring(roomIdLength - 4)}` : 
             this.roomId;
 
+        this.participantCount = this.participants.size
         // Update roomInfo with room ID and participant count
-        $('#roomInfo').textContent = `${formattedRoomId} 👤﹡ ${this.participantCount || 0}`;
+        $('#roomInfo').textContent = `${formattedRoomId} 👤﹡ ${this.participantCount}`;
     }
 
     updateConnectionStatus() {
@@ -1182,13 +1164,6 @@ class ChatRoom {
                 this.checkScrollPosition();
             }, 100);
         }, 50);
-    }
-
-    updateParticipantDisplay() {
-        const count = this.participants.size;
-        const formattedRoomId = this.roomId.slice(0, 8) + '...';
-        $('#roomInfo').textContent = `${formattedRoomId} 👤 ${count}`;
-        this.updateRoomStatus();
     }
 
     updateMessageContent(messageId, newContent) {

@@ -5,31 +5,12 @@ from typing import Dict, Optional
 import secrets
 import string
 from models.chat.message import Message, MessageType
-from models.chat.user import User
+from models.chat.user import User, ParticipantStatus
 from fastapi import HTTPException
-from utils.chat_error_codes import ChatErrorCodes, STATUS_CODES
 from utils.singleton import singleton
 import time
-
-class RoomError(Exception):
-    """Base exception for room operations"""
-    pass
-
-class RoomNotFoundError(RoomError):
-    """Room does not exist"""
-    pass
-
-class RoomFullError(RoomError):
-    """Room has reached capacity"""
-    pass
-
-class RoomExpiredError(RoomError):
-    """Room has expired"""
-    pass
-
-class MemoryLimitError(RoomError):
-    """Memory limit reached"""
-    pass
+from utils.error import Coded_Error
+from utils.chat_error_codes import ChatErrorCodes, STATUS_CODES
 
 @singleton
 class ChatroomManager:
@@ -49,7 +30,7 @@ class ChatroomManager:
     async def create_private_room(self, room_id: Optional[str] = None, room_token: Optional[str] = None, room_token_hint: Optional[str] = None) -> PrivateRoom:
         """Create a private chat room with optional custom ID"""
         if len(self.rooms) >= self._max_rooms:
-            raise MemoryLimitError("Maximum room limit reached")
+            raise Coded_Error(ChatErrorCodes.MEMORY_LIMIT, STATUS_CODES[ChatErrorCodes.MEMORY_LIMIT])
             
         # Create room with validation handled by PrivateRoom class
         room = PrivateRoom(
@@ -63,21 +44,14 @@ class ChatroomManager:
 
     async def validate_room_token(self, room_id: str, token: str) -> bool:
         """Validate room token"""
-        try:
-            room = await self.get_room(room_id)
-            is_valid = secrets.compare_digest(token, room.room_token)
-            print(f"[Token Validation] Room: {room_id}, Token Match: {is_valid}")
-            return is_valid
-        except RoomNotFoundError:
-            print(f"[Token Validation] Room not found: {room_id}")
-            return False
+        room = await self.get_room(room_id)
+        is_valid = secrets.compare_digest(token, room.room_token)
+        print(f"[Token Validation] Room: {room_id}, Token Match: {is_valid}")
+        return is_valid
 
-    def generate_private_room_token(self, room_id: str, expiry_minutes: int = 60) -> str:
+    def generate_private_room_token(self, room_id: str) -> str:
         """Generate a one-time token for room access"""
-        room = self.get_room(room_id)
-        if not room:
-            raise ValueError("Room not found")
-            
+        room = self.get_room(room_id)            
         token = secrets.token_urlsafe(8)
         room.room_token = token
         
@@ -93,15 +67,13 @@ class ChatroomManager:
     async def add_private_room_participant(self, room_id: str, user: User) -> bool:
         """Add a participant to a room"""
         room = await self.get_room(room_id)
-        if not room:
-            return False
-        
+
         if len(room.participants) >= room.max_participants:
-            return False
+            raise Coded_Error(ChatErrorCodes.ROOM_FULL, STATUS_CODES[ChatErrorCodes.ROOM_FULL])
         
         # Check if user is already in the room
         if any(participant.user_id == user.user_id for participant in room.participants):
-            return False
+            raise Coded_Error(ChatErrorCodes.USER_ID_DUPLICATE, STATUS_CODES[ChatErrorCodes.USER_ID_DUPLICATE])
         
         # Add user to the participants list
         room.participants.append(user)
@@ -166,12 +138,12 @@ class ChatroomManager:
         
         # Check message count
         if len(room.messages) >= self._max_messages_per_room:
-            raise MemoryLimitError("Maximum message count reached")
+            raise Coded_Error(ChatErrorCodes.MEMORY_LIMIT, STATUS_CODES[ChatErrorCodes.MEMORY_LIMIT])
             
         # Check message size based on type
         if message.type == MessageType.text.value:
             if len(message.content.encode('utf-8')) > (self._max_message_chars * 4):  # 4 bytes per char worst case
-                raise MemoryLimitError("Text message too long")
+                raise Coded_Error(ChatErrorCodes.MESSAGE_TOO_LARGE, STATUS_CODES[ChatErrorCodes.MESSAGE_TOO_LARGE])
         elif message.type == MessageType.image.value:
             self.validate_image(message.content, message.content_type)
         
@@ -179,10 +151,10 @@ class ChatroomManager:
 
     def validate_image(self, image_data: bytes, content_type: str) -> None:
         if content_type not in self.ALLOWED_IMAGE_TYPES:
-            raise ValueError(f"Unsupported image type: {content_type}")
+            raise Coded_Error(ChatErrorCodes.IMAGE_TYPE_NOT_SUPPORTED, STATUS_CODES[ChatErrorCodes.IMAGE_TYPE_NOT_SUPPORTED])
         
         if len(image_data) > self._max_image_size_bytes:
-            raise MemoryLimitError("Image size exceeds limit")
+            raise Coded_Error(ChatErrorCodes.IMAGE_TOO_LARGE, STATUS_CODES[ChatErrorCodes.IMAGE_TOO_LARGE])
 
     async def get_room(self, room_id: str) -> Optional[PrivateRoom]:
         """Get a room by its ID"""
@@ -190,16 +162,14 @@ class ChatroomManager:
         if not room:
             return None
         if room.is_expired():
-            raise RoomExpiredError(f"Room {room_id} has expired")
+            del self.rooms[room_id]
+            return None
         return room
 
     async def room_requires_token(self, room_id: str) -> bool:
         """Check if room requires a token"""
-        try:
-            room = self.get_room(room_id)
-            return bool(room.room_token)
-        except RoomNotFoundError:
-            return False
+        room = await self.get_room(room_id)
+        return room and bool(room.room_token)
 
     async def handle_disconnect(self, room_id: str, user_id: str, username: str):
         """Track disconnected users"""
@@ -217,16 +187,15 @@ class ChatroomManager:
             if (time.time() - t) < 60  # 60-second window
         }
 
-    async def validate_reconnection(self, room_id: str, user_id: str, username: str) -> bool:
-        """Check if user can reuse previous ID"""
-        room_disconnects = self.recent_disconnects.get(room_id, {})
-        record = room_disconnects.get(user_id)
-        
-        if not record:
+    async def validate_reconnection(self, room_id: str, claimed_user_id: str, username: str) -> bool:
+        """
+        Validate if a user with the claimed_user_id and matching username already exists in the room.
+        If yes, then it is a reconnection attempt.
+        """
+        room = await self.get_room(room_id)
+        if not room:
             return False
-        
-        stored_username, disconnect_time = record
-        return (
-            secrets.compare_digest(username, stored_username) and 
-            (time.time() - disconnect_time) < 60
-        )
+        for participant in room.participants:
+            if participant.user_id == claimed_user_id and participant.username == username:
+                return True
+        return False

@@ -18,6 +18,12 @@ class ChatErrorCodes(str, Enum):
     # Participant management
     USER_NOT_FOUND = auto()
     INVALID_USERNAME = auto()
+    USER_ID_DUPLICATE = auto()
+    
+    # Message validation
+    MESSAGE_TOO_LARGE = auto()
+    IMAGE_TOO_LARGE = auto()
+    IMAGE_TYPE_NOT_SUPPORTED = auto()
     
     # General
     MEMORY_LIMIT = auto()
@@ -31,7 +37,11 @@ STATUS_CODES = {
     ChatErrorCodes.INVALID_TOKEN_HINT: 400,
     ChatErrorCodes.INVALID_USERNAME: 400,
     ChatErrorCodes.FAILED_JOIN_ATTEMPT: 400,
-    
+    ChatErrorCodes.USER_ID_DUPLICATE: 400,
+    ChatErrorCodes.MESSAGE_TOO_LARGE: 400,
+    ChatErrorCodes.IMAGE_TOO_LARGE: 400,
+    ChatErrorCodes.IMAGE_TYPE_NOT_SUPPORTED: 400,
+
     # Not found -> 404
     ChatErrorCodes.ROOM_NOT_FOUND: 404,
     ChatErrorCodes.USER_NOT_FOUND: 404,
