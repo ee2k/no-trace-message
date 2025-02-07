@@ -136,6 +136,16 @@ class ChatRoom {
             this.isUserScrolling = false;
             this.checkScrollPosition();
         });
+
+        // Try to load saved chat session from sessionStorage.
+        const session = sessionStorage.getItem('chat_session');
+        if (session) {
+            const { user_id, username, room_id, token } = JSON.parse(session);
+            this.userId = user_id;
+            this.username = username;
+            this.roomId = room_id; // if applicable
+            this.token = token;   // if applicable
+        }
     }
 
     setupMenu() {
@@ -526,6 +536,8 @@ class ChatRoom {
                 break;
             
             case 'connection_info':
+                this.userId = data.user_id;
+                this.username = data.username || this.username;
                 sessionStorage.setItem('chat_session', JSON.stringify({
                     user_id: data.user_id,
                     username: this.username,
