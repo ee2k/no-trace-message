@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     $('#joinBtn').addEventListener('click', async () => {
         const username = $('#username').value.trim();
         const roomIdValue = $('#roomId').value.trim();
-        const tokenValue = $('#token').value.trim();
+        const tokenValue = $('#room_token').value.trim();
 
         if (!roomIdValue) {
             $('#roomId').classList.add('input-error');
@@ -141,10 +141,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if ($('#tokenSection').style.display !== 'none' && !tokenValue) {
             // Shake token input
-            $('#token').classList.add('input-error');
-            $('#token').focus();
+            $('#room_token').classList.add('input-error');
+            $('#room_token').focus();
             setTimeout(() => {
-                $('#token').classList.remove('input-error');
+                $('#room_token').classList.remove('input-error');
             }, 400);
             return;
         }
@@ -170,7 +170,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     user: {
                         username: username
                     },
-                    token: tokenValue || undefined
+                    room_token: tokenValue || undefined
                 })
             });
 
@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 user_id: data.user_id,
                 username: username,
                 room_id: roomIdValue,
-                token: tokenValue || null
+                room_token: tokenValue || null
             };
             sessionStorage.setItem('chat_session', JSON.stringify(userData));
 

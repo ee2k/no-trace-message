@@ -41,11 +41,11 @@ class MessageStore:
         self.messages[message.id] = message
         Statistics().increment_messages_created()
     
-    async def get_message(self, message_id: str, token: str) -> Optional[BurningMessage]:
+    async def get_message(self, message_id: str, room_token: str) -> Optional[BurningMessage]:
         message = self.messages.get(message_id)
         if not message:
             return None
-        if message.token and message.token != token:
+        if message.room_token and message.room_token != room_token:
             return None
         return message
     

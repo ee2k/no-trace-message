@@ -6,7 +6,7 @@ from .user import User
 
 class CreateRoomRequest(BaseModel):
     room_id: Optional[str] = Field(None, description="Custom Chatroom ID")
-    room_token: Optional[str] = Field(None, description="Access Token")
+    room_token: Optional[str] = Field(None, description="Access room_Token")
     room_token_hint: Optional[str] = None
 
 class CreateRoomResponse(BaseModel):
@@ -25,7 +25,7 @@ class RoomStatusResponse(BaseModel):
     status: str
 
 class InviteResponse(BaseModel):
-    token: str
+    room_token: str
 
 class JoinResponse(BaseModel):
     status: str
@@ -41,7 +41,7 @@ class DeleteResponse(BaseModel):
 class JoinRequest(BaseModel):
     room_id: str
     user: User
-    token: Optional[str] = None
+    room_token: Optional[str] = None
 
 class PrivateRoom(BaseModel):
     room_id: str
@@ -73,27 +73,27 @@ class PrivateRoom(BaseModel):
     def validate_room_token(cls, value):
         if value is not None:
             if len(value) < 1:
-                raise ValueError("Token cannot be empty")
+                raise ValueError("RoomToken cannot be empty")
             if len(value) > 70:
-                raise ValueError("Token cannot exceed 70 characters")
+                raise ValueError("RoomToken cannot exceed 70 characters")
             if any(ord(c) < 32 for c in value):
-                raise ValueError("Token contains invalid characters")
+                raise ValueError("RoomToken contains invalid characters")
         return value
 
     @validator('room_token_hint')
     def validate_room_token_hint(cls, value):
         if value is not None:
             if len(value) > 70:
-                raise ValueError("Token hint cannot exceed 70 characters")
+                raise ValueError("RoomToken hint cannot exceed 70 characters")
         return value
 
     @model_validator(mode='after')
     def validate_token_with_hint(self) -> 'PrivateRoom':
-        token = self.room_token
+        room_token = self.room_token
         hint = self.room_token_hint
         
-        if hint and not token:
-            raise ValueError("Token hint cannot exist without a token")
+        if hint and not room_token:
+            raise ValueError("room_Token hint cannot exist without a room_token")
         return self
 
     def add_participant(self, user: User) -> bool:
@@ -134,4 +134,4 @@ class PrivateRoom(BaseModel):
 
 class ValidateAccessRequest(BaseModel):
     room_id: str
-    token: Optional[str] = None
+    room_token: Optional[str] = None

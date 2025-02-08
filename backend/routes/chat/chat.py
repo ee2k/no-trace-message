@@ -62,18 +62,18 @@ async def validate_access(request: ValidateAccessRequest):
     try:
         room = await chatroom_manager.get_room(request.room_id)
         
-        # If room requires token but none provided
-        if room.room_token and not request.token:
+        # If room requires room_token but none provided
+        if room.room_token and not request.room_token:
             raise HTTPException(
                 status_code=400,
-                detail={"code": "TOKEN_REQUIRED", "message": "This room requires a token"}
+                detail={"code": "TOKEN_REQUIRED", "message": "This room requires a room_token"}
             )
             
-        # If token is provided but invalid
-        if request.token and not await chatroom_manager.validate_room_token(request.room_id, request.token):
+        # If room_token is provided but invalid
+        if request.room_token and not await chatroom_manager.validate_room_token(request.room_id, request.room_token):
             raise HTTPException(
                 status_code=400,
-                detail={"code": "INVALID_TOKEN", "message": "Invalid access token"}
+                detail={"code": "INVALID_TOKEN", "message": "Invalid access room_token"}
             )
             
         return {"status": "ok"}

@@ -42,27 +42,27 @@ class ChatroomManager:
         self.rooms[room.room_id] = room
         return room
 
-    async def validate_room_token(self, room_id: str, token: str) -> bool:
-        """Validate room token"""
+    async def validate_room_token(self, room_id: str, room_token: str) -> bool:
+        """Validate room room_token"""
         room = await self.get_room(room_id)
-        is_valid = secrets.compare_digest(token, room.room_token)
-        print(f"[Token Validation] Room: {room_id}, Token Match: {is_valid}")
+        is_valid = secrets.compare_digest(room_token, room.room_token)
+        print(f"[room_Token Validation] Room: {room_id}, room_Token Match: {is_valid}")
         return is_valid
 
     def generate_private_room_token(self, room_id: str) -> str:
-        """Generate a one-time token for room access"""
+        """Generate a one-time room_token for room access"""
         room = self.get_room(room_id)            
-        token = secrets.token_urlsafe(8)
-        room.room_token = token
+        room_token = secrets.token_urlsafe(8)
+        room.room_token = room_token
         
-        return token
+        return room_token
 
-    def validate_private_room_token(self, room_id: str, token: str) -> bool:
-        """Validate a room token"""
+    def validate_private_room_token(self, room_id: str, room_token: str) -> bool:
+        """Validate a room room_token"""
         room = self.get_room(room_id)
         if not room or not room.room_token:
             return False
-        return room.room_token == token
+        return room.room_token == room_token
 
     async def add_private_room_participant(self, room_id: str, user: User) -> bool:
         """Add a participant to a room"""
@@ -132,9 +132,9 @@ class ChatroomManager:
         if len(room.messages) > self._max_messages_per_room:
             room.messages = room.messages[-self._max_messages_per_room:]
 
-    def add_message_to_room(self, room_id: str, message: Message) -> None:
+    async def add_message_to_room(self, room_id: str, message: Message) -> None:
         """Add message with size checks"""
-        room = self.get_room(room_id)
+        room = await self.get_room(room_id)
         
         # Check message count
         if len(room.messages) >= self._max_messages_per_room:
@@ -167,7 +167,7 @@ class ChatroomManager:
         return room
 
     async def room_requires_token(self, room_id: str) -> bool:
-        """Check if room requires a token"""
+        """Check if room requires a room_token"""
         room = await self.get_room(room_id)
         return room and bool(room.room_token)
 

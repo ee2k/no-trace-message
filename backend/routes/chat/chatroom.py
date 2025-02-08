@@ -31,7 +31,7 @@ async def create_private_room(request: CreateRoomRequest):
         
     except ValueError as e:
         error_code = ChatErrorCodes.INVALID_ROOM_ID
-        if "Token" in str(e):
+        if "room_token" in str(e):
             error_code = ChatErrorCodes.INVALID_TOKEN
         elif "hint" in str(e):
             error_code = ChatErrorCodes.INVALID_TOKEN_HINT
@@ -55,7 +55,7 @@ async def create_private_room(request: CreateRoomRequest):
 @router.post("/validate", response_model=RoomValidationResponse)
 async def validate_private_room(request: RoomValidationRequest):
     try:
-        if not await private_room_manager.validate_private_room_token(request.room_id, request.token):
+        if not await private_room_manager.validate_private_room_token(request.room_id, request.room_token):
             raise HTTPException(
                 status_code=STATUS_CODES[ChatErrorCodes.INVALID_TOKEN],
                 detail={"code": ChatErrorCodes.INVALID_TOKEN.value}
@@ -88,8 +88,8 @@ async def get_private_room_status(room_id: str):
 @router.post("/{room_id}/invite", response_model=InviteResponse)
 async def generate_private_room_invite(room_id: str, creator_token: str):
     try:
-        token = await private_room_manager.generate_invite_token(room_id, creator_token)
-        return {"token": token}
+        room_token = await private_room_manager.generate_invite_token(room_id, creator_token)
+        return {"room_token": room_token}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -112,8 +112,8 @@ async def join_private_room(request: JoinRequest):
                 detail={"code": ChatErrorCodes.ROOM_NOT_FOUND.value}
             )
         
-        # Validate token if required
-        if room.requires_token() and room.room_token != request.token:
+        # Validate room_token if required
+        if room.requires_token() and room.room_token != request.room_token:
             raise HTTPException(
                 status_code=STATUS_CODES[ChatErrorCodes.INVALID_TOKEN],
                 detail={"code": ChatErrorCodes.INVALID_TOKEN.value}

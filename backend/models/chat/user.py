@@ -10,7 +10,7 @@ class ParticipantStatus(Enum):
     ACTIVE = "active"
     IDLE = "idle"
     OFFLINE = "offline"
-    PENDING = "pending"  # For users who have token but haven't joined yet
+    PENDING = "pending"  # For users who have room_token but haven't joined yet
 
 class User(BaseModel):
     user_id: str = Field(default_factory=lambda: str(uuid.uuid4()))

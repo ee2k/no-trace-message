@@ -175,7 +175,7 @@
 
 .message-status {
     position: absolute;
-    /* bottom: 1rem; */
+    bottom: 1rem;
     right: 0.3rem;
     font-size: 0.8rem;  /* adjust size as necessary */
     pointer-events: none; /* so clicks pass through, if desired */
@@ -634,7 +634,7 @@
 }
 
 .status-text {
-    margin-left: 0.5rem;
+    margin-left: 0.3rem;
     font-size: 0.9rem;
     color: var(--text-secondary);
 }
@@ -713,15 +713,24 @@
     padding: 0.5rem 2rem;
     background: var(--bg-secondary);
     border-radius: 1rem;
-    /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); */
     cursor: pointer;
     z-index: 20;
-    animation: slide-in 0.3s ease;
+    /* Slide in once, then start the flicker effect after a short delay, repeating every 2 seconds */
+    animation: slide-in 0.3s ease forwards, flickerMessageIndicator 3s ease-in-out 0.3s infinite;
 }
 
 @keyframes slide-in {
     from { transform: translateX(-50%) translateY(1rem); opacity: 0; }
-    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+    to   { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+@keyframes flickerMessageIndicator {
+    0% { opacity: 1; }
+    20% { opacity: 0.3; }
+    40% { opacity: 1; }
+    60% { opacity: 0.3; }
+    80% { opacity: 1; }
+    100% { opacity: 1; }
 }
 
 /* Mobile Responsiveness, always put this at the bottom */

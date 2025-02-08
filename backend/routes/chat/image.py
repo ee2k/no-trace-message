@@ -47,10 +47,16 @@ async def upload_image(
         # Generate unique image ID
         image_id = str(hash(image_data))
         
+        # Get from WebSocket room participants
+        required_recipients = {p.user_id for p in room.participants 
+                              if p.user_id != sender_id}
+        
         # Store image
         image_store[image_id] = {
             'data': image_data,
             'content_type': image.content_type,
+            'required_recipients': required_recipients,
+            'loaded_recipients': set(),    # Users who actually loaded
             'expires_at': datetime.now() + timedelta(hours=1),
             'message_id': message_id,
             'timestamp': timestamp,
@@ -85,7 +91,7 @@ async def upload_image(
         return {"success": False, "reason": str(e)}
 
 @router.get("/get-image/{image_id}")
-async def get_image(image_id: str):
+async def get_image(image_id: str, user_id: str = Depends(get_current_user)):
     try:
         # Check if image exists
         if image_id not in image_store:
@@ -97,6 +103,13 @@ async def get_image(image_id: str):
         if datetime.now() > image_data['expires_at']:
             del image_store[image_id]
             raise HTTPException(status_code=410, detail="Image expired")
+        
+        # Add user to loaded recipients
+        image_data['loaded_recipients'].add(user_id)
+        
+        # Immediate cleanup check
+        if image_data['loaded_recipients'] >= image_data['required_recipients']:
+            del image_store[image_id]
         
         # Return image as streaming response
         return StreamingResponse(

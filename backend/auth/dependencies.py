@@ -2,7 +2,6 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from typing import Annotated
-from datetime import datetime, timedelta
 from pydantic import BaseModel
 import os
 from dotenv import load_dotenv

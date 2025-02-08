@@ -1,19 +1,17 @@
 from fastapi import WebSocket, WebSocketDisconnect
 import logging
 from models.chat.message import Message
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from services.chat.chatroom_manager import ChatroomManager
 from utils.singleton import singleton
 import json
 import uuid
-from starlette.websockets import WebSocketState
 import time
 import asyncio
 from utils.chat_error_codes import ChatErrorCodes
-from utils.error_codes import CommonErrorCodes
 from models.chat.user import User, ParticipantStatus
-from models.chat.chatroom import PrivateRoom
 from pydantic import ValidationError
+from models.chat.chatroom import PrivateRoom
 
 router = APIRouter()
 
@@ -24,18 +22,16 @@ chatroom_manager = ChatroomManager()
 @singleton
 class WebSocketManager:
     def __init__(self):
-        self.rooms: dict[str, PrivateRoom] = {}  # room_id -> PrivateRoom
+        # Removed local rooms variable; using chatroom_manager.rooms instead.
+        # self.rooms: dict[str, PrivateRoom] = {}  # room_id -> PrivateRoom
+        pass
 
     async def connect(self, websocket: WebSocket, room_id: str, user: User):
         # Set user's WebSocket connection and mark active
         user.set_websocket(websocket)
         user.update_status(ParticipantStatus.ACTIVE)
 
-        # Get the room (if not already present, fetch it)
-        if room_id not in self.rooms:
-            self.rooms[room_id] = await chatroom_manager.get_room(room_id)
-
-        room = self.rooms[room_id]
+        room = await chatroom_manager.get_room(room_id)
         
         # Check if this user is already present in the room
         existing = next((p for p in room.participants if p.user_id == user.user_id), None)
@@ -52,25 +48,103 @@ class WebSocketManager:
             user.clear_websocket()
             user.update_status(ParticipantStatus.OFFLINE)
         
-        if room_id in self.rooms:
-            self.rooms[room_id].remove_participant(user.user_id)
+        # Use the rooms stored in chatroom_manager instead of self.rooms.
+        room = await chatroom_manager.get_room(room_id)
+        if room:
+            room.remove_participant(user.user_id)
 
     async def send_message(self, room_id: str, message: Message):
-        if room_id in self.rooms:
-            room = self.rooms[room_id]
+        room = await chatroom_manager.get_room(room_id)
+        if room:
+            first_attempt_failed = False
+            delivered_count = 0
+            total_recipients = len(room.participants) - 1  # Exclude sender
+            
+            # First delivery attempt
             for participant in room.participants:
                 if participant.is_connected() and participant.user_id != message.sender_id:
+                    try:
+                        await participant.websocket.send_text(message.model_dump_json())
+                        message.mark_delivered(participant.user_id)
+                        delivered_count += 1
+                    except Exception as e:
+                        first_attempt_failed = True
+
+            # Send initial ack
+            sender = next((p for p in room.participants if p.user_id == message.sender_id), None)
+            if sender and sender.is_connected():
+                if delivered_count == total_recipients:
+                    await self.send_full_ack(sender, message)
+                    await self.cleanup_message(room, message)
+                else:
+                    if first_attempt_failed:
+                        await self.send_partial_ack(sender, message)
+                    asyncio.create_task(
+                        self.retry_failed_deliveries(room, message, max_retries=3)
+                    )
+
+    async def retry_failed_deliveries(self, room: PrivateRoom, message: Message, max_retries: int):
+        retry_count = 0
+        total_recipients = len(room.participants) - 1
+        
+        while retry_count < max_retries:
+            retry_count += 1
+            await asyncio.sleep(2 ** retry_count)  # Exponential backoff
+            
+            # Get current undelivered participants
+            undelivered = [p for p in room.participants 
+                          if p.user_id != message.sender_id
+                          and p.user_id not in message.delivered_to]
+            
+            # Retry delivery
+            for participant in undelivered:
+                if participant.is_connected():
                     await participant.websocket.send_text(message.model_dump_json())
                     message.mark_delivered(participant.user_id)
 
+            # Check if fully delivered
+            if len(message.delivered_to) == total_recipients:
+                sender = next((p for p in room.participants if p.user_id == message.sender_id), None)
+                if sender and sender.is_connected():
+                    await self.send_full_ack(sender, message)
+                    await self.cleanup_message(room, message)
+                return
+                
+        # Max retries reached - delete message
+        await self.cleanup_message(room, message)
+
+    async def send_full_ack(self, sender: User, message: Message):
+        await sender.websocket.send_json({
+            "message_type": "ack",
+            "message_id": message.message_id,
+            "status": "delivered"
+        })
+
+    async def send_partial_ack(self, sender: User, message: Message):
+        await sender.websocket.send_json({
+            "message_type": "ack",
+            "message_id": message.message_id,
+            "status": "partial"
+        })
+
+    async def cleanup_message(self, room: PrivateRoom, message: Message):
+        if message in room.messages:
+            room.messages.remove(message)
+
     async def check_connections(self):
-        """Periodically check connection health"""
+        """Periodically check connection health and remove expired rooms"""
         while True:
             current_time = time.time()
-            for room in self.rooms.values():
+            # Iterate over a list of room IDs to avoid modifying the dictionary during iteration.
+            room_ids = list(chatroom_manager.rooms.keys())
+            for room_id in room_ids:
+                # Retrieve the room via get_room, which cleans up expired rooms.
+                room = await chatroom_manager.get_room(room_id)
+                if not room:
+                    continue
                 for participant in room.participants:
                     if participant.is_connected():
-                        # Check last activity or implement ping/pong tracking
+                        # Check for inactivity (e.g., via last_active timestamp)
                         if current_time - participant.last_active.timestamp() > 60:
                             await self.disconnect(participant, room.room_id)
             await asyncio.sleep(30)  # Check every 30 seconds
@@ -85,14 +159,14 @@ class WebSocketManager:
         }
         
         # Send to all participants in the room
-        if room_id in self.rooms:
-            room = self.rooms[room_id]
+        if room_id in chatroom_manager.rooms:
+            room = chatroom_manager.rooms[room_id]
             for participant in room.participants:
                 if participant.is_connected():
                     await participant.websocket.send_json(system_message)
 
     async def send_participant_list(self, room_id: str):
-        room = self.rooms.get(room_id)
+        room = await chatroom_manager.get_room(room_id)
         if room:
             participants = [{"user_id": p.user_id, "username": p.username} for p in room.participants]
             await self.broadcast(room_id, {
@@ -101,8 +175,8 @@ class WebSocketManager:
             })
 
     async def broadcast(self, room_id: str, message: dict):
-        if room_id in self.rooms:
-            room = self.rooms[room_id]
+        room = await chatroom_manager.get_room(room_id)
+        if room:
             for participant in room.participants:
                 if participant.is_connected():
                     await participant.websocket.send_json(message)
@@ -121,7 +195,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
         
         # Get all params from query string
         username = websocket.query_params.get("username")
-        token = websocket.query_params.get("token")
+        room_token = websocket.query_params.get("room_token")
         claimed_user_id = websocket.query_params.get("user_id")
 
         # Immediate validation
@@ -135,11 +209,11 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             await websocket.close(code=4004, reason="Room not found")
             return
 
-        # Token validation for private rooms
+        # room_token validation for private rooms
         if room.requires_token():
-            if not token or not await chatroom_manager.validate_room_token(room_id, token):
-                await websocket.close(code=4003, reason="Invalid token")
-            return
+            if not room_token or not await chatroom_manager.validate_room_token(room_id, room_token):
+                await websocket.close(code=4003, reason="Invalid room_token")
+                return
 
         # User ID handling
         user_id = claimed_user_id if await chatroom_manager.validate_reconnection(
@@ -186,6 +260,12 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                         validated = Message.model_validate(message)
                         if validated.message_type == "chat":
                             if validated.sender_id != user_id:
+                                continue
+                            # Add message to room
+                            try:
+                                chatroom_manager.add_message_to_room(room_id, validated)
+                            except Exception as e:
+                                logger.error(f"Failed to add message to room: {str(e)}")
                                 continue
                             await websocket_manager.send_message(room_id, validated)
                         elif validated.message_type == "system":

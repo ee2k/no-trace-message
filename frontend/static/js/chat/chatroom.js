@@ -55,8 +55,9 @@ class ChatRoom {
         this.messageStatus = {
             failed: 'failed',
             sending: 'sending',
-            sent: 'sent',           // Delivered to server
-            delivered: 'delivered'  // Delivered to recipients
+            sent: 'sent',          // Reached server
+            partial: 'partial',     // Some recipients
+            delivered: 'delivered' // All recipients
         };
 
         // Create status hierarchy once during initialization
@@ -420,23 +421,25 @@ class ChatRoom {
                 this.isConnected = false;
                 clearInterval(this.pingInterval);
                 
-                // Only handle specific close codes if we were previously connected
-                if (this.connectionState === this.connectionStates.CONNECTED) {
-                    switch (event.code) {
-                        case 4004: // ROOM_NOT_FOUND
-                            this.handleRoomNotFound();
-                            break;
-                        case 4003: // INVALID_TOKEN
-                            this.handleInvalidToken();
-                            break;
-                        case 1000: // NORMAL_CLOSURE
-                            this.addSystemMessage('Connection closed normally');
-                            break;
-                        default:
-                            if (!event.wasClean) {
-                                this.attemptReconnect();
-                            }
-                    }
+                // Handle closure even if connection state was "CONNECTED"
+                switch (event.code) {
+                    case 4004: // ROOM_NOT_FOUND
+                        this.handleRoomNotFound();
+                        break;
+                    case 4003: // INVALID_TOKEN
+                        this.handleInvalidToken();
+                        break;
+                    case 1000: // NORMAL_CLOSURE
+                        this.addSystemMessage('Connection closed normally');
+                        break;
+                    case 1005: // NO_STATUS_CODE (server restart)
+                        // Treat this as a potential room expiration and check existence
+                        this.attemptReconnect();
+                        break;
+                    default:
+                        if (!event.wasClean) {
+                            this.attemptReconnect();
+                        }
                 }
                 
                 this.updateRoomStatus();
@@ -959,16 +962,48 @@ class ChatRoom {
         }
     }
 
-    attemptReconnect() {
-        if (this.isReconnecting) return;
-        this.isReconnecting = true;
-        this.reconnectAttempts++; // Increment here
-        const delay = Math.min(this.RECONNECT_BASE_DELAY * Math.pow(2, this.reconnectAttempts), this.MAX_RECONNECT_DELAY);
-        console.log(`Next attempt in ${delay}ms (attempt ${this.reconnectAttempts})`);
-        this.reconnectTimeout = setTimeout(() => {
-            this.connectWebSocket();
-            this.isReconnecting = false;
-        }, delay);
+    async checkRoomExists() {
+        const metaUrl = `/api/chat/private_room/${this.roomId}/meta`;
+        try {
+            const response = await fetch(metaUrl);
+            // If the meta call succeeds, assume the room exists.
+            if (response.ok) {
+                return true;
+            } else if (response.status === 404 && responseData.detail?.code === 'ROOM_NOT_FOUND') {
+                // Room not found
+                return false;
+            } else {
+                // For other statuses, you may choose to treat them as temporary
+                // or assume the room still exists. Here we log and assume exists.
+                console.warn("Unexpected response status while checking room existence:", response.status);
+                return true;
+            }
+        } catch (error) {
+            // For network errors, log the error and return true so that transient issues don't cancel reconnection.
+            console.error("Error checking room existence:", error);
+            return true;
+        }
+    }
+
+    async attemptReconnect() {
+        try {
+            const exists = await this.checkRoomExists();
+            if (!exists) {
+                this.handleRoomNotFound();
+                return;
+            }
+            if (this.isReconnecting) return;
+            this.isReconnecting = true;
+            this.reconnectAttempts++; // Increment here
+            const delay = Math.min(this.RECONNECT_BASE_DELAY * Math.pow(2, this.reconnectAttempts), this.MAX_RECONNECT_DELAY);
+            console.log(`Next attempt in ${delay}ms (attempt ${this.reconnectAttempts})`);
+            this.reconnectTimeout = setTimeout(() => {
+                this.connectWebSocket();
+                this.isReconnecting = false;
+            }, delay);
+        } catch (error) {
+            console.error("Error during reconnection attempt:", error);
+        }
     }
 
     async sendTextMessage(content) {
@@ -1074,7 +1109,7 @@ class ChatRoom {
         
         // Redirect after short delay
         setTimeout(() => {
-            window.location.href = '/join-private-chatroom';
+            window.location.href = '/';
         }, 3000);
     }
 
@@ -1130,6 +1165,7 @@ class ChatRoom {
             failed: '',
             sending: '<span class="message-status-icon sending">•••</span>',
             sent: '<span class="message-status-icon sent">✓</span>',
+            partial: '<span class="message-status-icon partial">✓+</span>',
             delivered: '<span class="message-status-icon delivered"><span class="check">✓</span><span class="check">✓</span></span>'
         };
         return icons[status] || '';
