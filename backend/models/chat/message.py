@@ -1,9 +1,9 @@
 from pydantic import BaseModel, Field
 from datetime import datetime, UTC
 from enum import Enum, auto
-from pydantic import validator
-from utils.error import Coded_Error
-from utils.chat_error_codes import ChatErrorCodes, STATUS_CODES
+from pydantic import model_validator
+from utils.chat_error_codes import ChatErrorCodes
+from utils.constants import MAX_IMAGE_SIZE
 
 class ContentType(str, Enum):
     def _generate_next_value_(name, start, count, last_values):
@@ -27,6 +27,15 @@ class Message(BaseModel):
     content: str
     sender_id: str
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    def mark_delivered(self, user_id: str) -> None:
+        self.delivered_to.add(user_id)
+
+    def is_delivered_to_all(self, participants: set[str]) -> bool:
+        return self.delivered_to.issuperset(participants)
+
+class OutboundMessage(Message):
+    required_recipients: set[str] = Field(default_factory=set)
     delivered_to: set[str] = Field(default_factory=set)
 
     def mark_delivered(self, user_id: str) -> None:
@@ -35,17 +44,18 @@ class Message(BaseModel):
     def is_delivered_to_all(self, participants: set[str]) -> bool:
         return self.delivered_to.issuperset(participants)
 
-class ImageMessage(Message):
-    image_data: bytes
-    required_recipients: set[str]
-    loaded_recipients: set[str] = Field(default_factory=set)
+class ImageMessage(OutboundMessage):
+    image_data: bytes = Field(exclude=True)
+    loaded_recipients: set[str] = Field(default_factory=set, exclude=True)
     expires_at: datetime
+    content_type: str = Field(default="image")
+
+    @model_validator(mode='before')
+    @classmethod
+    def validate_size(cls, data: dict) -> dict:
+        if len(data.get('image_data', b'')) > MAX_IMAGE_SIZE:
+            raise ValueError(ChatErrorCodes.IMAGE_TOO_LARGE)
+        return data
 
     def mark_loaded(self, user_id: str):
         self.loaded_recipients.add(user_id)
-
-    @validator('image_data')
-    def validate_image(cls, v):
-        if len(v) > 3 * 1024 * 1024:
-            raise ValueError(ChatErrorCodes.IMAGE_TOO_LARGE)
-        return v

@@ -569,6 +569,12 @@ class ChatRoom {
 
     async sendMessage(message) {
         try {
+            // For images, create object URL before sending
+            if (message.content_type === 'image') {
+                const blob = new Blob([message.content], {type: 'application/octet-stream'});
+                message.raw_data = URL.createObjectURL(blob);
+            }
+            
             // Add message to UI immediately with 'sending' status
             const messageId = this.addChatMessage(
                 message.sender_id, 
@@ -633,7 +639,7 @@ class ChatRoom {
         return crypto.randomUUID();
     }
 
-    addChatMessage(sender_id, message, contentType, status = this.messageStatus.sending) {
+    async addChatMessage(sender_id, message, contentType, status = this.messageStatus.sending) {
         const isOwnMessage = sender_id === this.userId;
         const messageId = (typeof message === 'object' ? message.message_id : null) || this.generateMessageId();
         const timestamp = new Date(typeof message === 'object' ? message.timestamp : Date.now());
@@ -660,16 +666,29 @@ class ChatRoom {
         let contentHtml = '';
         
         if (contentType === 'image') {
-            // Show loading state for images
-            contentHtml = `
-                <div class="image-container loading">
-                    <div class="image-loader"></div>
-                </div>
-            `;
-            
-            // Start loading the image asynchronously
-            if (typeof messageContent === 'string') {
-                this.loadImageForMessage(messageContainer, messageContent);
+            if (isOwnMessage) {
+                // Use local Blob URL from raw_data directly
+                contentHtml = `
+                    <div class="image-container">
+                        <img src="${message.raw_data}" class="chat-image">
+                    </div>
+                `;
+            } else {
+                // Remote image - show skeleton and trigger load
+                contentHtml = `
+                    <div class="image-container loading">
+                        <div class="image-skeleton"></div>
+                    </div>
+                `;
+                
+                // Schedule image load after DOM insertion
+                requestAnimationFrame(() => {
+                    this.loadImageForMessage({
+                        ...message,
+                        message_id: messageId,
+                        content: message.content
+                    });
+                });
             }
         } else {
             // First escape HTML, then convert newlines
@@ -751,71 +770,57 @@ class ChatRoom {
         return messageId;
     }
 
-    // Add new method for loading images
-    async loadImageForMessage(messageContainer, imageUrl) {
+    // Restore original loadImageForMessage implementation
+    async loadImageForMessage(message) {
+        // Skip local images completely
+        if (message.sender_id === this.userId || message.content.startsWith('local:')) {
+            return;
+        }
+        
+        const imageId = message.content;
+        if (!imageId) return;
+
         try {
-            console.log('[Image Load] Starting image load for:', imageUrl);
+            // Restore proper query parameters from working version
+            const imageUrl = `/api/chat/get-image/${imageId}?room_id=${encodeURIComponent(this.roomId)}&user_id=${encodeURIComponent(this.userId)}`;
+            const response = await fetch(imageUrl);
+            if (!response.ok) throw new Error('Failed to fetch image');
             
-            // Check if it's a local data URL or needs to be fetched
-            if (imageUrl.startsWith('data:')) {
-                console.log('[Image Load] Loading local data URL');
-                const img = new Image();
-                img.src = imageUrl;
-                img.onload = () => {
-                    console.log('[Image Load] Local image loaded');
+            const blob = await response.blob();
+            const objectUrl = URL.createObjectURL(blob);
+            
+            const img = new Image();
+            img.src = objectUrl;
+            img.onload = () => {
+                const messageContainer = this.messages.$(`[data-message-id="${message.message_id}"]`);
+                if (messageContainer) {
                     const imageContainer = messageContainer.$('.image-container');
                     if (imageContainer) {
-                        console.log('[Image Load] Updating image container');
-                        imageContainer.classList.remove('loading');
-                        imageContainer.innerHTML = `
-                            <img src="${imageUrl}" class="chat-image">
-                        `;
-                        
-                        // Scroll to bottom after image loads
-                        if (this.isAtBottom) {
-                            this.scrollToBottom();
-                        }
-                    }
-                };
-            } else {
-                console.log('[Image Load] Fetching remote image');
-                const response = await fetch(`/api/chat/get-image/${imageUrl}`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch image');
-                }
-                const blob = await response.blob();
-                const objectUrl = URL.createObjectURL(blob);
-                console.log('[Image Load] Remote image fetched, object URL:', objectUrl);
-                
-                const img = new Image();
-                img.src = objectUrl;
-                img.onload = () => {
-                    console.log('[Image Load] Remote image loaded');
-                    const imageContainer = messageContainer.$('.image-container');
-                    if (imageContainer) {
-                        console.log('[Image Load] Updating image container');
                         imageContainer.classList.remove('loading');
                         imageContainer.innerHTML = `
                             <img src="${objectUrl}" class="chat-image">
                         `;
                         
-                        // Scroll to bottom after image loads
                         if (this.isAtBottom) {
                             this.scrollToBottom();
                         }
                     }
-                };
-            }
+                }
+            };
         } catch (error) {
             console.error('[Image Load] Error loading image:', error);
-            const imageContainer = messageContainer.$('.image-container');
-            if (imageContainer) {
-                console.log('[Image Load] Showing error state');
-                imageContainer.classList.remove('loading');
-                imageContainer.innerHTML = `
-                    <div class="image-error">⦰</div>
-                `;
+            const messageContainer = this.messages.$(`[data-message-id="${message.message_id}"]`);
+            if (messageContainer) {
+                const imageContainer = messageContainer.$('.image-container');
+                if (imageContainer) {
+                    imageContainer.classList.remove('loading');
+                    imageContainer.innerHTML = `
+                        <div class="image-error">⦰</div>
+                    `;
+                }
             }
+            // Restore status update from working version
+            this.updateMessageStatus(message.message_id, this.messageStatus.failed);
         }
     }
 
@@ -1044,36 +1049,32 @@ class ChatRoom {
         }
 
         try {
-            // Generate message ID and timestamp
             const messageId = this.generateMessageId();
-            const timestamp = Date.now();
-
-            // Create message with local image and loading icon
-            const reader = new FileReader();
-            const imageUrl = await new Promise((resolve) => {
-                reader.onload = (e) => resolve(e.target.result);
-                reader.readAsDataURL(file);
-            });
-
+            
+            // 1. Create local Blob URL immediately
+            const blobUrl = URL.createObjectURL(file);
+            
+            // 2. Create message with LOCAL reference only
             const message = {
                 message_id: messageId,
                 message_type: 'chat',
                 content_type: 'image',
-                content: imageUrl,
+                content: 'local:' + blobUrl, // Local identifier
                 sender_id: this.userId,
-                timestamp: timestamp
+                timestamp: Date.now(),
+                raw_data: blobUrl // Store Blob URL directly
             };
 
-            // Add message to UI with loading state
+            // 3. Add to UI immediately using Blob URL
             this.addChatMessage(this.userId, message, 'image', this.messageStatus.sending);
 
-            // Upload image with message metadata
+            // 4. Upload in background (doesn't block UI)
             const formData = new FormData();
             formData.append('image', file);
             formData.append('message_id', messageId);
-            formData.append('timestamp', timestamp.toString());
-            formData.append('room_id', this.roomId)
-            formData.append('sender_id', this.userId)
+            formData.append('room_id', this.roomId);
+            formData.append('sender_id', this.userId);
+            formData.append('timestamp', Date.now());
 
             const response = await fetch('/api/chat/upload-image', {
                 method: 'POST',
@@ -1082,16 +1083,18 @@ class ChatRoom {
 
             const result = await response.json();
             
-            if (!result.success) {
-                throw new Error(result.reason || 'Image upload failed');
+            if (result.success) {
+                // 5. Update message with server ID but keep local reference
+                message.content = result.image_id; // Server ID
+                message.raw_data = blobUrl; // Maintain local reference
+                this.updateMessageStatus(messageId, 'sent');
+            } else {
+                throw new Error('Upload failed');
             }
 
-            // Update message status to sent
-            this.updateMessageStatus(messageId, 'sent');
         } catch (error) {
-            console.error('Failed to send image:', error);
+            console.error('Image send failed:', error);
             this.updateMessageStatus(messageId, 'failed');
-            this.addSystemMessage('Failed to send image. Please try again.');
         }
     }
 

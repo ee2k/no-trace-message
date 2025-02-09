@@ -11,12 +11,11 @@ from utils.chat_error_codes import STATUS_CODES, ChatErrorCodes
 from services.chat.chatroom_manager import ChatroomManager 
 from utils.error import Coded_Error
 from uuid import uuid4
+from utils.constants import ALLOWED_MIME_TYPES, MAX_IMAGE_SIZE
+import re
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
-
-MAX_IMAGE_SIZE = 3 * 1024 * 1024  # 3MB
-ALLOWED_MIME_TYPES = {'image/jpeg', 'image/png', 'image/gif', 'image/webp'}
 
 def generate_image_id() -> str:
     # Get current timestamp in milliseconds
@@ -45,14 +44,26 @@ async def upload_image(
             f"room_id={room_id}"
         )
         
-        # Validate image
+        # First check - prevent reading large files
+        if image.size > MAX_IMAGE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=ChatErrorCodes.IMAGE_TOO_LARGE
+            )
+
+        # Second check - actual data size validation
+        image_data = await image.read()
+        if len(image_data) > MAX_IMAGE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=ChatErrorCodes.IMAGE_TOO_LARGE
+            )
+
+        # Initial MIME type check
         if image.content_type not in ALLOWED_MIME_TYPES:
             raise HTTPException(
                 status_code=STATUS_CODES.get(ChatErrorCodes.IMAGE_TYPE_NOT_SUPPORTED, 500),
                 detail={"code": ChatErrorCodes.IMAGE_TYPE_NOT_SUPPORTED})
-        
-        # Read image data
-        image_data = await image.read()
         
         # Generate unique image ID using timestamp + UUID
         image_id = generate_image_id()
@@ -63,7 +74,7 @@ async def upload_image(
         required_recipients = {p.user_id for p in room.participants 
                               if p.user_id != sender_id}
         
-        # Create message
+        # Create message - model validation will catch size issues
         message = ImageMessage(
             message_id=message_id,
             message_type='chat',
@@ -73,8 +84,7 @@ async def upload_image(
             timestamp=timestamp,
             image_data=image_data,
             required_recipients=required_recipients,
-            loaded_recipients=set(),
-            expires_at=datetime.now() + timedelta(hours=1)
+            expires_at=datetime.now(UTC) + timedelta(hours=1)
         )
 
         # Return success first
@@ -99,11 +109,14 @@ async def upload_image(
 @router.get("/get-image/{image_id}")
 async def get_image(
     image_id: str,
-    room_id: str = Query(...),
-    user_id: str = Query(...),
+    room_id: str = Query(..., min_length=1),  # Enforce non-empty
+    user_id: str = Query(..., min_length=1),  # Enforce non-empty
     chatroom_manager: ChatroomManager = Depends(get_chatroom_manager),
     background_tasks: BackgroundTasks = BackgroundTasks()
 ):
+    if not re.match(r"^[\w-]+$", user_id): 
+        raise HTTPException(status_code=422, detail="Invalid user ID format")
+
     try:
         room = await chatroom_manager.get_room(room_id)
         if not room:

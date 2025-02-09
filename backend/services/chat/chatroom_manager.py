@@ -4,7 +4,7 @@ from datetime import datetime, UTC
 from typing import Optional
 import secrets
 import string
-from models.chat.message import Message, MessageType
+from models.chat.message import Message, MessageType, OutboundMessage, ContentType, ImageMessage
 from models.chat.user import User
 from utils.singleton import singleton
 import time
@@ -125,26 +125,24 @@ class ChatroomManager:
             "total_messages": sum(len(r.messages) for r in self.rooms.values())
         }
 
-    def enforce_room_limits(self, room: PrivateRoom) -> None:
-        """Enforce memory limits for a room"""
-        # Remove oldest messages if limit exceeded
-        if len(room.messages) > self._max_messages_per_room:
-            room.messages = room.messages[-self._max_messages_per_room:]
+    # def enforce_room_limits(self, room: PrivateRoom) -> None:
+    #     """Enforce memory limits for a room"""
+    #     # Remove oldest messages if limit exceeded
+    #     if len(room.messages) > self._max_messages_per_room:
+    #         room.messages = room.messages[-self._max_messages_per_room:]
 
-    async def add_message_to_room(self, room_id: str, message: Message) -> None:
+    async def add_message_to_room(self, room_id: str, message: OutboundMessage) -> None:
         """Add message with size checks"""
         room = await self.get_room(room_id)
         
-        # Check message count
+        # Check if message is ImageMessage and has required fields
+        if isinstance(message, ImageMessage):
+            if not message.content or not message.image_data:
+                raise ValueError("Invalid image message structure")
+        
+        # Existing checks
         if len(room.messages) >= self._max_messages_per_room:
             raise Coded_Error(ChatErrorCodes.MEMORY_LIMIT, STATUS_CODES[ChatErrorCodes.MEMORY_LIMIT])
-            
-        # Check message size based on type
-        if message.type == MessageType.text.value:
-            if len(message.content.encode('utf-8')) > (self._max_message_chars * 4):  # 4 bytes per char worst case
-                raise Coded_Error(ChatErrorCodes.MESSAGE_TOO_LARGE, STATUS_CODES[ChatErrorCodes.MESSAGE_TOO_LARGE])
-        elif message.type == MessageType.image.value:
-            self.validate_image(message.content, message.content_type)
         
         room.messages.append(message)
 
