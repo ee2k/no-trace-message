@@ -6,7 +6,7 @@ class ChatRoom {
         this.ws = null;
         this.roomId = null;
         this.username = null;
-        this.token = null;
+        this.room_token = null;
         this.participantCount = 0;
         this.messageInput = $('#messageInput');
         this.chatArea = $('.chat-area');
@@ -141,11 +141,11 @@ class ChatRoom {
         // Try to load saved chat session from sessionStorage.
         const session = sessionStorage.getItem('chat_session');
         if (session) {
-            const { user_id, username, room_id, token } = JSON.parse(session);
+            const { user_id, username, room_id, room_token } = JSON.parse(session);
             this.userId = user_id;
             this.username = username;
             this.roomId = room_id; // if applicable
-            this.token = token;   // if applicable
+            this.room_token = room_token;   // if applicable
         }
     }
 
@@ -286,8 +286,8 @@ class ChatRoom {
             
             // If the room requires a token, get it from the session
             if (this.requiresToken) {
-                this.token = chatSession.token;
-                if (!this.token) {
+                this.room_token = chatSession.room_token;
+                if (!this.room_token) {
                     alert("Token is required for this private room");
                     console.error("Token is required for private rooms");
                     window.location.href = '/join-private-chatroom';
@@ -311,7 +311,6 @@ class ChatRoom {
 
             console.log('Retrieving token for room:', this.roomId);
             console.log('SessionStorage on chatroom load:', JSON.stringify(sessionStorage));
-            console.log('Token retrieved:', sessionStorage.getItem(`room_token_${this.roomId}`));
         } catch (error) {
             console.error('Error initializing chat room:', error);
             this.handleRoomNotFound(); // Handle all errors as room not found
@@ -325,7 +324,7 @@ class ChatRoom {
         const params = new URLSearchParams({
             // username: encodeURIComponent(this.username),
             username: this.username,
-            token: this.token || '',
+            room_token: this.room_token || '',
             user_id: chatSession.user_id || ''
         });
         
@@ -343,7 +342,7 @@ class ChatRoom {
         this.ws = new WebSocket(this.buildWebSocketUrl());
         
         console.log('[WebSocket] Connecting to:', this.ws.url);
-        console.log('[WebSocket] Using token:', this.token ? 'Yes' : 'No');
+        console.log('[WebSocket] Using token:', this.room_token ? 'Yes' : 'No');
         console.log('[WebSocket] Room ID:', this.roomId);
         
         try {
@@ -351,10 +350,10 @@ class ChatRoom {
                 console.log('[WebSocket] Connection established');
                 
                 // Send token immediately after connection using message_type
-                if (this.requiresToken && this.token) {
+                if (this.requiresToken && this.room_token) {
                     const authMessage = {
                         message_type: 'auth',
-                        token: this.token,
+                        room_token: this.room_token,
                         room_id: this.roomId
                     };
                     this.ws.send(JSON.stringify(authMessage));
@@ -455,7 +454,7 @@ class ChatRoom {
 
             console.log('WebSocket auth message:', {
                 message_type: 'auth',
-                token: this.token,
+                room_token: this.room_token,
                 room_id: this.roomId
             });
         } catch (error) {
@@ -545,7 +544,7 @@ class ChatRoom {
                     user_id: data.user_id,
                     username: this.username,
                     room_id: this.roomId,
-                    token: this.token
+                    room_token: this.room_token
                 }));
                 this.updateRoomInfo();
                 break;

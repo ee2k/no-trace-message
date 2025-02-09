@@ -1,12 +1,11 @@
 from models.chat.chatroom import PrivateRoom
 from utils.num_generator import generate_id
 from datetime import datetime, UTC
-from typing import Dict, Optional
+from typing import Optional
 import secrets
 import string
 from models.chat.message import Message, MessageType
-from models.chat.user import User, ParticipantStatus
-from fastapi import HTTPException
+from models.chat.user import User
 from utils.singleton import singleton
 import time
 from utils.error import Coded_Error

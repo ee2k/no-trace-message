@@ -1,6 +1,6 @@
 from fastapi import WebSocket, WebSocketDisconnect
 import logging
-from models.chat.message import Message
+from models.chat.message import Message, ImageMessage
 from fastapi import APIRouter
 from services.chat.chatroom_manager import ChatroomManager
 from utils.singleton import singleton
@@ -12,6 +12,7 @@ from utils.chat_error_codes import ChatErrorCodes
 from models.chat.user import User, ParticipantStatus
 from pydantic import ValidationError
 from models.chat.chatroom import PrivateRoom
+from datetime import datetime, UTC
 
 router = APIRouter()
 
@@ -55,33 +56,48 @@ class WebSocketManager:
 
     async def send_message(self, room_id: str, message: Message):
         room = await chatroom_manager.get_room(room_id)
-        if room:
-            first_attempt_failed = False
-            delivered_count = 0
-            total_recipients = len(room.participants) - 1  # Exclude sender
-            
-            # First delivery attempt
-            for participant in room.participants:
-                if participant.is_connected() and participant.user_id != message.sender_id:
-                    try:
-                        await participant.websocket.send_text(message.model_dump_json())
-                        message.mark_delivered(participant.user_id)
-                        delivered_count += 1
-                    except Exception as e:
-                        first_attempt_failed = True
+        if not room:
+            return
 
-            # Send initial ack
-            sender = next((p for p in room.participants if p.user_id == message.sender_id), None)
-            if sender and sender.is_connected():
-                if delivered_count == total_recipients:
-                    await self.send_full_ack(sender, message)
-                    await self.cleanup_message(room, message)
-                else:
-                    if first_attempt_failed:
-                        await self.send_partial_ack(sender, message)
-                    asyncio.create_task(
-                        self.retry_failed_deliveries(room, message, max_retries=3)
-                    )
+        # Store message in room history
+        try:
+            await chatroom_manager.add_message_to_room(room_id, message)
+        except Exception as e:
+            logger.error(f"Failed to add message to room: {str(e)}")
+            return
+
+        # Delivery logic
+        first_attempt_failed = False
+        delivered_count = 0
+        total_recipients = len(room.participants) - 1  # Exclude sender
+        
+        # First delivery attempt
+        for participant in room.participants:
+            if participant.is_connected() and participant.user_id != message.sender_id:
+                try:
+                    await participant.websocket.send_text(message.model_dump_json())
+                    message.mark_delivered(participant.user_id)
+                    delivered_count += 1
+                except Exception as e:
+                    first_attempt_failed = True
+
+        # Image-specific cleanup scheduling
+        if isinstance(message, ImageMessage):
+            asyncio.create_task(
+                self.monitor_image_cleanup(room, message)
+            )
+
+        # Ack handling
+        sender = next((p for p in room.participants if p.user_id == message.sender_id), None)
+        if sender and sender.is_connected():
+            if delivered_count == total_recipients:
+                await self.send_full_ack(sender, message)
+            else:
+                if first_attempt_failed:
+                    await self.send_partial_ack(sender, message)
+                asyncio.create_task(
+                    self.retry_failed_deliveries(room, message, max_retries=3)
+                )
 
     async def retry_failed_deliveries(self, room: PrivateRoom, message: Message, max_retries: int):
         retry_count = 0
@@ -130,6 +146,23 @@ class WebSocketManager:
     async def cleanup_message(self, room: PrivateRoom, message: Message):
         if message in room.messages:
             room.messages.remove(message)
+
+    async def monitor_image_cleanup(self, room: PrivateRoom, message: ImageMessage):
+        """Check image message status periodically"""
+        while True:
+            # Check expiration
+            if datetime.now(UTC) > message.expires_at:
+                await self.cleanup_message(room, message)
+                return
+            
+            # Check if all required recipients loaded the image
+            required = message.required_recipients
+            loaded = message.loaded_recipients
+            if loaded and required.issubset(loaded):
+                await self.cleanup_message(room, message)
+                return
+            
+            await asyncio.sleep(30)  # Check every 30 seconds
 
     async def check_connections(self):
         """Periodically check connection health and remove expired rooms"""
@@ -297,6 +330,6 @@ def get_websocket_manager() -> WebSocketManager:
     """Dependency to get WebSocketManager instance"""
     return websocket_manager
 
-def get_websocket_manager() -> WebSocketManager:
+def get_chatroom_manager() -> ChatroomManager:
     """Dependency to get WebSocketManager instance"""
-    return websocket_manager
+    return chatroom_manager
