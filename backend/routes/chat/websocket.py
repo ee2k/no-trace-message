@@ -54,10 +54,24 @@ class WebSocketManager:
             user.clear_websocket()
             user.update_status(ParticipantStatus.OFFLINE)
         
-        # Use the rooms stored in chatroom_manager instead of self.rooms.
         room = await chatroom_manager.get_room(room_id)
         if room:
             room.remove_participant(user.user_id)
+            # Force broadcast participant list after removal
+            await self.send_participant_list(room_id)
+
+    async def send_participant_list(self, room_id: str):
+        """Send participant list regardless of changes"""
+        room = await chatroom_manager.get_room(room_id)
+        if not room:
+            return
+        
+        # Remove the state comparison to ensure updates are always sent
+        participants = [{"user_id": p.user_id, "username": p.username} for p in room.participants]
+        await self.broadcast(room_id, {
+            "message_type": "participant_list",
+            "participants": participants
+        })
 
     async def send_message(self, room_id: str, message: Message):
         room = await chatroom_manager.get_room(room_id)
@@ -224,22 +238,22 @@ class WebSocketManager:
                 if participant.is_connected():
                     await participant.websocket.send_json(system_message)
 
-    async def send_participant_list(self, room_id: str):
-        """Send participant list only when there's actual changes"""
-        room = await chatroom_manager.get_room(room_id)
-        if not room:
-            return
+    # async def send_participant_list(self, room_id: str):
+    #     """Send participant list only when there's actual changes"""
+    #     room = await chatroom_manager.get_room(room_id)
+    #     if not room:
+    #         return
         
-        current_state = hash(tuple((p.user_id, p.status) for p in room.participants))
-        if room.last_participant_state == current_state:
-            return  # No changes since last update
+    #     current_state = hash(tuple((p.user_id, p.status) for p in room.participants))
+    #     if room.last_participant_state == current_state:
+    #         return  # No changes since last update
         
-        room.last_participant_state = current_state  # Store hash of participant state
-        participants = [{"user_id": p.user_id, "username": p.username} for p in room.participants]
-        await self.broadcast(room_id, {
-            "message_type": "participant_list",
-            "participants": participants
-        })
+    #     room.last_participant_state = current_state  # Store hash of participant state
+    #     participants = [{"user_id": p.user_id, "username": p.username} for p in room.participants]
+    #     await self.broadcast(room_id, {
+    #         "message_type": "participant_list",
+    #         "participants": participants
+    #     })
 
     async def broadcast(self, room_id: str, message: dict):
         room = await chatroom_manager.get_room(room_id)

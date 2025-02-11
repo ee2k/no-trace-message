@@ -55,7 +55,7 @@ class PrivateRoom(BaseModel):
     max_participants: int = 6
     lock: asyncio.Lock = Field(default_factory=asyncio.Lock, 
                              arbitrary_types_allowed=True)
-    last_participant_state: str = ""  # Hash of participant state
+    # last_participant_state: str = ""  # Hash of participant state
 
     model_config = {
         "arbitrary_types_allowed": True
@@ -140,9 +140,9 @@ class PrivateRoom(BaseModel):
         """Check if this room requires a token for access"""
         return self.room_token is not None
 
-    def has_participant_changes(self):
-        current_state = hash(tuple((p.user_id, p.status) for p in self.participants))
-        return current_state != self.last_participant_state
+    # def has_participant_changes(self):
+    #     current_state = hash(tuple((p.user_id, p.status) for p in self.participants))
+    #     return current_state != self.last_participant_state
 
 class ValidateAccessRequest(BaseModel):
     room_id: str
