@@ -28,21 +28,26 @@ class WebSocketManager:
         pass
 
     async def connect(self, websocket: WebSocket, room_id: str, user: User):
-        # Set user's WebSocket connection and mark active
+        # Set user's WebSocket connection and mark active FIRST
         user.set_websocket(websocket)
         user.update_status(ParticipantStatus.ACTIVE)
 
         room = await chatroom_manager.get_room(room_id)
         
-        # Check if this user is already present in the room
-        existing = next((p for p in room.participants if p.user_id == user.user_id), None)
-        if existing:
-            # Update the existing participant's connection rather than adding a duplicate
-            existing.set_websocket(websocket)
-            existing.update_status(ParticipantStatus.ACTIVE)
-        else:
-            # Add the new participant for first-time join
-            room.add_participant(user)
+        # Use lock to prevent race conditions
+        async with room.lock:  # Ensure PrivateRoom has an asyncio.Lock() attribute
+            # Check if this user is already present in the room
+            existing = next((p for p in room.participants if p.user_id == user.user_id), None)
+            if existing:
+                # Update the existing participant's connection
+                existing.set_websocket(websocket)
+                existing.update_status(ParticipantStatus.ACTIVE)
+                await self.send_participant_list(room_id)
+            else:
+                # Add the new participant for first-time join
+                room.add_participant(user)
+                # Immediately broadcast updated participant list
+                await self.send_participant_list(room_id)
 
     async def disconnect(self, user: User, room_id: str):
         if user.is_connected():
@@ -59,8 +64,9 @@ class WebSocketManager:
         if not room:
             return
 
-        # Set required recipients (current participants excluding sender)
-        message.required_recipients = {p.user_id for p in room.participants if p.user_id != message.sender_id}
+        # Get fresh participant list every time
+        current_participants = {p.user_id for p in room.participants}
+        message.required_recipients = current_participants - {message.sender_id}
 
         # Store message in room history
         try:
@@ -85,16 +91,12 @@ class WebSocketManager:
                 except Exception as e:
                     first_attempt_failed = True
 
-        # Image-specific cleanup scheduling
-        if isinstance(message, ImageMessage):
-            asyncio.create_task(
-                self.monitor_image_cleanup(room, message)
-            )
-
         # Ack handling based on required recipients
         sender = next((p for p in room.participants if p.user_id == message.sender_id), None)
         if sender and sender.is_connected():
-            if delivered_count == total_recipients:
+            if message.content_type == ContentType.text and delivered_count == total_recipients:
+                await self.send_full_ack(sender, message)
+            elif isinstance(message, ImageMessage) and message.loaded_recipients.issuperset(message.required_recipients):
                 await self.send_full_ack(sender, message)
             else:
                 if first_attempt_failed:
@@ -103,9 +105,11 @@ class WebSocketManager:
                     self.retry_failed_deliveries(room, message, max_retries=3)
                 )
 
+        # In all cases, start monitoring the message for expiry/deletion criteria
+        asyncio.create_task(self.monitor_message_cleanup(room, message))
+
     async def retry_failed_deliveries(self, room: PrivateRoom, message: Message, max_retries: int):
         retry_count = 0
-        total_recipients = len(message.required_recipients)
         
         while retry_count < max_retries:
             retry_count += 1
@@ -117,6 +121,7 @@ class WebSocketManager:
                 if p.user_id in message.required_recipients
                 and p.user_id not in message.delivered_to
                 and p.is_connected()
+                and p.websocket is not None  # Additional check
             ]
             
             # Retry delivery
@@ -128,7 +133,7 @@ class WebSocketManager:
                     logger.error(f"Retry failed for {participant.user_id}: {str(e)}")
 
             # Check if fully delivered
-            if len(message.delivered_to) == total_recipients:
+            if message.content_type == ContentType.text and message.required_recipients.issubset(message.delivered_to):
                 sender = next((p for p in room.participants if p.user_id == message.sender_id), None)
                 if sender and sender.is_connected():
                     await self.send_full_ack(sender, message)
@@ -156,26 +161,39 @@ class WebSocketManager:
         if message in room.messages:
             room.messages.remove(message)
 
-    async def monitor_image_cleanup(self, room: PrivateRoom, message: ImageMessage):
-        """Check image message status periodically"""
+    def should_cleanup(self, message: OutboundMessage) -> bool:
+        now = datetime.now(UTC)
+        if now > message.expires_at:
+            return True
+        if message.content_type == ContentType.text:
+            if message.required_recipients.issubset(message.delivered_to):
+                return True
+        elif message.content_type == ContentType.image:
+            if isinstance(message, ImageMessage):
+                if message.required_recipients.issubset(message.loaded_recipients):
+                    return True
+            else:
+                if message.required_recipients.issubset(message.delivered_to):
+                    return True
+        return False
+
+    async def monitor_message_cleanup(self, room: PrivateRoom, message: OutboundMessage):
         while True:
-            # Check expiration
-            if datetime.now(UTC) > message.expires_at.replace(tzinfo=UTC):
+            if self.should_cleanup(message):
+                # Send acknowledgment before cleanup for image messages
+                if (isinstance(message, ImageMessage) and 
+                    message.required_recipients.issubset(message.loaded_recipients)):
+                    sender = next((p for p in room.participants if p.user_id == message.sender_id), None)
+                    if sender and sender.is_connected():
+                        await self.send_full_ack(sender, message)
                 await self.cleanup_message(room, message)
                 return
-            
-            # Check if all required recipients loaded the image
-            required = message.required_recipients
-            loaded = message.loaded_recipients
-            if loaded and required.issubset(loaded):
-                await self.cleanup_message(room, message)
-                return
-            
-            await asyncio.sleep(30)  # Check every 30 seconds
+            await asyncio.sleep(5)
 
     async def check_connections(self):
-        """Periodically check connection health and remove expired rooms"""
+        """Periodically check connection health"""
         while True:
+            await asyncio.sleep(60)  # Match xx-second inactivity timeout
             current_time = time.time()
             # Iterate over a list of room IDs to avoid modifying the dictionary during iteration.
             room_ids = list(chatroom_manager.rooms.keys())
@@ -189,7 +207,6 @@ class WebSocketManager:
                         # Check for inactivity (e.g., via last_active timestamp)
                         if current_time - participant.last_active.timestamp() > 60:
                             await self.disconnect(participant, room.room_id)
-            await asyncio.sleep(30)  # Check every 30 seconds
 
     async def broadcast_failed_join(self, room_id: str, username: str):
         """Broadcast failed join attempt to room participants"""
@@ -208,13 +225,21 @@ class WebSocketManager:
                     await participant.websocket.send_json(system_message)
 
     async def send_participant_list(self, room_id: str):
+        """Send participant list only when there's actual changes"""
         room = await chatroom_manager.get_room(room_id)
-        if room:
-            participants = [{"user_id": p.user_id, "username": p.username} for p in room.participants]
-            await self.broadcast(room_id, {
-                "message_type": "participant_list",
-                "participants": participants
-            })
+        if not room:
+            return
+        
+        current_state = hash(tuple((p.user_id, p.status) for p in room.participants))
+        if room.last_participant_state == current_state:
+            return  # No changes since last update
+        
+        room.last_participant_state = current_state  # Store hash of participant state
+        participants = [{"user_id": p.user_id, "username": p.username} for p in room.participants]
+        await self.broadcast(room_id, {
+            "message_type": "participant_list",
+            "participants": participants
+        })
 
     async def broadcast(self, room_id: str, message: dict):
         room = await chatroom_manager.get_room(room_id)
@@ -287,7 +312,16 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
         while True:
             try:
                 data = await websocket.receive_text()
+                user.last_active = datetime.now(UTC)
                 message = json.loads(data)
+
+                # Add validation for empty messages
+                if not message:
+                    await websocket.send_json({
+                        "message_type": "error",
+                        "content": "Empty message received"
+                    })
+                    continue
 
                 # Check for ping messages using the proper key
                 if message.get("message_type") == "ping":
@@ -309,7 +343,6 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                             validated = ImageMessage(
                                 **validated.model_dump(),
                                 image_data=b'',  # Will be populated from upload
-                                expires_at=datetime.now(UTC) + timedelta(hours=1)
                             )
                         else:
                             validated = OutboundMessage(**validated.model_dump())
@@ -333,8 +366,16 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
             except json.JSONDecodeError:
                 logger.error("Invalid JSON message")
+                await websocket.send_json({
+                    "message_type": "error",
+                    "content": "Invalid JSON format"
+                })
             except ValidationError as e:
                 logger.error(f"Invalid message format: {str(e)}")
+                await websocket.send_json({
+                    "message_type": "error",
+                    "content": f"Validation error: {str(e)}"
+                })
 
     except WebSocketDisconnect:
         logger.info(f"WebSocket disconnected: {user_id}")

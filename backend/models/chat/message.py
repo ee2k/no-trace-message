@@ -1,7 +1,6 @@
-from pydantic import BaseModel, Field
-from datetime import datetime, UTC
+from pydantic import BaseModel, Field, model_validator
+from datetime import datetime, timedelta, UTC
 from enum import Enum, auto
-from pydantic import model_validator
 from utils.chat_error_codes import ChatErrorCodes
 from utils.constants import MAX_IMAGE_SIZE
 
@@ -37,6 +36,7 @@ class Message(BaseModel):
 class OutboundMessage(Message):
     required_recipients: set[str] = Field(default_factory=set)
     delivered_to: set[str] = Field(default_factory=set)
+    expires_at: datetime = Field(default_factory=lambda: datetime.now(UTC) + timedelta(hours=1))
 
     def mark_delivered(self, user_id: str) -> None:
         self.delivered_to.add(user_id)
@@ -47,7 +47,6 @@ class OutboundMessage(Message):
 class ImageMessage(OutboundMessage):
     image_data: bytes = Field(exclude=True)
     loaded_recipients: set[str] = Field(default_factory=set, exclude=True)
-    expires_at: datetime
     content_type: str = Field(default="image")
 
     @model_validator(mode='before')

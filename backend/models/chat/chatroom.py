@@ -3,6 +3,7 @@ from typing import List, Optional
 from .message import Message
 from pydantic import BaseModel, Field, validator, model_validator
 from .user import User
+import asyncio
 
 class CreateRoomRequest(BaseModel):
     room_id: Optional[str] = Field(None, description="Custom Chatroom ID")
@@ -52,6 +53,13 @@ class PrivateRoom(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     expires_at: Optional[datetime] = None
     max_participants: int = 6
+    lock: asyncio.Lock = Field(default_factory=asyncio.Lock, 
+                             arbitrary_types_allowed=True)
+    last_participant_state: str = ""  # Hash of participant state
+
+    model_config = {
+        "arbitrary_types_allowed": True
+    }
 
     @model_validator(mode='before')
     def validate_room(cls, values):
@@ -131,6 +139,10 @@ class PrivateRoom(BaseModel):
     def requires_token(self) -> bool:
         """Check if this room requires a token for access"""
         return self.room_token is not None
+
+    def has_participant_changes(self):
+        current_state = hash(tuple((p.user_id, p.status) for p in self.participants))
+        return current_state != self.last_participant_state
 
 class ValidateAccessRequest(BaseModel):
     room_id: str

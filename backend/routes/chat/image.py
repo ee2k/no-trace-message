@@ -142,7 +142,8 @@ async def get_image(
             mark_image_loaded,
             room_id,
             image_id,
-            user_id
+            user_id,
+            chatroom_manager
         )
 
         # Return image as streaming response
@@ -157,7 +158,12 @@ async def get_image(
         logger.error(f"Error retrieving image: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to retrieve image")
 
-async def mark_image_loaded(room_id: str, image_id: str, user_id: str, chatroom_manager: ChatroomManager = Depends(get_chatroom_manager)):
+async def mark_image_loaded(
+    room_id: str, 
+    image_id: str, 
+    user_id: str,
+    chatroom_manager: ChatroomManager
+):
     """Background task to mark image as loaded by user"""
     try:
         room = await chatroom_manager.get_room(room_id)
@@ -174,11 +180,6 @@ async def mark_image_loaded(room_id: str, image_id: str, user_id: str, chatroom_
             image_message.mark_loaded(user_id)
             logger.debug(f"Marked image {image_id} as loaded by {user_id}")
             
-            # Check if all required recipients have loaded
-            if image_message.loaded_recipients.issuperset(image_message.required_recipients):
-                logger.info(f"All recipients loaded image {image_id}, scheduling cleanup")
-                room.messages.remove(image_message)
-                
     except Exception as e:
         logger.error(f"Error marking image loaded: {str(e)}")
 

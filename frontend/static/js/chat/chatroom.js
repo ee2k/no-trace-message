@@ -311,6 +311,13 @@ class ChatRoom {
 
             console.log('Retrieving token for room:', this.roomId);
             console.log('SessionStorage on chatroom load:', JSON.stringify(sessionStorage));
+
+            // Add to init()
+            // setInterval(() => {
+            //     if (this.ws.readyState === WebSocket.OPEN) {
+            //         this.ws.send(JSON.stringify({ message_type: 'get_participants' }));
+            //     }
+            // }, 10000);  // Every 10 seconds
         } catch (error) {
             console.error('Error initializing chat room:', error);
             this.handleRoomNotFound(); // Handle all errors as room not found
@@ -383,33 +390,37 @@ class ChatRoom {
 
             this.ws.onmessage = (event) => {
                 try {
-                    const message = JSON.parse(event.data);
+                    const rawMessage = JSON.parse(event.data);
                     
-                    // Handle backend's initial auth response by looking for message_type
-                    if (message.message_type === 'auth') {
-                        console.log('Auth received, setting user ID:', message.user_id);
-                        this.userId = message.user_id;
-                        sessionStorage.setItem('current_user_id', this.userId);
-                        return;
+                    // Handle special cases before verification/decoding
+                    switch(rawMessage.message_type) {
+                        case 'auth':
+                            console.log('Auth received, setting user ID:', rawMessage.user_id);
+                            this.userId = rawMessage.user_id;
+                            sessionStorage.setItem('current_user_id', this.userId);
+                            return;  // Exit early after handling
+                            
+                        case 'auth_ack':
+                            console.log('Authentication successful');
+                            return;  // Exit early after handling
                     }
-                    
-                    // Handle our own auth acknowledgment
-                    if (message.message_type === 'auth_ack') {
-                        console.log('Authentication successful');
-                        return;
-                    }
-                    
+
+                    // Common processing for other messages
                     this.verifyOrigin(event);
                     const data = this.decodeMessage(event.data);
-                    if (data.message_type === 'pong') {
-                        this.lastPong = Date.now();
-                    } else {
-                        this.handleMessage(data);
+                    
+                    switch(data.message_type) {
+                        case 'pong':
+                            this.lastPong = Date.now();
+                            break;
+                            
+                        default:
+                            this.handleMessage(data);
                     }
-                    console.log('Processing message:', message);
+                    
+                    console.log('Processed message:', data);
                 } catch (error) {
                     console.error('Message processing error:', error);
-                    console.log('Raw message:', event.data);
                     this.addSystemMessage('Error processing message');
                 }
             };
@@ -521,8 +532,7 @@ class ChatRoom {
                 break;
             
             case 'participant_list':
-                this.participants = new Map(data.participants.map(p => [p.user_id, p.username]));
-                this.updateRoomInfo();
+                this.handleParticipantList(data);
                 break;
             
             case 'participant_joined':
@@ -557,18 +567,20 @@ class ChatRoom {
         this.handlePendingScroll();
     }
 
-    async compressMessage(message) {
-        if (message.length > 1024) { // Only compress large messages
-            const stream = new Blob([message]).stream();
-            const compressedStream = stream.pipeThrough(new CompressionStream('gzip'));
-            const compressedBlob = await new Response(compressedStream).blob();
-            return compressedBlob;
-        }
-        return message;
-    }
-
     async sendMessage(message) {
         try {
+            // Validate message ID before sending
+            if (!message.message_id || typeof message.message_id !== 'string') {
+                console.error('Message missing valid ID:', message);
+                throw new Error('Message ID is required and must be a string');
+            }
+            
+            // Add validation for required fields
+            if (!message.content || !message.sender_id) {
+                console.error('Invalid message structure:', message);
+                throw new Error('Message missing required fields');
+            }
+            
             // For images, create object URL before sending
             if (message.content_type === 'image') {
                 const blob = new Blob([message.content], {type: 'application/octet-stream'});
@@ -576,7 +588,7 @@ class ChatRoom {
             }
             
             // Add message to UI immediately with 'sending' status
-            const messageId = this.addChatMessage(
+            const messageId = await this.addChatMessage(
                 message.sender_id, 
                 message.content, 
                 message.content_type, 
@@ -635,8 +647,28 @@ class ChatRoom {
     }
 
     generateMessageId() {
-        // Using crypto.randomUUID() which is supported in modern browsers
-        return crypto.randomUUID();
+        const timestamp = Date.now();
+        try {
+            // Generate 8-character unique string using different methods
+            let shortUUID;
+            if (crypto.randomUUID) {
+                // Take first 8 chars from standard UUID
+                shortUUID = crypto.randomUUID().split('-')[0];
+            } else {
+                // Fallback: 4 random bytes as hex (8 characters)
+                const buffer = new Uint8Array(4);
+                crypto.getRandomValues(buffer);
+                shortUUID = Array.from(buffer, byte => 
+                    byte.toString(16).padStart(2, '0')
+                ).join('');
+            }
+            return `${timestamp}-${shortUUID}`;
+        } catch (error) {
+            // Ultimate fallback: timestamp + random string
+            console.error('UUID generation failed:', error);
+            const randStr = Math.random().toString(36).substr(2, 8);
+            return `${timestamp}-${randStr}`;
+        }
     }
 
     async addChatMessage(sender_id, message, contentType, status = this.messageStatus.sending) {
@@ -1011,9 +1043,7 @@ class ChatRoom {
     }
 
     async sendTextMessage(content) {
-        if (!content || !content.trim()) {
-            return;
-        }
+        if (!content?.trim()) return;
         
         try {
             const message = {
@@ -1024,8 +1054,8 @@ class ChatRoom {
                 sender_id: this.userId,
                 timestamp: Date.now()
             };
-            
-            console.log('Sending message:', message);
+
+            console.log('Sending message:', message);  // Add debug log
             await this.sendMessage(message);
             
             // Only clear input and reset height if message was sent successfully
@@ -1326,6 +1356,15 @@ class ChatRoom {
                 this.scrollToBottom(true);
             }
         }, 300);
+    }
+
+    handleParticipantList(message) {
+        this.participants.clear();
+        message.participants.forEach(p => {
+            this.participants.set(p.user_id, p.username);
+        });
+        this.updateRoomDisplay();
+        this.updateMessageTimes();  // Force UI refresh
     }
 }
 // Initialize chat when page loads
