@@ -14,6 +14,10 @@ export default {
     },
     message: {
       typePlaceholder: "Type a message..."
+    },
+    alert: {
+        sessionNotFound: "Session not found. Please join a room.",
+        tokenRequired: "Token is required for this private room."
     }
   }
 };

@@ -17,7 +17,6 @@ export default {
     validity: 'Validité',
     tokenPlaceholder: '6~70 caractères\n\nUne phrase mémorable pourrait convenir~',
     tokenHintPlaceholder: 'Indice optionnel pour le jeton\n\nex : \'Notre café préféré\'',
-    legal: 'En utilisant ce service, vous acceptez nos <a href="{{urls.tos}}" class="hyperlink" target="_blank">Conditions d\'Utilisation</a> et notre <a href="{{urls.privacy}}" class="hyperlink" target="_blank">Politique de Confidentialité</a>',
     validation: {
       emptyMessage: 'Veuillez saisir un message ou ajouter des images',
       tokenLength: 'Le mot de passe doit contenir au moins {{length}} caractères',
@@ -37,9 +36,5 @@ export default {
       createFailed: 'Échec de la création du message. Veuillez réessayer',
       networkError: 'Erreur réseau. Veuillez réessayer plus tard'
     }
-  },
-  urls: {
-    tos: '/static/i18n/fr/tos.html',
-    privacy: '/static/i18n/fr/privacy.html'
   }
 }

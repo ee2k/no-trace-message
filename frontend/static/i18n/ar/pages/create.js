@@ -17,7 +17,6 @@ export default {
     validity: 'مدة الصلاحية',
     tokenPlaceholder: '٦~٧٠ حرف\n\nيمكن استخدام عبارة سهلة التذكر~',
     tokenHintPlaceholder: 'تلميح اختياري للرمز\n\nمثال: \'مقهانا المفضل\'',
-    legal: 'باستخدام هذه الخدمة، فإنك توافق على <a href="{{urls.tos}}" class="hyperlink" target="_blank">شروط الخدمة</a> و<a href="{{urls.privacy}}" class="hyperlink" target="_blank">سياسة الخصوصية</a>',
     validation: {
       emptyMessage: 'الرجاء إدخال رسالة أو إضافة صور',
       tokenLength: 'يجب أن تكون كلمة المرور {{length}} حرف على الأقل',
@@ -37,9 +36,5 @@ export default {
       createFailed: 'فشل إنشاء الرسالة. الرجاء المحاولة مرة أخرى',
       networkError: 'خطأ في الشبكة. الرجاء المحاولة لاحقاً'
     }
-  },
-  urls: {
-    tos: '/static/i18n/ar/tos.html',
-    privacy: '/static/i18n/ar/privacy.html'
   }
 } 

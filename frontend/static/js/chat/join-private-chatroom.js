@@ -240,7 +240,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!(await checkBrowser())) return;
 
   // Load translations for the join-private-chatroom page using the current locale
-  await i18n.loadTranslations(i18n.currentLocale);
+  await i18n.loadTranslations(i18n.currentLocale, null, 'share');
   i18n.updateTranslations();
   
   // Initialize the language selector (ensure there's a container with id "languageSelector")

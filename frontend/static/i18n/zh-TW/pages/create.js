@@ -17,7 +17,6 @@ export default {
     validity: '有效期',
     tokenPlaceholder: '6~70個字元\n\n可以是你們共同知道的資訊~',
     tokenHintPlaceholder: '可選的權杖提示\n\n例如：\'我們最喜歡的咖啡店\'',
-    legal: '使用本服務即表示您同意我們的<a href="{{urls.tos}}" class="hyperlink" target="_blank">服務條款</a>和<a href="{{urls.privacy}}" class="hyperlink" target="_blank">隱私權政策</a>',
     validation: {
       emptyMessage: '請輸入訊息或新增圖片',
       tokenLength: '密碼長度至少需要 {{length}} 個字元',
@@ -37,9 +36,5 @@ export default {
       createFailed: '建立訊息失敗，請重試',
       networkError: '網路錯誤，請稍後重試'
     }
-  },
-  urls: {
-    tos: '/static/i18n/zh-TW/tos.html',
-    privacy: '/static/i18n/zh-TW/privacy.html'
   }
 }

@@ -17,7 +17,6 @@ export default {
     validity: '有効期限',
     tokenPlaceholder: '6～70文字\n\n覚えやすいフレーズがおすすめです～',
     tokenHintPlaceholder: 'トークンのヒント（任意）\n\n例：\'お気に入りのカフェ\'',
-    legal: 'このサービスを利用することで、<a href="{{urls.tos}}" class="hyperlink" target="_blank">利用規約</a>および<a href="{{urls.privacy}}" class="hyperlink" target="_blank">プライバシーポリシー</a>に同意したものとみなされます',
     validation: {
       emptyMessage: 'メッセージを入力するか画像を追加してください',
       tokenLength: 'パスワードは{{length}}文字以上である必要があります',
@@ -37,9 +36,5 @@ export default {
       createFailed: 'メッセージの作成に失敗しました。もう一度お試しください',
       networkError: 'ネットワークエラーが発生しました。後でもう一度お試しください'
     }
-  },
-  urls: {
-    tos: '/static/i18n/ja/tos.html',
-    privacy: '/static/i18n/ja/privacy.html'
   }
 } 

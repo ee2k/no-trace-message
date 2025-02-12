@@ -17,7 +17,6 @@ export default {
     validity: 'Validity',
     tokenPlaceholder: '6~70 characters\n\na memorable line could be good~',
     tokenHintPlaceholder: 'Optional token hint\n\ne.g., \'Our favorite coffee shop\'',
-    legal: 'By using this service, you agree to our <a href="{{urls.tos}}" class="hyperlink" target="_blank">Terms of Service</a> and <a href="{{urls.privacy}}" class="hyperlink" target="_blank">Privacy Policy</a>',
     validation: {
       emptyMessage: 'Please enter a message or add images',
       tokenLength: 'Password must be at least {{length}} characters',
@@ -38,9 +37,5 @@ export default {
       networkError: 'Network error. Please try again later.',
       tooManyRequests: 'Too many requests. Please wait a while.'
     }
-  },
-  urls: {
-    tos: '/static/i18n/en/tos.html',
-    privacy: '/static/i18n/en/privacy.html'
   }
 }

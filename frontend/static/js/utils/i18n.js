@@ -39,27 +39,38 @@ class I18nManager {
    * @param {string|null} i18nFile - The page-specific key or file to load translations for.
    * @param {string|null} commonFile - Optional name of the common translations file (without the .js extension). If provided, it loads from ../../i18n/${locale}/${commonFile}.js.
    */
-  async loadTranslations(locale, i18nFile = null, commonFile = null) {
+  async loadTranslations(locale, i18nFile = null, ...commonFiles) {
     if (!this.translations.has(locale)) {
       try {
-        let commonModule = {};
-        if (commonFile) {
-          commonModule = await import(`../../i18n/${locale}/${commonFile}.js`);
+        // Load all common translations from the provided commonFiles list (if any)
+        let commonTranslations = {};
+        if (commonFiles.length > 0) {
+          for (const file of commonFiles) {
+            try {
+              const module = await import(`../../i18n/${locale}/pages/${file}.js`);
+              commonTranslations = {
+                ...commonTranslations,
+                ...(module && module.default ? module.default : {})
+              };
+            } catch (error) {
+              console.warn(`Failed to load common translation file '${file}' for locale '${locale}'`);
+            }
+          }
         }
         
-        // Load page-specific translations based on current page or passed i18nFile
+        // Load page-specific translations based on the provided i18nFile or current page
         const page = i18nFile || this.getCurrentPage();
         const pageModule = await import(`../../i18n/${locale}/pages/${page}.js`);
         
-        // Merge the translations. If commonModule is not loaded, it simply does not contribute any keys.
+        // Merge the translations. Common translations will be overwritten by page-specific ones if keys conflict.
         this.translations.set(locale, {
-          ...((commonModule && commonModule.default) || {}),
+          ...commonTranslations,
           ...pageModule.default
         });
       } catch (error) {
-        console.warn(`Failed to load translations for ${locale}, falling back to English`);
+        console.warn(`Failed to load translations for '${locale}', falling back to English`);
         if (locale !== this.defaultLocale) {
-          await this.loadTranslations(this.defaultLocale, i18nFile, commonFile);
+          await this.loadTranslations(this.defaultLocale, i18nFile, ...commonFiles);
         }
       }
     }

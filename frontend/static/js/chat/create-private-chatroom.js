@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         // Load header component
         await loadComponent('headerComponent', '/components/header');
-        await i18n.loadTranslations(i18n.currentLocale);
+        await i18n.loadTranslations(i18n.currentLocale, null, 'share');
         i18n.updateTranslations();
 
         // Setup custom ID section

@@ -42,10 +42,10 @@ h1 a {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    margin: 0 auto;
 }
 .nickname-form {
     width: 100%;
-    max-width: 75%;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
@@ -160,11 +160,6 @@ footer {
     color: var(--text-secondary);
 }
 
-/* .code-row {
-    bottom: 0.5rem;
-    right: 0.5rem;
-} */
-
 .id-input-container, .token-input-container {
     display: flex;
     flex-direction: column;
@@ -277,6 +272,9 @@ footer {
 @media (max-width: 600px) {
     .nickname-form {
         max-width: 100%;
+    }
+    .room-form {
+        width: 100%;
     }
 }
 

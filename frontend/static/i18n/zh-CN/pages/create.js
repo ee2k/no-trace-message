@@ -17,7 +17,6 @@ export default {
     validity: '有效期',
     tokenPlaceholder: '6~70个字符\n\n可以是你们共同知道的信息~',
     tokenHintPlaceholder: '可选的令牌提示\n\n例如：\'我们最喜欢的咖啡店\'',
-    legal: '使用本服务即表示您同意我们的<a href="{{urls.tos}}" class="hyperlink" target="_blank">服务条款</a>和<a href="{{urls.privacy}}" class="hyperlink" target="_blank">隐私政策</a>',
     validation: {
       emptyMessage: '请输入消息或添加图片',
       tokenLength: '密码长度至少需要 {{length}} 个字符',
@@ -37,9 +36,5 @@ export default {
       createFailed: '创建消息失败，请重试',
       networkError: '网络错误，请稍后重试'
     }
-  },
-  urls: {
-    tos: '/static/i18n/zh-CN/tos.html',
-    privacy: '/static/i18n/zh-CN/privacy.html'
   }
 }

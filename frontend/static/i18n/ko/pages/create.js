@@ -17,7 +17,6 @@ export default {
     validity: '유효 기간',
     tokenPlaceholder: '6~70자\n\n기억하기 쉬운 문구를 추천합니다~',
     tokenHintPlaceholder: '토큰 힌트 (선택사항)\n\n예: \'우리가 좋아하는 카페\'',
-    legal: '이 서비스를 이용함으로써 <a href="{{urls.tos}}" class="hyperlink" target="_blank">이용약관</a>과 <a href="{{urls.privacy}}" class="hyperlink" target="_blank">개인정보 처리방침</a>에 동의하게 됩니다',
     validation: {
       emptyMessage: '메시지를 입력하거나 이미지를 추가해 주세요',
       tokenLength: '비밀번호는 {{length}}자 이상이어야 합니다',
@@ -37,9 +36,5 @@ export default {
       createFailed: '메시지 생성에 실패했습니다. 다시 시도해 주세요',
       networkError: '네트워크 오류가 발생했습니다. 나중에 다시 시도해 주세요'
     }
-  },
-  urls: {
-    tos: '/static/i18n/ko/tos.html',
-    privacy: '/static/i18n/ko/privacy.html'
   }
 } 

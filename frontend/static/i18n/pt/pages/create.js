@@ -17,7 +17,6 @@ export default {
     validity: 'Validade',
     tokenPlaceholder: '6~70 caracteres\n\nUma frase memorável pode ser boa~',
     tokenHintPlaceholder: 'Dica opcional para o token\n\nex: \'Nosso café favorito\'',
-    legal: 'Ao usar este serviço, você concorda com nossos <a href="{{urls.tos}}" class="hyperlink" target="_blank">Termos de Serviço</a> e <a href="{{urls.privacy}}" class="hyperlink" target="_blank">Política de Privacidade</a>',
     validation: {
       emptyMessage: 'Por favor, digite uma mensagem ou adicione imagens',
       tokenLength: 'A senha deve ter pelo menos {{length}} caracteres',
@@ -37,9 +36,5 @@ export default {
       createFailed: 'Falha ao criar mensagem. Por favor, tente novamente',
       networkError: 'Erro de rede. Por favor, tente novamente mais tarde'
     }
-  },
-  urls: {
-    tos: '/static/i18n/pt/tos.html',
-    privacy: '/static/i18n/pt/privacy.html'
   }
 } 

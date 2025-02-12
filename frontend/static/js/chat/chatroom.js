@@ -307,7 +307,7 @@ class ChatRoom {
         // Retrieve chat session data from sessionStorage
         const sessionData = sessionStorage.getItem('chat_session');
         if (!sessionData) {
-            alert("Session not found. Please join a room.");
+            alert(i18n.t("chatroom.alert.sessionNotFound"));
             window.location.href = '/join-private-chatroom';
             return;
         }
@@ -324,7 +324,7 @@ class ChatRoom {
             // Fetch room metadata
             const response = await fetch(`/api/chat/private_room/${this.roomId}/meta`);
             if (!response.ok) {
-                if (response.status === 404 && response.detail.code == 'ROOM_NOT_FOUND') {
+                if (response.status === 404 && response.detail && response.detail.code == 'ROOM_NOT_FOUND') {
                     this.handleRoomNotFound();
                     return;
                 }
@@ -339,7 +339,7 @@ class ChatRoom {
             if (this.requiresToken) {
                 this.room_token = chatSession.room_token;
                 if (!this.room_token) {
-                    alert("Token is required for this private room");
+                    alert(i18n.t("chatroom.alert.tokenRequired"));
                     console.error("Token is required for private rooms");
                     window.location.href = '/join-private-chatroom';
                     return;

@@ -17,7 +17,6 @@ export default {
     validity: 'Срок действия',
     tokenPlaceholder: '6~70 символов\n\nМожно использовать запоминающуюся фразу~',
     tokenHintPlaceholder: 'Необязательная подсказка для токена\n\nнапр.: \'Наше любимое кафе\'',
-    legal: 'Используя этот сервис, вы соглашаетесь с нашими <a href="{{urls.tos}}" class="hyperlink" target="_blank">Условиями использования</a> и <a href="{{urls.privacy}}" class="hyperlink" target="_blank">Политикой конфиденциальности</a>',
     validation: {
       emptyMessage: 'Пожалуйста, введите сообщение или добавьте изображения',
       tokenLength: 'Пароль должен содержать не менее {{length}} символов',
@@ -37,9 +36,5 @@ export default {
       createFailed: 'Не удалось создать сообщение. Повторите попытку',
       networkError: 'Ошибка сети. Повторите попытку позже'
     }
-  },
-  urls: {
-    tos: '/static/i18n/ru/tos.html',
-    privacy: '/static/i18n/ru/privacy.html'
   }
 } 

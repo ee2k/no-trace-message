@@ -17,7 +17,6 @@ export default {
     validity: 'Gültigkeit',
     tokenPlaceholder: '6~70 Zeichen\n\nEine einprägsame Zeile könnte gut sein~',
     tokenHintPlaceholder: 'Optionaler Token-Hinweis\n\nz.B. \'Unser Lieblingscafé\'',
-    legal: 'Durch die Nutzung dieses Dienstes stimmen Sie unseren <a href="{{urls.tos}}" class="hyperlink" target="_blank">Nutzungsbedingungen</a> und der <a href="{{urls.privacy}}" class="hyperlink" target="_blank">Datenschutzerklärung</a> zu',
     validation: {
       emptyMessage: 'Bitte geben Sie eine Nachricht ein oder fügen Sie Bilder hinzu',
       tokenLength: 'Passwort muss mindestens {{length}} Zeichen lang sein',
@@ -37,9 +36,5 @@ export default {
       createFailed: 'Nachricht konnte nicht erstellt werden. Bitte versuchen Sie es erneut',
       networkError: 'Netzwerkfehler. Bitte versuchen Sie es später erneut'
     }
-  },
-  urls: {
-    tos: '/static/i18n/de/tos.html',
-    privacy: '/static/i18n/de/privacy.html'
   }
 } 

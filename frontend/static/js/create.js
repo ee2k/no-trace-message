@@ -5,7 +5,7 @@ import { i18n } from './utils/i18n.js';
 
 class MessageCreator {
     static async initialize() {
-        await i18n.loadTranslations(i18n.currentLocale, null, 'common');
+        await i18n.loadTranslations(i18n.currentLocale, null, 'common', 'share');
         i18n.updateTranslations();
         return new MessageCreator();
     }

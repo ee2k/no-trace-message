@@ -23,7 +23,7 @@ class IndexPage {
         try {
             // Load header component
             await loadComponent('headerComponent', '/components/header');
-            await i18n.loadTranslations(i18n.currentLocale);
+            await i18n.loadTranslations(i18n.currentLocale, 'index');
             i18n.updateTranslations();
             new LanguageSelector('languageSelector');
         } catch (error) {
