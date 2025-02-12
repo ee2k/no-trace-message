@@ -32,29 +32,34 @@ class I18nManager {
     return lang || this.defaultLocale;
   }
 
-  async loadTranslations(locale, i18nFile = null) {
+  /**
+   * Loads the translations for the given locale and page.
+   *
+   * @param {string} locale - The locale to load.
+   * @param {string|null} i18nFile - The page-specific key or file to load translations for.
+   * @param {string|null} commonFile - Optional name of the common translations file (without the .js extension). If provided, it loads from ../../i18n/${locale}/${commonFile}.js.
+   */
+  async loadTranslations(locale, i18nFile = null, commonFile = null) {
     if (!this.translations.has(locale)) {
       try {
-        // Load global translations
-        const globalModule = await import(`../../i18n/global.js`);
+        let commonModule = {};
+        if (commonFile) {
+          commonModule = await import(`../../i18n/${locale}/${commonFile}.js`);
+        }
         
-        // Load common translations
-        const commonModule = await import(`../../i18n/${locale}/common.js`);
-        
-        // Load page-specific translations based on current page
+        // Load page-specific translations based on current page or passed i18nFile
         const page = i18nFile || this.getCurrentPage();
         const pageModule = await import(`../../i18n/${locale}/pages/${page}.js`);
         
-        // Merge translations
+        // Merge the translations. If commonModule is not loaded, it simply does not contribute any keys.
         this.translations.set(locale, {
-          ...globalModule.default,
-          ...commonModule.default,
+          ...((commonModule && commonModule.default) || {}),
           ...pageModule.default
         });
       } catch (error) {
         console.warn(`Failed to load translations for ${locale}, falling back to English`);
         if (locale !== this.defaultLocale) {
-          await this.loadTranslations(this.defaultLocale, i18nFile);
+          await this.loadTranslations(this.defaultLocale, i18nFile, commonFile);
         }
       }
     }

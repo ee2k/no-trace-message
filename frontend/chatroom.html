@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NoTrace Chat - Private Room</title>
+    <title data-i18n="chatroom.title">NoTrace Chat - Private Room</title>
     <base href="/">
     <link rel="stylesheet" href="static/css/global.css">
     <link rel="stylesheet" href="static/css/chat/chatroom.css">
@@ -24,9 +24,15 @@
                         <svg class="menu-icon icon-primary"><use href="static/images/nav_menu.svg#icon"></use></svg>
                     </button>
                     <div id="menuDropdown" class="menu-dropdown" hidden>
-                        <button class="menu-item" id="clearMsgBtn"><span>Clear Messages</span></button>
-                        <button class="menu-item" id="leaveBtn"><span>Leave Room</span></button>
-                        <button class="menu-item danger" id="deleteRoomBtn"><span>Delete Room</span></button>
+                        <button class="menu-item" id="clearMsgBtn">
+                            <span data-i18n="chatroom.menu.clearMessages">Clear Messages</span>
+                        </button>
+                        <button class="menu-item" id="leaveBtn">
+                            <span data-i18n="chatroom.menu.leaveRoom">Leave Room</span>
+                        </button>
+                        <button class="menu-item danger" id="deleteRoomBtn">
+                            <span data-i18n="chatroom.menu.deleteRoom">Delete Room</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -41,7 +47,7 @@
         <footer class="chat-footer">
             <div class="chat-input">
                 <button id="plusBtn" class="plus-button">⨁</button>
-                <textarea id="messageInput" placeholder="Type a message..." rows="1" maxlength="2000"></textarea>
+                <textarea id="messageInput" data-i18n-placeholder="chatroom.message.typePlaceholder" placeholder="Type a message..." rows="1" maxlength="2000"></textarea>
                 <button id="sendBtn" class="send-button">
                     <svg class="menu-icon icon-primary"><use href="static/images/send.svg#icon"></use></svg>
                 </button>
@@ -57,7 +63,7 @@
 
     <!-- Lightbox for enlarged images -->
     <div class="lightbox" style="display: none;">
-        <button class="close-lightbox">&times;</button>
+        <button class="close-lightbox">×</button>
         <img src="" alt="Enlarged image">
     </div>
 

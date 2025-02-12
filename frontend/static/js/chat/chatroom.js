@@ -1,4 +1,5 @@
 import { $ } from '../utils/dom.js';
+import { i18n } from '../utils/i18n.js';
 
 class ChatRoom {
     constructor() {
@@ -295,10 +296,14 @@ class ChatRoom {
     }
 
     async init() {
+        // Load translations for the current locale before doing anything else.
+        await i18n.loadTranslations(i18n.currentLocale);
+        i18n.updateTranslations();
+        
         // Get room ID from URL path
         const pathParts = window.location.pathname.split('/').filter(Boolean);
         this.roomId = pathParts[pathParts.length - 1];
-
+    
         // Retrieve chat session data from sessionStorage
         const sessionData = sessionStorage.getItem('chat_session');
         if (!sessionData) {
@@ -309,13 +314,12 @@ class ChatRoom {
         const chatSession = JSON.parse(sessionData);
         this.userId = chatSession.user_id;
         this.username = chatSession.username;
-
+    
         // Optional: Check if the room in the session matches the URL.
         if (chatSession.room_id !== this.roomId) {
             console.warn(`Room ID mismatch: session room (${chatSession.room_id}) vs URL room (${this.roomId}).`);
-            // Optionally, you may want to update the session or redirect.
         }
-
+    
         try {
             // Fetch room metadata
             const response = await fetch(`/api/chat/private_room/${this.roomId}/meta`);
@@ -327,10 +331,10 @@ class ChatRoom {
                 // Handle other errors (including 500)
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+    
             const roomData = await response.json();
             this.requiresToken = roomData.token_required;
-            
+    
             // If the room requires a token, get it from the session
             if (this.requiresToken) {
                 this.room_token = chatSession.room_token;
@@ -341,21 +345,21 @@ class ChatRoom {
                     return;
                 }
             }
-            
+    
             // Initialize WebSocket connection
             await this.connectWebSocket();
-
+    
             // Update room status after WebSocket is initialized
             this.updateRoomStatus();
-
+    
             // Handle mobile viewport
             this.handleViewportChange();
             window.addEventListener('resize', () => this.handleViewportChange());
             window.addEventListener('orientationchange', () => this.handleViewportChange());
-            
+    
             // Ensure initial scroll position
             setTimeout(() => this.scrollToBottom(), 100);
-
+    
             console.log('Retrieving token for room:', this.roomId);
             console.log('SessionStorage on chatroom load:', JSON.stringify(sessionStorage));
 
@@ -994,12 +998,12 @@ class ChatRoom {
         switch(this.connectionState) {
             case this.connectionStates.CONNECTED:
                 this.statusIcon.classList.add('connected');
-                this.statusText.textContent = 'Connected';
+                this.statusText.textContent = i18n.t("chatroom.status.connected");
                 break;
             
             case this.connectionStates.ROOM_NOT_FOUND:
                 this.statusIcon.classList.add('not-found');
-                this.statusText.textContent = 'Room not found';
+                this.statusText.textContent = i18n.t("chatroom.status.roomNotFound");
                 // Optionally redirect after a delay
                 setTimeout(() => {
                     // window.location.href = '/join-private-chatroom';
@@ -1008,12 +1012,12 @@ class ChatRoom {
             
             case this.connectionStates.CONNECTING:
                 this.statusIcon.classList.add('connecting');
-                this.statusText.textContent = 'Connecting...';
+                this.statusText.textContent = i18n.t("chatroom.status.connecting");
                 break;
             
             default:
                 this.statusIcon.classList.add('connecting');
-                this.statusText.textContent = 'Reconnecting...';
+                this.statusText.textContent = i18n.t("chatroom.status.reconnecting");
         }
     }
 

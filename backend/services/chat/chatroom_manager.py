@@ -1,10 +1,10 @@
 from models.chat.chatroom import PrivateRoom
 from utils.num_generator import generate_id
-from datetime import datetime, UTC
+from datetime import datetime, UTC, timedelta
 from typing import Optional
 import secrets
 import string
-from models.chat.message import Message, MessageType, OutboundMessage, ContentType, ImageMessage
+from models.chat.message import OutboundMessage, ImageMessage
 from models.chat.user import User
 from utils.singleton import singleton
 import time
@@ -66,16 +66,17 @@ class ChatroomManager:
     async def add_private_room_participant(self, room_id: str, user: User) -> bool:
         """Add a participant to a room"""
         room = await self.get_room(room_id)
-
+        
         if len(room.participants) >= room.max_participants:
             raise Coded_Error(ChatErrorCodes.ROOM_FULL, STATUS_CODES[ChatErrorCodes.ROOM_FULL])
         
-        # Check if user is already in the room
         if any(participant.user_id == user.user_id for participant in room.participants):
             raise Coded_Error(ChatErrorCodes.USER_ID_DUPLICATE, STATUS_CODES[ChatErrorCodes.USER_ID_DUPLICATE])
         
-        # Add user to the participants list
         room.participants.append(user)
+        # Await the update so that room is properly updated.
+        await self.update_private_room_activity(room_id)
+        
         return True
 
     def remove_private_room_participant(self, room_id: str, user_id: str) -> bool:
@@ -92,11 +93,11 @@ class ChatroomManager:
                 return True
         return False
 
-    def update_private_room_activity(self, room_id: str) -> None:
+    async def update_private_room_activity(self, room_id: str) -> None:
         """Update room's last activity timestamp"""
-        room = self.get_room(room_id)
+        room = await self.get_room(room_id)
         if room:
-            room.last_activity = datetime.now(UTC)
+            room.update_expiry()
 
     def delete_private_room(self, room_id: str) -> bool:
         """Delete a room"""
@@ -145,6 +146,8 @@ class ChatroomManager:
             raise Coded_Error(ChatErrorCodes.MEMORY_LIMIT, STATUS_CODES[ChatErrorCodes.MEMORY_LIMIT])
         
         room.messages.append(message)
+        # Refresh the room expiry upon new message activity
+        await self.update_private_room_activity(room_id)
 
     def validate_image(self, image_data: bytes, content_type: str) -> None:
         if content_type not in self.ALLOWED_IMAGE_TYPES:

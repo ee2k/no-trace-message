@@ -1,5 +1,7 @@
 import { checkBrowser } from '../utils/browser_check.js';
 import { $ } from '../utils/dom.js';
+import { i18n } from '../utils/i18n.js';
+import { LanguageSelector } from '../components/languageSelector.js';
 
 // Global constants for random username generation
 const ADJECTIVES = [
@@ -24,8 +26,6 @@ const NOUNS = [
 
 class JoinPrivateChatroomPage {
   static async initialize() {
-    if (!(await checkBrowser())) return;
-    // Ensure DOM is ready before instantiation.
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => new JoinPrivateChatroomPage());
     } else {
@@ -116,7 +116,7 @@ class JoinPrivateChatroomPage {
       const response = await fetch(`/api/chat/private_room/${roomId}/meta`);
       if (!response.ok) {
         if (response.status === 404) {
-          this.displayRoomIdError('Room not found. Please check the room ID.');
+          this.displayRoomIdError(i18n.t("error.roomNotFound"));
           this.tokenSection.style.display = 'none';
           this.tokenHintSection.style.display = 'none';
           return null;
@@ -127,9 +127,7 @@ class JoinPrivateChatroomPage {
       return await response.json();
     } catch (error) {
       console.error('Error fetching room metadata:', error);
-      this.displayRoomIdError(
-        'Failed to load room information. Please try again.'
-      );
+      this.displayRoomIdError(i18n.t("error.joinFailed"));
       this.tokenSection.style.display = 'none';
       this.tokenHintSection.style.display = 'none';
       return null;
@@ -202,16 +200,16 @@ class JoinPrivateChatroomPage {
 
       if (!response.ok) {
         const errorData = await response.json();
-        let errorMessage = 'Failed to join room. Please try again.';
+        let errorMessage = i18n.t("error.joinFailed");
         switch (errorData.detail.code) {
           case 'INVALID_TOKEN':
-            errorMessage = 'Invalid access token. Please check and try again.';
+            errorMessage = i18n.t("error.invalidToken");
             break;
           case 'ROOM_NOT_FOUND':
-            errorMessage = 'Room not found. Please check the room ID.';
+            errorMessage = i18n.t("error.roomNotFound");
             break;
           case 'ROOM_FULL':
-            errorMessage = 'Room is full.';
+            errorMessage = i18n.t("error.roomFull");
             break;
         }
         alert(errorMessage);
@@ -229,9 +227,25 @@ class JoinPrivateChatroomPage {
       window.location.href = `/chatroom/${data.room_id}`;
     } catch (error) {
       console.error('Error joining room:', error);
-      alert('Failed to join room. Please try again.');
+      alert(i18n.t("error.joinFailed"));
     }
   }
 }
 
-JoinPrivateChatroomPage.initialize();
+// Rather than calling JoinPrivateChatroomPage.initialize() directly,
+// wait for the DOM to be fully loaded. Then, check browser compatibility, load translations,
+// initialize the language selector, and finally instantiate the chatroom page.
+document.addEventListener('DOMContentLoaded', async () => {
+  // Check browser compatibility first
+  if (!(await checkBrowser())) return;
+
+  // Load translations for the join-private-chatroom page using the current locale
+  await i18n.loadTranslations(i18n.currentLocale);
+  i18n.updateTranslations();
+  
+  // Initialize the language selector (ensure there's a container with id "languageSelector")
+  new LanguageSelector('languageSelector');
+
+  // Start the chatroom page initialization
+  JoinPrivateChatroomPage.initialize();
+});

@@ -1,14 +1,18 @@
-import { initSvgIcons } from '../global.js';
 import { $, $$ } from '../utils/dom.js';
+import { i18n } from '../utils/i18n.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Initialize global features
-    initSvgIcons();
-
+    try {
+        await i18n.loadTranslations(i18n.currentLocale);
+        i18n.updateTranslations();
+    } catch (error) {
+        console.error("Error loading translations:", error);
+    }
+    
     // Get room details from sessionStorage
     const roomId = sessionStorage.getItem('current_room_id');
     if (!roomId) {
-        alert('Room ID not found');
+        alert(i18n.t("privateChatroomCreated.error.roomIdNotFound") || "Room ID not found");
         return;
     }
 
@@ -87,11 +91,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             btn.addEventListener('click', async () => {
                 const targetId = btn.previousElementSibling.dataset.clipboard;
                 const text = $('#' + targetId).textContent;
-                const title = 'Join Private Chatroom';
+                const shareTitle = i18n.t("privateChatroomCreated.shareTitle") || "Join Private Chatroom";
                 
                 try {
                     await navigator.share({
-                        title: title,
+                        title: shareTitle,
                         text: text
                     });
                 } catch (err) {

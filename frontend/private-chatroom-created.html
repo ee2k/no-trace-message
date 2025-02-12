@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NoTrace Chat - Room Created Successfully</title>
+    <title data-i18n="pagei18n.title">NoTrace Chat - Room Created Successfully</title>
     <base href="/">
     <link rel="stylesheet" href="static/css/global.css">
     <link rel="stylesheet" href="static/css/chat/private-chatroom-created.css">
@@ -16,13 +16,13 @@
             <div class="success-container">
                 <div class="success-header">
                     <span class="char-success">✓</span>
-                    <h2>Chatroom Created!</h2>
+                    <h2 data-i18n="pagei18n.header">Chatroom Created!</h2>
                 </div>
 
                 <!-- Basic Link Section - Always visible -->
                 <div id="basicLinkSection" class="share-section">
-                    <h3>Room Info</h3>
-                    <p class="hint-text">Share link and token separately (more secure)</p>
+                    <h3 data-i18n="pagei18n.basicSection.heading">Room Info</h3>
+                    <p class="hint-text" data-i18n="pagei18n.basicSection.hint">Share link and token separately (more secure)</p>
                     <div class="url-box">
                         <span id="basicLink"></span>
                         <div class="button-group">
@@ -33,12 +33,14 @@
                                 <div class="btn-content-copied" style="display: none;">✓</div>
                             </button>
                             <button class="share-btn" style="display: none;" title="Share">
-                                <div class="btn-share"><svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg></div>
+                                <div class="btn-share">
+                                    <svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg>
+                                </div>
                             </button>
                         </div>
                     </div>
                     <div id="basicTokenBox" class="token-box" style="display: none;">
-                        <p>Token:</p>
+                        <p data-i18n="pagei18n.basicSection.tokenLabel">Token:</p>
                         <span id="roomToken"></span>
                         <div class="button-group">
                             <button class="copy-btn" data-clipboard="roomToken" title="Copy">
@@ -48,21 +50,23 @@
                                 <div class="btn-content-copied" style="display: none;">✓</div>
                             </button>
                             <button class="share-btn" style="display: none;" title="Share">
-                                <div class="btn-share"><svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg></div>
+                                <div class="btn-share">
+                                    <svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg>
+                                </div>
                             </button>
                         </div>
                     </div>
                     <div id="tokenHintSection" class="token-hint" style="display: none;">
-                        <p>Token hint: <span id="tokenHint"></span></p>
+                        <p><span data-i18n="pagei18n.tokenHintLabel">Token hint:</span> <span id="tokenHint"></span></p>
                     </div>
                 </div>
 
                 <!-- Separate Info Section -->
                 <div id="separateInfoSection" class="share-section">
-                    <h3>Separate Info (Most Secure)</h3>
-                    <p class="hint-text">Share each piece of information separately</p>
+                    <h3 data-i18n="pagei18n.separateSection.heading">Separate Info (Most Secure)</h3>
+                    <p class="hint-text" data-i18n="pagei18n.separateSection.hint">Share each piece of information separately</p>
                     <div class="url-box">
-                        <p>Base URL:</p>
+                        <p data-i18n="pagei18n.separateSection.baseLabel">Base URL:</p>
                         <span id="baseLink"></span>
                         <div class="button-group">
                             <button class="copy-btn" data-clipboard="baseLink" title="Copy">
@@ -72,12 +76,14 @@
                                 <div class="btn-content-copied" style="display: none;">✓</div>
                             </button>
                             <button class="share-btn" style="display: none;" title="Share">
-                                <div class="btn-share"><svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg></div>
+                                <div class="btn-share">
+                                    <svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg>
+                                </div>
                             </button>
                         </div>
                     </div>
                     <div class="room-box">
-                        <p>Chatroom ID:</p>
+                        <p data-i18n="pagei18n.separateSection.chatroomIdLabel">Chatroom ID:</p>
                         <span id="roomId"></span>
                         <div class="button-group">
                             <button class="copy-btn" data-clipboard="roomId" title="Copy">
@@ -87,30 +93,36 @@
                                 <div class="btn-content-copied" style="display: none;">✓</div>
                             </button>
                             <button class="share-btn" style="display: none;" title="Share">
-                                <div class="btn-share"><svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg></div>
+                                <div class="btn-share">
+                                    <svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg>
+                                </div>
                             </button>
                         </div>
                     </div>
                     <div class="token-box" style="display: none;">
-                        <p>Token:</p>
+                        <p data-i18n="pagei18n.separateSection.tokenLabel">Token:</p>
                         <span id="separateToken"></span>
                         <div class="button-group">
                             <button class="copy-btn" data-clipboard="separateToken" title="Copy">
-                                <div class="btn-content"><svg class="copy-icon"><use href="static/images/copy.svg#icon"></use></svg></div>
+                                <div class="btn-content">
+                                    <svg class="copy-icon"><use href="static/images/copy.svg#icon"></use></svg>
+                                </div>
                                 <div class="btn-content-copied" style="display: none;">✓</div>
                             </button>
                             <button class="share-btn" style="display: none;" title="Share">
-                                <div class="btn-share"><svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg></div>
+                                <div class="btn-share">
+                                    <svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg>
+                                </div>
                             </button>
                         </div>
                     </div>
                     <div id="separateTokenHintSection" class="token-hint" style="display: none;">
-                        <p>Token hint: <span id="separateTokenHint"></span></p>
+                        <p><span data-i18n="pagei18n.tokenHintLabel">Token hint:</span> <span id="separateTokenHint"></span></p>
                     </div>
                 </div>
 
                 <div class="actions">
-                    <button id="joinBtn" class="button primary">Join Chatroom</button>
+                    <button id="joinBtn" class="button primary" data-i18n="pagei18n.joinButton">Join Chatroom</button>
                 </div>
             </div>
         </main>

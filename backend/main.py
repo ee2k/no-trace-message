@@ -20,6 +20,7 @@ from middleware.unmatched_request_limiter import UnmatchedRequestLimiter
 from routes.chat.websocket import router as websocket_router
 import asyncio
 from routes.chat.websocket import WebSocketManager
+from services.chat.chatroom_manager import ChatroomManager  # Import the manager as needed
 
 # Load environment variables from .env file
 load_dotenv()
@@ -45,6 +46,18 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 websocket_manager = WebSocketManager()
+chatroom_manager = ChatroomManager()
+
+# Define a coroutine that periodically cleans up inactive chatrooms
+async def cleanup_inactive_chatrooms():
+    """Background task that periodically cleans up expired chatrooms."""
+    # Since ChatroomManager is a singleton, this returns the shared instance
+    
+    while True:
+        await asyncio.sleep(60)  # Check every 60 seconds; adjust as needed
+        chatroom_manager.cleanup_inactive_rooms()
+        # Log cleanup for debugging purposes
+        print("Inactive chatrooms cleanup executed.")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -55,8 +68,16 @@ async def lifespan(app: FastAPI):
         from services.message_store import MessageStore
         await MessageStore().initialize()
         logger.info("Application startup complete")
-        asyncio.create_task(websocket_manager.check_connections())
+        
+        # Launch background tasks
+        websocket_conn_task = asyncio.create_task(websocket_manager.check_connections())
+        cleanup_chatrooms_task = asyncio.create_task(cleanup_inactive_chatrooms())
+        
         yield
+        
+        # On shutdown, cancel the background tasks
+        websocket_conn_task.cancel()
+        cleanup_chatrooms_task.cancel()
     finally:
         # Shutdown: Cleanup resources
         logger.info("Application shutting down...")

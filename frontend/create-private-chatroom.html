@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NoTrace Chat - Create a private room</title>
+    <title data-i18n="title">NoTrace Chat - Create a private room</title>
     <base href="/">
     <link rel="stylesheet" href="static/css/global.css">
     <link rel="stylesheet" href="static/css/chat/create-private-chatroom.css">
@@ -28,15 +28,15 @@
                     </div>
                 </div>
 
-                <!-- room_Token Section -->
+                <!-- Room Token Section -->
                 <div class="code-section">
                     <button id="customTokenBtn" class="toggle-button">
                         <svg class="toggle-icon"><use href="static/images/toggle.svg#icon"></use></svg>
-                        <span>Use access token</span>
+                        <span data-i18n="create.useAccessToken">Use access token</span>
                     </button>
                     <div class="token-input-container" id="tokenInputContainer" style="display: none;">
                         <div class="code-row">
-                            <input type="text" id="customToken" maxlength="70" placeholder="Access token (70 chars max)" class="custom-input">
+                            <input type="text" id="customToken" maxlength="70" data-i18n-placeholder="create.tokenPlaceholder" placeholder="Access token (70 chars max)" class="custom-input">
                             <div class="char-counter" id="tokenCounter"></div>
                         </div>
                         <div class="code-row">
@@ -46,10 +46,11 @@
                     </div>
                 </div>
 
-                <p class="legal-text" data-i18n="create.legal" data-i18n-html="true">By using this service, you agree to our <a href="static/i18n/en/tos.html" class="hyperlink" href="tos" target="_blank">Terms of Service</a> and <a href="static/i18n/en/privacy.html" class="hyperlink" href="privacy" target="_blank">Privacy Policy</a></p>
+                <p class="legal-text" data-i18n="create.legal" data-i18n-html="true">
+                  By using this service, you agree to our <a href="static/i18n/en/tos.html" class="hyperlink" target="_blank">Terms of Service</a> and <a href="static/i18n/en/privacy.html" class="hyperlink" target="_blank">Privacy Policy</a>
+                </p>
                 <button id="createBtn" class="primary-button" data-i18n="create.createButton">Create Private Chatroom</button>
             </div>
-
         </main>
     </div>
     <script type="module" src="static/js/chat/create-private-chatroom.js"></script>

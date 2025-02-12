@@ -3,59 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NoTrace Chat - Join a private room</title>
+    <title data-i18n="join.title">NoTrace Chat - Join a private room</title>
     <base href="/">
     <link rel="stylesheet" href="static/css/global.css">
     <link rel="stylesheet" href="static/css/chat/join-private-chatroom.css">
+    <link rel="stylesheet" href="static/css/languageSelector.css">
     <link rel="icon" type="image/svg+xml" href="static/images/favicon.svg">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1><a href="/"><svg class="fire-icon"><use href="static/images/fire.svg#icon"></use></svg></a><span data-i18n="common.header">Join Private Chatroom</span></h1>
-            <p class="subtitle" data-i18n="create.subtitle" data-i18n-html="true">A secure, anonymous open-source platform</p>
+            <h1>
+                <a href="/">
+                    <svg class="fire-icon">
+                        <use href="static/images/fire.svg#icon"></use>
+                    </svg>
+                </a>
+                <span data-i18n="join.header">Join Private Chatroom</span>
+            </h1>
+            <p class="subtitle" data-i18n="join.subtitle" data-i18n-html="true">
+              A secure, anonymous open-source platform
+            </p>
             <div class="features">
-                <div class="feature-item">•<span data-i18n="create.features.noHistory">No history</span></div>
-                <div class="feature-item">•<span data-i18n="create.features.noTracking">No tracking</span></div>
-                <div class="feature-item">•<span data-i18n="create.features.noDatabase">No database</span></div>
+                <div class="feature-item">
+                    • <span data-i18n="join.features.noHistory">No history</span>
+                </div>
+                <div class="feature-item">
+                    • <span data-i18n="join.features.noTracking">No tracking</span>
+                </div>
+                <div class="feature-item">
+                    • <span data-i18n="join.features.noDatabase">No database</span>
+                </div>
             </div>
             <hr class="header-hr">
         </header>
 
+        <div id="languageSelector" class="language-selector-container"></div>
         <main class="content">
             <div class="room-form">
                 <!-- Room ID Section -->
                 <div class="code-section">
                     <div class="code-row">
-                        <input type="text" id="roomId" maxlength="70" placeholder="Room ID" class="custom-input">
-                        <!-- <div class="char-counter" id="roomIdCounter"></div> -->
+                        <input type="text" id="roomId" maxlength="70"
+                               data-i18n-placeholder="join.roomIdPlaceholder" placeholder="Room ID"
+                               class="custom-input">
                     </div>
                 </div>
 
-                <!-- Token Info Section (shown if token hint exists) -->
+                <!-- Token Hint Section -->
                 <div id="tokenHintSection" class="token-hint" style="display: none;">
-                    <p>Token hint: <span id="tokenHint"></span></p>
+                    <p>
+                      <span data-i18n="join.tokenHintLabel">Token hint:</span>
+                      <span id="tokenHint"></span>
+                    </p>
                 </div>
 
                 <!-- Token Input Section -->
                 <div id="tokenSection" class="code-section" style="display: none;">
                     <div class="code-row">
-                        <input type="text" id="room_token" maxlength="70" placeholder="Access token" class="custom-input">
+                        <input type="text" id="room_token" maxlength="70"
+                               data-i18n-placeholder="join.tokenPlaceholder" placeholder="Access token"
+                               class="custom-input">
                     </div>
                 </div>
 
                 <!-- Nickname Section -->
                 <div class="nickname-form">
                     <div class="input-group">
-                        <input type="text" id="username" maxlength="35" placeholder="Nickname (Click icon to auto create)">
+                        <input type="text" id="username" maxlength="35"
+                               data-i18n-placeholder="join.nicknamePlaceholder"
+                               placeholder="Nickname (Click icon to auto create)">
                         <button id="generateUsername" class="icon-button">
-                            <svg class="pencil-icon"><use href="static/images/pencil.svg#icon"></use></svg>
+                            <svg class="pencil-icon">
+                                <use href="static/images/pencil.svg#icon"></use>
+                            </svg>
                         </button>
                     </div>
                 </div>
 
-                <p class="legal-text" data-i18n="create.legal" data-i18n-html="true">By using this service, you agree to our <a href="static/i18n/en/tos.html" class="hyperlink" href="tos" target="_blank">Terms of Service</a> and <a href="static/i18n/en/privacy.html" class="hyperlink" href="privacy" target="_blank">Privacy Policy</a></p>
-                <button id="joinBtn" class="primary-button">Join Private Room</button>
+                <p class="legal-text" data-i18n="create.legal" data-i18n-html="true">
+                  By using this service, you agree to our <a href="static/i18n/en/tos.html" class="hyperlink" target="_blank">Terms of Service</a> and
+                  <a href="static/i18n/en/privacy.html" class="hyperlink" target="_blank">Privacy Policy</a>
+                </p>
+                <button id="joinBtn" class="primary-button" data-i18n="join.joinButton">
+                  Join Private Room
+                </button>
             </div>
         </main>
     </div>

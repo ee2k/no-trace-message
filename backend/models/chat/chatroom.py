@@ -1,4 +1,4 @@
-from datetime import datetime, UTC
+from datetime import datetime, UTC, timedelta
 from typing import List, Optional
 from .message import Message
 from pydantic import BaseModel, Field, validator, model_validator
@@ -121,9 +121,12 @@ class PrivateRoom(BaseModel):
     def add_message(self, message: Message) -> None:
         self.messages.append(message)
 
+    def update_expiry(self, timeout: timedelta = timedelta(minutes=30)) -> None:
+        self.expires_at = datetime.now(UTC) + timeout
+
     def is_expired(self) -> bool:
         if self.expires_at is None:
-            return False  # Room never expires if expires_at is None
+            return False
         return datetime.now(UTC) > self.expires_at
 
     def to_dict(self) -> dict:

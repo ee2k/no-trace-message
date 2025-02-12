@@ -6,7 +6,7 @@ import { i18n } from '../utils/i18n.js';
 class MessagePage {
     static async initialize() {
         if (!(await checkBrowser())) return;
-        await i18n.loadTranslations(i18n.currentLocale);
+        await i18n.loadTranslations(i18n.currentLocale, null, 'common');
         i18n.updateTranslations();
         return new MessagePage();
     }

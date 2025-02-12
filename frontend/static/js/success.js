@@ -4,7 +4,7 @@ import { i18n } from './utils/i18n.js';
 class SuccessPage {
     static async initialize() {
         try {
-            await i18n.loadTranslations(i18n.currentLocale);
+            await i18n.loadTranslations(i18n.currentLocale, null, 'common');
             i18n.updateTranslations();
         } catch (error) {
             console.warn('Failed to load translations:', error);

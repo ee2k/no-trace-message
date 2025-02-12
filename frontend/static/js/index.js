@@ -1,4 +1,3 @@
-// import { initSvgIcons } from './global.js';
 import { loadComponent } from './utils/components.js';
 import { i18n } from './utils/i18n.js';
 import { LanguageSelector } from './components/languageSelector.js';
@@ -24,9 +23,7 @@ class IndexPage {
         try {
             // Load header component
             await loadComponent('headerComponent', '/components/header');
-            // Initialize global features
-            // initSvgIcons();
-            await i18n.loadTranslations(i18n.currentLocale, 'index');
+            await i18n.loadTranslations(i18n.currentLocale);
             i18n.updateTranslations();
             new LanguageSelector('languageSelector');
         } catch (error) {
