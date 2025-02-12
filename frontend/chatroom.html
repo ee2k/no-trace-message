@@ -24,9 +24,6 @@
                         <svg class="menu-icon icon-primary"><use href="static/images/nav_menu.svg#icon"></use></svg>
                     </button>
                     <div id="menuDropdown" class="menu-dropdown" hidden>
-                        <button class="menu-item" id="shareBtn">
-                            <span>Share Room Link</span>
-                        </button>
                         <button class="menu-item" id="leaveBtn">
                             <span>Leave Room</span>
                         </button>
@@ -61,22 +58,12 @@
         </footer>
     </div>
 
-    <!-- Share Dialog -->
-    <div class="share-dialog" id="shareDialog" hidden>
-        <h3>Share Private Chat</h3>
-        <div class="share-options">
-            <div class="share-link">
-                <input type="text" id="shareUrl" readonly>
-                <button id="copyLinkBtn">Copy Link</button>
-            </div>
-            <div class="share-code">
-                <input type="text" id="shareCode" readonly>
-                <button id="copyCodeBtn">Copy Code</button>
-            </div>
-        </div>
-        <p class="note">Links and codes expire in 1 hour if unused</p>
-        <button class="close-btn" id="closeShareDialog">Close</button>
+    <!-- Lightbox for enlarged images -->
+    <div class="lightbox" style="display: none;">
+        <button class="close-lightbox">&times;</button>
+        <img src="" alt="Enlarged image">
     </div>
+
     <script type="module" src="static/js/chat/chatroom.js"></script>
 </body>
 </html>

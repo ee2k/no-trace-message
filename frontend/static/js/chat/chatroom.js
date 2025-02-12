@@ -147,6 +147,24 @@ class ChatRoom {
             this.roomId = room_id; // if applicable
             this.room_token = room_token;   // if applicable
         }
+
+        this.lightbox = $('.lightbox');
+        if (this.lightbox) {
+            this.lightboxImage = this.lightbox.$('img');
+            // Close the lightbox when clicking outside the image or on the close button.
+            this.lightbox.addEventListener('click', (e) => {
+                if (e.target === this.lightbox || e.target.classList.contains('close-lightbox')) {
+                    this.closeLightbox();
+                }
+            });
+        }
+
+        // Add a delegated event listener so that when an image with the 'chat-image' class is clicked, the lightbox opens.
+        this.messages.addEventListener('click', (e) => {
+            if (e.target.tagName === 'IMG' && e.target.classList.contains('chat-image')) {
+                this.openLightbox(e.target.src);
+            }
+        });
     }
 
     setupMenu() {
@@ -161,10 +179,27 @@ class ChatRoom {
             this.menuDropdown.hidden = true;
         });
 
+        // Delete Room handler
         $('#deleteRoomBtn').addEventListener('click', () => {
             if (confirm('Are you sure to delete this room? This cannot be undone.')) {
-                this.ws.send(JSON.stringify({ message_type: 'delete_room' }));
-                // window.location.href = '/';
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    this.ws.send(JSON.stringify({ message_type: 'delete_room' }));
+                }
+            }
+            this.menuDropdown.hidden = true;
+        });
+
+        // Leave Room handler
+        $('#leaveBtn').addEventListener('click', () => {
+            if (confirm('Are you sure you want to leave the room?')) {
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    // Optionally send a leave notification to update the participant list
+                    this.ws.send(JSON.stringify({ message_type: 'leave_room' }));
+                    this.ws.close();
+                }
+                this.messages.innerHTML = '';  // Clear displayed chat messages
+                sessionStorage.clear();
+                window.location.href = '/';
             }
             this.menuDropdown.hidden = true;
         });
@@ -413,7 +448,15 @@ class ChatRoom {
                         case 'pong':
                             this.lastPong = Date.now();
                             break;
-                            
+                        case 'room_deleted':
+                            // Notify user, clear local data, and redirect to home
+                            this.addSystemMessage("This room has been deleted by " + data.username + ". Redirecting...");
+                            sessionStorage.clear();
+                            setTimeout(() => {
+                                this.messages.innerHTML = '';
+                                window.location.href = "/";
+                            }, 3000);
+                            break;
                         default:
                             this.handleMessage(data);
                     }
@@ -1365,6 +1408,20 @@ class ChatRoom {
         });
         this.updateRoomDisplay();
         this.updateMessageTimes();  // Force UI refresh
+    }
+
+    openLightbox(src) {
+        if (this.lightbox && this.lightboxImage) {
+            this.lightboxImage.src = src;
+            this.lightbox.style.display = 'flex';
+        }
+    }
+
+    closeLightbox() {
+        if (this.lightbox && this.lightboxImage) {
+            this.lightboxImage.src = '';
+            this.lightbox.style.display = 'none';
+        }
     }
 }
 // Initialize chat when page loads

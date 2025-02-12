@@ -12,7 +12,7 @@ from utils.chat_error_codes import ChatErrorCodes
 from models.chat.user import User, ParticipantStatus
 from pydantic import ValidationError
 from models.chat.chatroom import PrivateRoom
-from datetime import datetime, UTC, timedelta
+from datetime import datetime, UTC
 
 router = APIRouter()
 
@@ -329,7 +329,6 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 user.last_active = datetime.now(UTC)
                 message = json.loads(data)
 
-                # Add validation for empty messages
                 if not message:
                     await websocket.send_json({
                         "message_type": "error",
@@ -337,7 +336,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     })
                     continue
 
-                # Check for ping messages using the proper key
+                # Check for common control messages
                 if message.get("message_type") == "ping":
                     await websocket.send_json({
                         "message_type": "pong",
@@ -347,6 +346,36 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                 elif message.get("message_type") == "get_participants":
                     await websocket_manager.send_participant_list(room_id)
                     continue
+                elif message.get("message_type") == "delete_room":
+                    # Process room deletion request
+                    room_obj = await chatroom_manager.get_room(room_id)
+                    if room_obj:
+                        # Broadcast deletion notification to all participants
+                        await websocket_manager.broadcast(room_id, {
+                            "message_type": "room_deleted",
+                            "by": user.user_id,
+                            "username": user.username
+                        })
+                        # Now delete the room
+                        deleted = chatroom_manager.delete_private_room(room_id)
+                        if deleted:
+                            await websocket.close()
+                            break
+                        else:
+                            await websocket.send_json({
+                                "message_type": "error",
+                                "content": "Failed to delete room."
+                            })
+                    else:
+                        await websocket.send_json({
+                            "message_type": "error",
+                            "content": "Room does not exist."
+                        })
+                    continue
+                elif message.get("message_type") == "leave_room":
+                    # Process leave room request by closing the websocket connection
+                    await websocket.close()
+                    break
                 else:
                     try:
                         # Now validate and process messages that are not ping messages
