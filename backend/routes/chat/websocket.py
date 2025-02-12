@@ -376,6 +376,22 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
                     # Process leave room request by closing the websocket connection
                     await websocket.close()
                     break
+
+                elif message.get("message_type") == "clear_messages":
+                    # --- New Block: Handle clear messages ---
+                    room = await chatroom_manager.get_room(room_id)
+                    if room:
+                        # Clear all messages stored in the room on the server
+                        room.messages.clear()
+                        # Broadcast the clear message command to all participants 
+                        # along with a system message that includes the username.
+                        await websocket_manager.broadcast(room_id, {
+                            "message_type": "clear_messages",
+                            "username": user.username,
+                            "timestamp": time.time()
+                        })
+                    continue
+
                 else:
                     try:
                         # Now validate and process messages that are not ping messages

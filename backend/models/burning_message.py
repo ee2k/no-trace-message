@@ -52,7 +52,7 @@ class BurningMessage(BaseModel):
         """Convert message to API response format"""
         return {
             "id": self.id,
-            "room_token": self.token,
+            "token": self.token,
             "token_hint": self.token_hint,
             "burn_index": self.burn_index,
             "expiry_index": self.expiry_index,

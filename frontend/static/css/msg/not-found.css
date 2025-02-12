@@ -58,6 +58,12 @@ h1 {
     justify-content: center;
     gap: 0.5rem;
 }
+
+h1 a {
+    display: inline-flex;
+    align-items: center;
+}
+
 @media (max-width: 600px) {
     .language-selector-container {
         top: 0.2rem;

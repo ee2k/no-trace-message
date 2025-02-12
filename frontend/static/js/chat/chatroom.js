@@ -179,6 +179,18 @@ class ChatRoom {
             this.menuDropdown.hidden = true;
         });
 
+        // Clear Messages handler
+        $('#clearMsgBtn').addEventListener('click', () => {
+            if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                this.ws.send(JSON.stringify({
+                    message_type: 'clear_messages',
+                    sender_id: this.userId,
+                    timestamp: Date.now()
+                }));
+            }
+            this.menuDropdown.hidden = true;
+        });
+
         // Delete Room handler
         $('#deleteRoomBtn').addEventListener('click', () => {
             if (confirm('Are you sure to delete this room? This cannot be undone.')) {
@@ -560,10 +572,8 @@ class ChatRoom {
             
             case 'system':
                 if (data.code === 'FAILED_JOIN_ATTEMPT') {
-                    username = data.username
+                    const username = data.username;
                     const message = `Join attempt by ${username} was unsuccessful`;
-                    // Use i18n to format the message
-                    // const message = i18n.t('chat.failed_join_attempt', { username: data.username });
                     this.addSystemMessage(message);
                     return;
                 }
@@ -600,6 +610,11 @@ class ChatRoom {
                     room_token: this.room_token
                 }));
                 this.updateRoomInfo();
+                break;
+            
+            case 'clear_messages':
+                this.messages.innerHTML = '';
+                this.addSystemMessage(data.username + " " + "cleared messages");
                 break;
             
             default:

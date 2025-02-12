@@ -1,9 +1,11 @@
+import { checkBrowser } from '../utils/browser_check.js';
 import { FONT_SIZES, BURN_TIMES } from '../constants.js';
 import { $ } from '../utils/dom.js';
 import { i18n } from '../utils/i18n.js';
 
 class MessagePage {
     static async initialize() {
+        if (!(await checkBrowser())) return;
         await i18n.loadTranslations(i18n.currentLocale);
         i18n.updateTranslations();
         return new MessagePage();
@@ -354,5 +356,4 @@ class MessagePage {
     }
 }
 
-// Initialize
 MessagePage.initialize();
