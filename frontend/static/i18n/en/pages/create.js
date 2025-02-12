@@ -15,11 +15,12 @@ export default {
     useAccessToken: 'Use access token',
     visible: 'Visible',
     validity: 'Validity',
-    tokenPlaceholder: '6~70 characters\n\na memorable line could be good~',
+    tokenPlaceholder: 'a memorable line could be good~',
     tokenHintPlaceholder: 'Optional token hint\n\ne.g., \'Our favorite coffee shop\'',
     validation: {
+      emptyCustomID: 'Please enter a custom message ID.',
       emptyMessage: 'Please enter a message or add images',
-      tokenLength: 'Password must be at least {{length}} characters',
+      emptyToken: 'Please enter a custom token.',
       maxImages: 'Only {{count}} image allowed. Please remove the existing image first.',
       fileType: 'File type {{type}} not supported',
       fileSize: 'File size exceeds {{size}}MB limit'

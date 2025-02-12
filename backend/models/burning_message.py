@@ -24,7 +24,8 @@ class BurningMessage(BaseModel):
     @validator('id')
     def validate_id(cls, v):
         # Simple validation for browser requests
-        if not re.match(r'^[\w-]{8,32}$', v):
+        # if not re.match(r'^[\w-]{8,32}$', v):
+        if len(v) < 1 or len(v) > 70:
             raise ValueError('Invalid message ID format')
         return v
 
@@ -37,8 +38,8 @@ class BurningMessage(BaseModel):
     @validator('token')
     def validate_token(cls, v):
         if v is not None and v != "":  # Only validate non-empty tokens
-            if len(v) < 6 or len(v) > 70:
-                raise ValueError('Token must be between 6 and 70 characters')
+            if len(v) < 1 or len(v) > 70:
+                raise ValueError('Token must be between 1 and 70 characters')
         return v
 
     @validator('font_size')

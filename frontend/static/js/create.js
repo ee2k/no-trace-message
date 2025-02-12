@@ -1,6 +1,6 @@
 import { FONT_SIZES } from './constants.js';
 import { $ } from './utils/dom.js';
-import { setupSlider, updateCharCounter } from './utils/ui.js';
+import { setupSlider } from './utils/ui.js';
 import { i18n } from './utils/i18n.js';
 
 class MessageCreator {
@@ -26,35 +26,29 @@ class MessageCreator {
         this.customTokenBtn = $('#customTokenBtn');
         this.tokenInputContainer = $('#tokenInputContainer');
         this.customToken = $('#customToken');
-        this.tokenCounter = $('#tokenCounter');
         this.tokenHint = $('#tokenHint');
-        this.hintCounter = $('#hintCounter');
         
-        this.MIN_TOKEN_LENGTH = 6;
+        this.MIN_TOKEN_LENGTH = 1;
         this.MAX_TOKEN_LENGTH = 70;
         
-        // Characters chosen for readability (no I,l,0,O etc.)
         this.TOKEN_CHARS = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         this.TOKEN_LENGTH = 8;
         
         this.setupEventListeners();
-        this.setupCharCounter();
         this.setupExpirySlider();
         this.setupBurnTimeSlider();
         this.setupTokenInput();
         this.setupTokenGenerator();
         this.setupFontSizeControls();
+        this.setupCustomIDSection();
         
-        // Initialize rate limiting
         this.initRateLimiting();
     }
     
     setupEventListeners() {
-        // Prevent browser from opening dropped files
         document.addEventListener('dragover', (e) => e.preventDefault());
         document.addEventListener('drop', (e) => e.preventDefault());
 
-        // Drag and drop handlers
         this.dropZone.addEventListener('click', () => this.fileInput.click());
         this.dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -69,35 +63,11 @@ class MessageCreator {
             this.handleFiles(e.dataTransfer.files);
         });
         
-        // File input handler
         this.fileInput.addEventListener('change', (e) => {
             this.handleFiles(e.target.files);
         });
         
-        // Create button handler
         this.createBtn.addEventListener('click', () => this.createMessage());
-    }
-    
-    setupCharCounter() {
-        const counter = document.createElement('div');
-        counter.className = 'char-counter';
-        counter.style.display = 'none';
-        this.messageInput.parentNode.insertBefore(counter, this.messageInput.nextSibling);
-        
-        this.messageInput.addEventListener('input', () => {
-            updateCharCounter(this.messageInput, counter, this.MAX_MESSAGE_LENGTH, {
-                warningThreshold: 100,
-                onValid: () => {
-                    this.messageInput.classList.remove('error', 'near-limit');
-                    this.createBtn.disabled = false;
-                },
-                onInvalid: () => {
-                    this.messageInput.classList.add('error');
-                    this.messageInput.classList.remove('near-limit');
-                    this.createBtn.disabled = true;
-                }
-            });
-        });
     }
     
     setupExpirySlider() {
@@ -117,48 +87,30 @@ class MessageCreator {
             e.preventDefault();
             const isHidden = !this.tokenInputContainer.classList.contains('show');
             
-            // Toggle button state
             this.customTokenBtn.classList.toggle('active');
             
-            // Show container before animation
             if (isHidden) {
                 this.tokenInputContainer.style.display = 'block';
-                // Small delay to ensure display: block is applied
                 setTimeout(() => {
                     this.tokenInputContainer.classList.add('show');
                 }, 10);
             } else {
                 this.tokenInputContainer.classList.remove('show');
-                // Hide after animation completes
                 setTimeout(() => {
                     this.tokenInputContainer.style.display = 'none';
-                }, 300); // Match transition duration
+                }, 300);
                 
                 this.customToken.value = '';
                 this.tokenHint.value = '';
-                this.customToken.dispatchEvent(new Event('input'));
-                this.tokenHint.dispatchEvent(new Event('input'));
             }
         });
 
-        // Token counter
         this.customToken.addEventListener('input', () => {
-            const remaining = this.MAX_TOKEN_LENGTH - this.customToken.value.length;
-            this.tokenCounter.textContent = remaining.toString();
-            
             if (this.customToken.value.length > 0 && this.customToken.value.length < this.MIN_TOKEN_LENGTH) {
-                this.tokenCounter.classList.add('error');
                 this.createBtn.disabled = true;
             } else {
-                this.tokenCounter.classList.remove('error');
                 this.createBtn.disabled = false;
             }
-        });
-
-        // Hint counter
-        this.tokenHint.addEventListener('input', () => {
-            const remaining = this.MAX_TOKEN_LENGTH - this.tokenHint.value.length;
-            this.hintCounter.textContent = remaining.toString();
         });
     }
     
@@ -168,7 +120,6 @@ class MessageCreator {
             e.preventDefault();
             const token = this.generateReadableToken();
             this.customToken.value = token;
-            // Trigger input event to update character counter
             this.customToken.dispatchEvent(new Event('input'));
         });
     }
@@ -185,20 +136,20 @@ class MessageCreator {
     handleFiles(files) {
         if (this.images.size >= this.MAX_IMAGES) {
             alert(i18n.t('create.validation.maxImages', { count: this.MAX_IMAGES }));
-            this.fileInput.value = '';  // Reset file input after alert
+            this.fileInput.value = '';
             return;
         }
         
         Array.from(files).slice(0, this.MAX_IMAGES - this.images.size).forEach(file => {
             if (!this.ALLOWED_TYPES.includes(file.type)) {
                 alert(i18n.t('create.validation.fileType').replace('{{type}}', file.type));
-                this.fileInput.value = '';  // Reset file input after type error
+                this.fileInput.value = '';
                 return;
             }
             
             if (file.size > this.MAX_IMAGE_SIZE) {
                 alert(i18n.t('create.validation.fileSize').replace('{{size}}', this.MAX_IMAGE_SIZE / 1024 / 1024));
-                this.fileInput.value = '';  // Reset file input after size error
+                this.fileInput.value = '';
                 return;
             }
             
@@ -219,7 +170,7 @@ class MessageCreator {
             preview.$('.remove-btn').addEventListener('click', () => {
                 this.images.delete(file);
                 preview.remove();
-                this.fileInput.value = '';  // Reset file input
+                this.fileInput.value = '';
             });
             
             this.imagePreviews.appendChild(preview);
@@ -232,13 +183,10 @@ class MessageCreator {
         const now = Date.now();
         const minute = 60 * 1000;
         
-        // Get or initialize browser requests from sessionStorage
         let browserRequests = JSON.parse(sessionStorage.getItem('create_requests') || '[]');
-        
-        // Clean old requests
         browserRequests = browserRequests
             .filter(time => (now - time) < minute)
-            .map(Number);  // Ensure numbers
+            .map(Number);
             
         sessionStorage.setItem('create_requests', JSON.stringify(browserRequests));
     }
@@ -252,17 +200,35 @@ class MessageCreator {
         
         const formData = new FormData();
         formData.append('message', message);
-        
         formData.append('expiry_index', $('#expiryTime').value);
         formData.append('burn_index', $('#burnTime').value);
         formData.append('font_size', this.fontSize);
         
+        const customIDElement = $('#customID');
+        if (customIDElement) {
+            const customIDBtn = $('#customIDBtn');
+            if (customIDBtn && customIDBtn.classList.contains('active')) {
+                const customIDValue = customIDElement.value.trim();
+                if (!customIDValue) {
+                    alert(i18n.t("create.validation.emptyCustomID"));
+                    customIDElement.classList.add('input-error');
+                    customIDElement.focus();
+                    setTimeout(() => customIDElement.classList.remove('input-error'), 400);
+                    return;
+                }
+                formData.append('custom_id', customIDValue);
+            }
+        }
+        
         const customToken = this.customToken.value.trim();
         const tokenHint = this.tokenHint.value.trim();
 
-        if (this.tokenInputContainer.style.display !== 'none' && customToken) {
-            if (customToken.length < this.MIN_TOKEN_LENGTH) {
-                alert(i18n.t('create.validation.tokenLength', { length: this.MIN_TOKEN_LENGTH }));
+        if (this.tokenInputContainer.style.display !== 'none') {
+            if (!customToken || customToken.length < this.MIN_TOKEN_LENGTH) {
+                alert(i18n.t('create.validation.emptyToken'));
+                this.customToken.classList.add('input-error');
+                this.customToken.focus();
+                setTimeout(() => this.customToken.classList.remove('input-error'), 400);
                 return;
             }
             formData.append('token', customToken);
@@ -284,7 +250,6 @@ class MessageCreator {
             const now = Date.now();
             const minute = 60 * 1000;
             
-            // Check browser limit
             let browserRequests = JSON.parse(sessionStorage.getItem('create_requests') || '[]');
             browserRequests = browserRequests.filter(time => (now - time) < minute);
             
@@ -292,11 +257,9 @@ class MessageCreator {
                 throw new Error(i18n.t('create.errors.tooManyRequests'));
             }
             
-            // Add new request timestamp
             browserRequests.push(now);
             sessionStorage.setItem('create_requests', JSON.stringify(browserRequests));
             
-            // Disable button during upload
             this.createBtn.disabled = true;
             this.createBtn.textContent += '...';
             
@@ -313,7 +276,6 @@ class MessageCreator {
             }
             
             if (!response.ok) {
-                // Handle error codes from backend (including rate limiting)
                 if (data.detail?.code) {
                     throw new Error(i18n.t(`create.errors.${data.detail.code}`));
                 }
@@ -323,8 +285,7 @@ class MessageCreator {
 
             console.log('Server response:', { status: response.status, statusText: response.statusText, data: data });
             
-            if (data.id) {  // Make sure we have a valid message ID
-                // Only store data and redirect on success
+            if (data.id) {
                 if (customToken) {
                     sessionStorage.setItem(`msg_token_${data.id}`, customToken);
                 }
@@ -350,7 +311,32 @@ class MessageCreator {
             this.fontSize = index;
         });
     }
+    
+    setupCustomIDSection() {
+        const customIDBtn = $('#customIDBtn');
+        const idInputContainer = $('#idInputContainer');
+        if (!customIDBtn || !idInputContainer) return;
+        const customID = $('#customID');
+        const idCounter = $('#idCounter');
+        customIDBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const isHidden = !idInputContainer.classList.contains('show');
+            customIDBtn.classList.toggle('active');
+            if (isHidden) {
+                idInputContainer.style.display = 'block';
+                setTimeout(() => {
+                    idInputContainer.classList.add('show');
+                }, 10);
+            } else {
+                idInputContainer.classList.remove('show');
+                setTimeout(() => {
+                    idInputContainer.style.display = 'none';
+                    customID.value = '';
+                    if (idCounter) idCounter.textContent = '70';
+                }, 300);
+            }
+        });
+    }
 }
 
-// Initialize
 MessageCreator.initialize();

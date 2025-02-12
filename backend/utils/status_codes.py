@@ -8,4 +8,4 @@ COMMON_STATUS_CODES = {
     CommonErrorCodes.FORBIDDEN: 403,
     CommonErrorCodes.UNAUTHORIZED: 401,
     CommonErrorCodes.INVALID_REQUEST: 400
-} 
+}

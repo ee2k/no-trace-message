@@ -21,8 +21,15 @@
 
             <div class="token-form" style="display: none;">
                 <p data-i18n="message.tokenRequired">Access token required:</p>
-                <div class="token-row"><textarea id="tokenInput" rows="3" data-i18n-placeholder="message.tokenPlaceholder" maxlength="70"></textarea></div>
-                <div id="tokenHintSection" class="token-hint" style="display: none;"><p><span data-i18n="message.tokenHint">Token hint:</span><span id="messageTokenHint"></span></p></div>
+                <div class="token-row">
+                    <input type="text" id="tokenInput" data-i18n-placeholder="message.tokenPlaceholder" maxlength="70" class="custom-input">
+                </div>
+                <div id="tokenHintSection" class="token-hint" style="display: none;">
+                    <p>
+                        <span data-i18n="message.tokenHint">Token hint:</span>
+                        <span id="messageTokenHint"></span>
+                    </p>
+                </div>
                 <button id="submitToken" class="button primary" data-i18n="message.submitToken">OK</button>
                 <p class="error-message" style="display: none;"></p>
             </div>
