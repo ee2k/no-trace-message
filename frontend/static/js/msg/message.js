@@ -212,12 +212,21 @@ class MessagePage {
             return;
         }
         
-        this.textContent.textContent = text;
+        // Convert any URLs in the text to clickable links.
+        this.textContent.innerHTML = this.linkify(text);
+        
         if (fontSize !== null && fontSize !== undefined) {
             this.textContent.style.fontSize = FONT_SIZES[fontSize];
         }
         this.textSkeleton.style.display = 'none';
         this.textContent.style.display = 'block';
+    }
+
+    // Helper function to convert URLs in a text string into clickable links.
+    linkify(text) {
+        // This simple regex matches http(s) URLs.
+        const urlRegex = /(\bhttps?:\/\/[^\s]+)/gi;
+        return text.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
     }
     
     async displayImage(imageData) {

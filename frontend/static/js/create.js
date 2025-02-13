@@ -277,10 +277,8 @@ class MessageCreator {
             
             if (!response.ok) {
                 if (data.detail?.code) {
-                    throw new Error(i18n.t(`create.errors.${data.detail.code}`));
+                    throw new Error(data.detail.code);
                 }
-                
-                throw new Error(i18n.t('create.errors.createFailed'));
             }
 
             console.log('Server response:', { status: response.status, statusText: response.statusText, data: data });
@@ -298,7 +296,13 @@ class MessageCreator {
             console.error('Error creating message:', error);
             this.createBtn.disabled = false;
             this.createBtn.textContent = i18n.t('create.createButton');
-            alert(error.message || i18n.t('create.errors.networkError'));
+            switch(error.message) {
+                case 'MESSAGE_ID_EXISTS':
+                    alert(i18n.t('create.errors.MESSAGE_ID_EXISTS'));
+                    break;
+                default:
+                    alert(i18n.t('create.errors.createFailed') + ":" + error.message);
+            }
         }
     }
 

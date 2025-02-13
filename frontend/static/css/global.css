@@ -80,9 +80,16 @@ button:hover {
     width: 36px;
     height: 36px;
 }
-.hyperlink {
+
+/* Add default link styling */
+a {
     color: var(--accent-color);
     text-decoration: none;
+}
+
+a:hover {
+    color: var(--accent-hover);
+    text-decoration: underline;
 }
 /* Mobile Responsiveness, always put this at the bottom */
 @media (max-width: 600px) {

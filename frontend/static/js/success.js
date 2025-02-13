@@ -1,5 +1,6 @@
 import { $, $$ } from './utils/dom.js';
 import { i18n } from './utils/i18n.js';
+import { prettyEncodeURL } from './utils/url.js'
 
 class SuccessPage {
     static async initialize() {
@@ -142,7 +143,7 @@ class SuccessPage {
             }
             
             // Update URL and token display
-            const baseUrl = `${window.location.origin}/message/${this.messageId}`;
+            const baseUrl = `${window.location.origin}/message/${prettyEncodeURL(this.messageId)}`;
             this.messageUrl.textContent = baseUrl;
             
             if (token) {

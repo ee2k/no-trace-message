@@ -1,5 +1,6 @@
 import { $, $$ } from '../utils/dom.js';
 import { i18n } from '../utils/i18n.js';
+import { prettyEncodeURL } from '../utils/url.js'
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -24,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Set up all the links and information
     const baseLink = `${baseUrl}/join-private-chatroom`;
-    const basicLink = `${baseLink}/${roomId}`;
+    const basicLink = `${baseLink}/${prettyEncodeURL(roomId)}`;
     
     // Populate spans
     $('#basicLink').textContent = basicLink;

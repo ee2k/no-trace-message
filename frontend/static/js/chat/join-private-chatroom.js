@@ -43,7 +43,7 @@ class JoinPrivateChatroomPage {
       pathParts.length === 1 && pathParts[0] === 'join-private-chatroom';
     const roomId = isBaseRoute ? null : pathParts[pathParts.length - 1];
     if (roomId) {
-      this.roomIdInput.value = roomId;
+      this.roomIdInput.value = decodeURIComponent(roomId);
       this.handleRoomMetadata(roomId);
     }
   }

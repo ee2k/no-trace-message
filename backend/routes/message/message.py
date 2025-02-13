@@ -124,7 +124,7 @@ async def create_message(
             if custom_id in message_store.messages:
                 raise HTTPException(
                     status_code=400,
-                    detail={"code": "MESSAGE_ID_EXISTS", "message": "Custom message ID already exists."}
+                    detail={"code": "MESSAGE_ID_EXISTS"}
                 )
             message_id = custom_id
         else:
