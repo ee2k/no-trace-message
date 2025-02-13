@@ -254,7 +254,7 @@ class MessageCreator {
             browserRequests = browserRequests.filter(time => (now - time) < minute);
             
             if (browserRequests.length >= 3) {
-                throw new Error(i18n.t('create.errors.tooManyRequests'));
+                throw new Error(i18n.t('create.errors.TOO_MANY_ATTEMPTS'));
             }
             
             browserRequests.push(now);

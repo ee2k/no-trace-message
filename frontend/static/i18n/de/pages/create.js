@@ -18,8 +18,9 @@ export default {
     tokenPlaceholder: '6~70 Zeichen\n\nEine einprägsame Zeile könnte gut sein~',
     tokenHintPlaceholder: 'Optionaler Token-Hinweis\n\nz.B. \'Unser Lieblingscafé\'',
     validation: {
+      emptyCustomID: 'Bitte geben Sie eine benutzerdefinierte Nachrichten-ID ein',
       emptyMessage: 'Bitte geben Sie eine Nachricht ein oder fügen Sie Bilder hinzu',
-      tokenLength: 'Passwort muss mindestens {{length}} Zeichen lang sein',
+      emptyToken: 'Bitte geben Sie einen benutzerdefinierten Token ein',
       maxImages: 'Nur {{count}} Bild erlaubt. Bitte entfernen Sie zuerst das vorhandene Bild',
       fileType: 'Dateityp {{type}} wird nicht unterstützt',
       fileSize: 'Dateigröße überschreitet {{size}}MB Limit'
@@ -34,7 +35,8 @@ export default {
       TOO_MANY_ATTEMPTS: 'Zu viele Anfragen. Bitte warten Sie einen Moment',
       SERVER_ERROR: 'Serverfehler. Bitte versuchen Sie es später erneut',
       createFailed: 'Nachricht konnte nicht erstellt werden. Bitte versuchen Sie es erneut',
-      networkError: 'Netzwerkfehler. Bitte versuchen Sie es später erneut'
+      networkError: 'Netzwerkfehler. Bitte versuchen Sie es später erneut',
+      MESSAGE_ID_EXISTS: 'Nachrichten-ID existiert bereits. Bitte wählen Sie eine andere.'
     }
   }
 } 

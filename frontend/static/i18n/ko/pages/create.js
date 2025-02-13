@@ -18,8 +18,9 @@ export default {
     tokenPlaceholder: '6~70자\n\n기억하기 쉬운 문구를 추천합니다~',
     tokenHintPlaceholder: '토큰 힌트 (선택사항)\n\n예: \'우리가 좋아하는 카페\'',
     validation: {
+      emptyCustomID: '사용자 지정 메시지 ID를 입력해 주세요',
       emptyMessage: '메시지를 입력하거나 이미지를 추가해 주세요',
-      tokenLength: '비밀번호는 {{length}}자 이상이어야 합니다',
+      emptyToken: '사용자 지정 토큰을 입력해 주세요',
       maxImages: '이미지는 {{count}}개만 허용됩니다. 기존 이미지를 먼저 삭제해 주세요',
       fileType: '{{type}} 파일 형식은 지원되지 않습니다',
       fileSize: '파일 크기가 {{size}}MB 제한을 초과했습니다'
@@ -34,7 +35,8 @@ export default {
       TOO_MANY_ATTEMPTS: '요청이 너무 많습니다. 잠시만 기다려 주세요',
       SERVER_ERROR: '서버 오류가 발생했습니다. 나중에 다시 시도해 주세요',
       createFailed: '메시지 생성에 실패했습니다. 다시 시도해 주세요',
-      networkError: '네트워크 오류가 발생했습니다. 나중에 다시 시도해 주세요'
+      networkError: '네트워크 오류가 발생했습니다. 나중에 다시 시도해 주세요',
+      MESSAGE_ID_EXISTS: '메시지 ID가 이미 존재합니다. 다른 것을 선택해 주세요'
     }
   }
 } 

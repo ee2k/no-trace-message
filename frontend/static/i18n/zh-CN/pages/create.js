@@ -18,8 +18,9 @@ export default {
     tokenPlaceholder: '6~70个字符\n\n可以是你们共同知道的信息~',
     tokenHintPlaceholder: '可选的令牌提示\n\n例如：\'我们最喜欢的咖啡店\'',
     validation: {
+      emptyCustomID: '请输入自定义消息ID。',
       emptyMessage: '请输入消息或添加图片',
-      tokenLength: '密码长度至少需要 {{length}} 个字符',
+      emptyToken: '请输入自定义令牌。',
       maxImages: '只能上传 {{count}} 张图片，请先删除现有图片',
       fileType: '不支持的文件类型 {{type}}',
       fileSize: '文件大小超过 {{size}}MB 限制'
@@ -34,7 +35,8 @@ export default {
       TOO_MANY_ATTEMPTS: '请求过于频繁，请稍等片刻',
       SERVER_ERROR: '服务器错误，请稍后重试',
       createFailed: '创建消息失败，请重试',
-      networkError: '网络错误，请稍后重试'
+      networkError: '网络错误，请稍后重试',
+      MESSAGE_ID_EXISTS: '消息ID已存在，请选择另一个。'
     }
   }
 }

@@ -18,8 +18,9 @@ export default {
     tokenPlaceholder: '6~70個字元\n\n可以是你們共同知道的資訊~',
     tokenHintPlaceholder: '可選的權杖提示\n\n例如：\'我們最喜歡的咖啡店\'',
     validation: {
+      emptyCustomID: '請輸入自訂訊息ID。',
       emptyMessage: '請輸入訊息或新增圖片',
-      tokenLength: '密碼長度至少需要 {{length}} 個字元',
+      emptyToken: '請輸入自訂令牌。',
       maxImages: '只能上傳 {{count}} 張圖片，請先刪除現有圖片',
       fileType: '不支援的檔案類型 {{type}}',
       fileSize: '檔案大小超過 {{size}}MB 限制'
@@ -34,7 +35,8 @@ export default {
       TOO_MANY_ATTEMPTS: '請求過於頻繁，請稍等片刻',
       SERVER_ERROR: '伺服器錯誤，請稍後重試',
       createFailed: '建立訊息失敗，請重試',
-      networkError: '網路錯誤，請稍後重試'
+      networkError: '網路錯誤，請稍後重試',
+      MESSAGE_ID_EXISTS: '訊息ID已存在，請選擇另一個。'
     }
   }
 }

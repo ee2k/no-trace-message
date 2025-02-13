@@ -18,8 +18,9 @@ export default {
     tokenPlaceholder: '6~70 caracteres\n\nPuede ser una frase memorable~',
     tokenHintPlaceholder: 'Pista opcional para el token\n\np.ej. \'Nuestro café favorito\'',
     validation: {
+      emptyCustomID: 'Por favor, ingresa un ID de mensaje personalizado',
       emptyMessage: 'Por favor, ingresa un mensaje o agrega imágenes',
-      tokenLength: 'La contraseña debe tener al menos {{length}} caracteres',
+      emptyToken: 'Por favor, ingresa un token personalizado',
       maxImages: 'Solo se permite {{count}} imagen. Por favor, elimina la imagen existente primero',
       fileType: 'Tipo de archivo {{type}} no soportado',
       fileSize: 'El tamaño del archivo excede el límite de {{size}}MB'
@@ -34,7 +35,8 @@ export default {
       TOO_MANY_ATTEMPTS: 'Demasiadas solicitudes. Por favor, espera un momento',
       SERVER_ERROR: 'Error del servidor. Por favor, inténtalo más tarde',
       createFailed: 'No se pudo crear el mensaje. Por favor, inténtalo de nuevo',
-      networkError: 'Error de red. Por favor, inténtalo más tarde'
+      networkError: 'Error de red. Por favor, inténtalo más tarde',
+      MESSAGE_ID_EXISTS: 'El ID del mensaje ya existe, por favor elige otro.'
     }
   }
 }

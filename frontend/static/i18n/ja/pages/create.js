@@ -18,8 +18,9 @@ export default {
     tokenPlaceholder: '6～70文字\n\n覚えやすいフレーズがおすすめです～',
     tokenHintPlaceholder: 'トークンのヒント（任意）\n\n例：\'お気に入りのカフェ\'',
     validation: {
+      emptyCustomID: 'カスタムメッセージIDを入力してください',
       emptyMessage: 'メッセージを入力するか画像を追加してください',
-      tokenLength: 'パスワードは{{length}}文字以上である必要があります',
+      emptyToken: 'カスタムトークンを入力してください',
       maxImages: '画像は{{count}}枚のみ許可されています。既存の画像を削除してください',
       fileType: 'ファイル形式{{type}}はサポートされていません',
       fileSize: 'ファイルサイズが{{size}}MBの制限を超えています'
@@ -34,7 +35,8 @@ export default {
       TOO_MANY_ATTEMPTS: 'リクエストが多すぎます。しばらくお待ちください',
       SERVER_ERROR: 'サーバーエラーが発生しました。後でもう一度お試しください',
       createFailed: 'メッセージの作成に失敗しました。もう一度お試しください',
-      networkError: 'ネットワークエラーが発生しました。後でもう一度お試しください'
+      networkError: 'ネットワークエラーが発生しました。後でもう一度お試しください',
+      MESSAGE_ID_EXISTS: 'メッセージIDは既に存在します。別のものを選んでください'
     }
   }
 } 

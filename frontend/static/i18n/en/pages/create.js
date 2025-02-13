@@ -36,7 +36,6 @@ export default {
       SERVER_ERROR: 'Server error. Please try again later.',
       createFailed: 'Failed to create message. Please try again.',
       networkError: 'Network error. Please try again later.',
-      tooManyRequests: 'Too many requests. Please wait a while.',
       MESSAGE_ID_EXISTS: 'Message ID exists, please choose another one.'
     }
   }

@@ -18,8 +18,9 @@ export default {
     tokenPlaceholder: '6~70 caractères\n\nUne phrase mémorable pourrait convenir~',
     tokenHintPlaceholder: 'Indice optionnel pour le jeton\n\nex : \'Notre café préféré\'',
     validation: {
+      emptyCustomID: 'Veuillez saisir un identifiant de message personnalisé',
       emptyMessage: 'Veuillez saisir un message ou ajouter des images',
-      tokenLength: 'Le mot de passe doit contenir au moins {{length}} caractères',
+      emptyToken: 'Veuillez saisir un jeton personnalisé',
       maxImages: 'Une seule image autorisée. Veuillez d\'abord supprimer l\'image existante',
       fileType: 'Type de fichier {{type}} non pris en charge',
       fileSize: 'La taille du fichier dépasse la limite de {{size}} Mo'
@@ -34,7 +35,8 @@ export default {
       TOO_MANY_ATTEMPTS: 'Trop de requêtes. Veuillez patienter un moment',
       SERVER_ERROR: 'Erreur serveur. Veuillez réessayer plus tard',
       createFailed: 'Échec de la création du message. Veuillez réessayer',
-      networkError: 'Erreur réseau. Veuillez réessayer plus tard'
+      networkError: 'Erreur réseau. Veuillez réessayer plus tard',
+      MESSAGE_ID_EXISTS: 'L\'identifiant du message existe déjà, veuillez en choisir un autre.'
     }
   }
 }
