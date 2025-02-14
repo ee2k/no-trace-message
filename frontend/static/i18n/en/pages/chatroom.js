@@ -1,6 +1,7 @@
 export default {
   chatroom: {
     title: "NoTrace Chat - Private Room",
+    homepage: "Homepage",
     status: {
       connected: "Connected",
       roomNotFound: "Room not found",

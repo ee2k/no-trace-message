@@ -103,7 +103,6 @@ class MessageStore:
         """Stream message content and delete after successful streaming"""
         try:
             message = self.messages[message_id]
-            Statistics().increment_messages_read()
             async for chunk in message.stream_content():
                 yield chunk
             await asyncio.sleep(0.1)  # Small delay to ensure client receives data

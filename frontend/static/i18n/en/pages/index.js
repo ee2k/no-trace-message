@@ -13,8 +13,7 @@ export default {
     // Section for the Burn after reading Message features
     burningMessage: {
       heading: "Burn after reading Message",
-      createButton: "Create Message",
-      getButton: "Get Message"
+      createButton: "Create Message"
     }
   }
 };

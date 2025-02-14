@@ -15,7 +15,7 @@ async function loadStats() {
         
         // Update message counts
         $('#messagesCreated').textContent = data.messages_created.toLocaleString();
-        $('#messagesRead').textContent = data.messages_read.toLocaleString();
+        // $('#messagesRead').textContent = data.messages_read.toLocaleString();
         
     } catch (error) {
         console.error('Error loading stats:', error);

@@ -1,5 +1,6 @@
 import { $ } from '../utils/dom.js';
 import { i18n } from '../utils/i18n.js';
+import { debug } from '../utils/debug.js';
 
 class ChatRoom {
     constructor() {
@@ -18,7 +19,6 @@ class ChatRoom {
         this.plusBtn = $('#plusBtn');
         this.plusMenu = $('#plusMenu');
         this.chatFooter = $('.chat-footer');
-        this.MAX_MESSAGE_LENGTH = 2000;
         this.messageQueue = [];
         this.isConnected = false;
         this.pingInterval = null;
@@ -33,7 +33,6 @@ class ChatRoom {
             window.location.origin,
             // Add other allowed origins here
         ]);
-        this.MAX_TEXT_LENGTH = 2000; // Characters
         this.MAX_IMAGE_SIZE = 3 * 1024 * 1024; // 3MB
         this.hasSentFirstMessage = false; // Track if first message has been sent
         this.reconnectAttempts = 0; // Track reconnection attempts
@@ -115,9 +114,7 @@ class ChatRoom {
         window.addEventListener('focus', () => {
             this.isWindowFocused = true;
             // Scroll to bottom if new messages arrived while unfocused
-            if (this.isAtBottom) {
-                this.scrollToBottom();
-            }
+            this.scrollIfAtBottom();
         });
         
         window.addEventListener('blur', () => {
@@ -166,6 +163,15 @@ class ChatRoom {
                 this.openLightbox(e.target.src);
             }
         });
+
+        this.formattedRoomId = '';
+    }
+
+    setFormattedRoomId() {
+        const decoded = decodeURIComponent(this.roomId);
+        this.formattedRoomId = decoded.length > 8 ? 
+            `${decoded.substring(0, 4)}…${decoded.substring(decoded.length - 4)}` : 
+            decoded;
     }
 
     setupMenu() {
@@ -317,7 +323,7 @@ class ChatRoom {
     
         // Optional: Check if the room in the session matches the URL.
         if (chatSession.room_id !== this.roomId) {
-            console.warn(`Room ID mismatch: session room (${chatSession.room_id}) vs URL room (${this.roomId}).`);
+            debug.warn(`Room ID mismatch: session room (${chatSession.room_id}) vs URL room (${this.roomId}).`);
         }
     
         try {
@@ -340,7 +346,7 @@ class ChatRoom {
                 this.room_token = chatSession.room_token;
                 if (!this.room_token) {
                     alert(i18n.t("chatroom.alert.tokenRequired"));
-                    console.error("Token is required for private rooms");
+                    debug.error("Token is required for private rooms");
                     window.location.href = '/join-private-chatroom';
                     return;
                 }
@@ -360,8 +366,8 @@ class ChatRoom {
             // Ensure initial scroll position
             setTimeout(() => this.scrollToBottom(), 100);
     
-            console.log('Retrieving token for room:', this.roomId);
-            console.log('SessionStorage on chatroom load:', JSON.stringify(sessionStorage));
+            debug.log('Retrieving token for room:', this.roomId);
+            debug.log('SessionStorage on chatroom load:', JSON.stringify(sessionStorage));
 
             // Add to init()
             // setInterval(() => {
@@ -370,10 +376,12 @@ class ChatRoom {
             //     }
             // }, 10000);  // Every 10 seconds
         } catch (error) {
-            console.error('Error initializing chat room:', error);
+            debug.error('Error initializing chat room:', error);
             this.handleRoomNotFound(); // Handle all errors as room not found
             this.updateRoomStatus();
         }
+
+        this.setFormattedRoomId();
     }
 
     buildWebSocketUrl() {
@@ -399,13 +407,13 @@ class ChatRoom {
     async connectWebSocket() {
         this.ws = new WebSocket(this.buildWebSocketUrl());
         
-        console.log('[WebSocket] Connecting to:', this.ws.url);
-        console.log('[WebSocket] Using token:', this.room_token ? 'Yes' : 'No');
-        console.log('[WebSocket] Room ID:', this.roomId);
+        debug.log('[WebSocket] Connecting to:', this.ws.url);
+        debug.log('[WebSocket] Using token:', this.room_token ? 'Yes' : 'No');
+        debug.log('[WebSocket] Room ID:', this.roomId);
         
         try {
             this.ws.onopen = () => {
-                console.log('[WebSocket] Connection established');
+                debug.log('[WebSocket] Connection established');
                 
                 // Send token immediately after connection using message_type
                 if (this.requiresToken && this.room_token) {
@@ -415,7 +423,7 @@ class ChatRoom {
                         room_id: this.roomId
                     };
                     this.ws.send(JSON.stringify(authMessage));
-                    console.log('Auth message sent:', authMessage);
+                    debug.log('Auth message sent:', authMessage);
                 }
                 
                 // Request participant list using message_type
@@ -446,13 +454,13 @@ class ChatRoom {
                     // Handle special cases before verification/decoding
                     switch(rawMessage.message_type) {
                         case 'auth':
-                            console.log('Auth received, setting user ID:', rawMessage.user_id);
+                            debug.log('Auth received, setting user ID:', rawMessage.user_id);
                             this.userId = rawMessage.user_id;
                             sessionStorage.setItem('current_user_id', this.userId);
                             return;  // Exit early after handling
                             
                         case 'auth_ack':
-                            console.log('Authentication successful');
+                            debug.log('Authentication successful');
                             return;  // Exit early after handling
                     }
 
@@ -462,15 +470,15 @@ class ChatRoom {
                     
                     this.handleMessage(data);
                     
-                    console.log('Processed message:', data);
+                    debug.log('Processed message:', data);
                 } catch (error) {
-                    console.error('Message processing error:', error);
+                    debug.error('Message processing error:', error);
                     this.addSystemMessage('Error processing message');
                 }
             };
 
             this.ws.onclose = (event) => {
-                console.log('[WebSocket] Connection closed:', event.code);
+                debug.log('[WebSocket] Connection closed:', event.code);
                 this.connectionState = this.connectionStates.DISCONNECTED;
                 this.isConnected = false;
                 clearInterval(this.pingInterval);
@@ -479,7 +487,7 @@ class ChatRoom {
                     case 1000: // Normal closure
                         this.addSystemMessage('Disconnected from chat');
                         this.addSystemMessage('Try refreshing or join the chatroom again');
-                        this.addSystemMessage('join-private-chatroom link')
+                        this.addSystemMessage(`<a href="/">${i18n.t("chatroom.homepage")}</a>`, true);
                         break;
                     case 1001: // Going away
                         this.addSystemMessage('Connection lost - page is navigating away');
@@ -498,8 +506,8 @@ class ChatRoom {
                         break;
                     case 4001:
                         this.addSystemMessage('Disconnected due to inactivity');
-                        this.addSystemMessage('Please refresh to rejoin');
-                        this.addSystemMessage('join-private-chatroom link')
+                        this.addSystemMessage('Please refresh or rejoin');
+                        this.addSystemMessage(`<a href="/">${i18n.t("chatroom.homepage")}</a>`, true);
                         break;
                     case 4003: // Custom: Invalid token
                         this.handleInvalidToken();
@@ -518,20 +526,20 @@ class ChatRoom {
             };
 
             this.ws.onerror = (error) => {
-                console.log('[WebSocket] Connection error:', error);
+                debug.log('[WebSocket] Connection error:', error);
                 this.isConnected = false;
                 this.connectionQuality = 'poor';
                 this.updateRoomStatus();
                 this.attemptReconnect();
             };
 
-            console.log('WebSocket auth message:', {
+            debug.log('WebSocket auth message:', {
                 message_type: 'auth',
                 room_token: this.room_token,
                 room_id: this.roomId
             });
         } catch (error) {
-            console.error('WebSocket connection error:', error);
+            debug.error('WebSocket connection error:', error);
             if (error.message.includes('404')) {
                 this.updateRoomStatus();
             } else {
@@ -550,7 +558,7 @@ class ChatRoom {
         
         // For other events, verify origin
         if (event.origin && !this.allowedOrigins.has(event.origin)) {
-            console.warn('Message from unauthorized origin:', event.origin);
+            debug.warn('Message from unauthorized origin:', event.origin);
             return false;
         }
         return true;
@@ -614,7 +622,7 @@ class ChatRoom {
             
             case 'participant_left':
                 this.participants.delete(data.user_id);
-                this.addSystemMessage(`${data.username} ✈️`);
+                this.addSystemMessage(`⇠ ${data.username}`);
                 this.updateRoomInfo();
                 break;
             
@@ -636,17 +644,13 @@ class ChatRoom {
                 break;
             
             case 'room_deleted':
+                sessionStorage.clear();
                 // Notify user, clear local data, and redirect to home
                 this.addSystemMessage("This room has been deleted by " + data.username);
-                this.addSystemMessage("Redirecting...");
-                sessionStorage.clear();
-                setTimeout(() => {
-                    this.messages.innerHTML = '';
-                    window.location.href = "/";
-                }, 3000);
+                this.updateRoomStatus();
                 break;
             default:
-                console.warn('Unknown message type:', data, data.message_type);
+                debug.warn('Unknown message type:', data, data.message_type);
         }
 
         // Handle pending scroll after message is processed
@@ -657,13 +661,13 @@ class ChatRoom {
         try {
             // Validate message ID before sending
             if (!message.message_id || typeof message.message_id !== 'string') {
-                console.error('Message missing valid ID:', message);
+                debug.error('Message missing valid ID:', message);
                 throw new Error('Message ID is required and must be a string');
             }
             
             // Add validation for required fields
             if (!message.content || !message.sender_id) {
-                console.error('Invalid message structure:', message);
+                debug.error('Invalid message structure:', message);
                 throw new Error('Message missing required fields');
             }
             
@@ -698,7 +702,7 @@ class ChatRoom {
                             timestamp: Date.now()
                         };
                         
-                        console.log('Sending formatted message:', messageData);
+                        debug.log('Sending formatted message:', messageData);
                         await this.ws.send(this.encodeMessage(messageData));
                         // Message sent successfully
                         this.updateMessageStatus(messageId, 'sent');
@@ -717,7 +721,7 @@ class ChatRoom {
                 }
             }
         } catch (error) {
-            console.error('Message sending error:', error);
+            debug.error('Message sending error:', error);
             throw error;
         }
     }
@@ -751,7 +755,7 @@ class ChatRoom {
             return `${timestamp}-${shortUUID}`;
         } catch (error) {
             // Ultimate fallback: timestamp + random string
-            console.error('UUID generation failed:', error);
+            debug.error('UUID generation failed:', error);
             const randStr = Math.random().toString(36).substr(2, 8);
             return `${timestamp}-${randStr}`;
         }
@@ -842,7 +846,7 @@ class ChatRoom {
         this.checkScrollPosition();
         const wasAtBottomBeforeAdd = this.isAtBottom;
 
-        console.log('Before adding message:', {
+        debug.log('Before adding message:', {
             wasAtBottomBeforeAdd,
             scrollHeight: this.chatArea.scrollHeight,
             clientHeight: this.chatArea.clientHeight,
@@ -919,14 +923,12 @@ class ChatRoom {
                             <img src="${objectUrl}" class="chat-image">
                         `;
                         
-                        if (this.isAtBottom) {
-                            this.scrollToBottom();
-                        }
+                        this.scrollIfAtBottom();
                     }
                 }
             };
         } catch (error) {
-            console.error('[Image Load] Error loading image:', error);
+            debug.error('[Image Load] Error loading image:', error);
             const messageContainer = this.messages.$(`[data-message-id="${message.message_id}"]`);
             if (messageContainer) {
                 const imageContainer = messageContainer.$('.image-container');
@@ -1001,15 +1003,8 @@ class ChatRoom {
     }
 
     updateRoomInfo() {
-        // Format room ID - show first 4 and last 4 characters
-        const roomIdLength = this.roomId.length;
-        const formattedRoomId = roomIdLength > 8 ? 
-            `${this.roomId.substring(0, 4)}...${this.roomId.substring(roomIdLength - 4)}` : 
-            this.roomId;
-
         this.participantCount = this.participants.size
-        // Update roomInfo with room ID and participant count
-        $('#roomInfo').textContent = `${formattedRoomId} 👤 ${this.participantCount}`;
+        $('#roomInfo').textContent = `${this.formattedRoomId} 👤 ${this.participantCount}`;
     }
 
     updateConnectionStatus() {
@@ -1049,7 +1044,7 @@ class ChatRoom {
         try {
             return JSON.stringify(message);  // Simply stringify the message
         } catch (error) {
-            console.error('Message encoding error:', error);
+            debug.error('Message encoding error:', error);
             throw new Error('Failed to encode message');
         }
     }
@@ -1079,7 +1074,7 @@ class ChatRoom {
             
             return message;
         } catch (error) {
-            console.error('Message decoding error:', error);
+            debug.error('Message decoding error:', error);
             throw new Error('Failed to decode message');
         }
     }
@@ -1091,18 +1086,18 @@ class ChatRoom {
             // If the meta call succeeds, assume the room exists.
             if (response.ok) {
                 return true;
-            } else if (response.status === 404 && responseData.detail?.code === 'ROOM_NOT_FOUND') {
+            } else if (response.status === 404 && response.detail?.code === 'ROOM_NOT_FOUND') {
                 // Room not found
                 return false;
             } else {
                 // For other statuses, you may choose to treat them as temporary
                 // or assume the room still exists. Here we log and assume exists.
-                console.warn("Unexpected response status while checking room existence:", response.status);
+                debug.warn("Unexpected response status while checking room existence:", response.status);
                 return true;
             }
         } catch (error) {
             // For network errors, log the error and return true so that transient issues don't cancel reconnection.
-            console.error("Error checking room existence:", error);
+            debug.error("Error checking room existence:", error);
             return true;
         }
     }
@@ -1118,13 +1113,13 @@ class ChatRoom {
             this.isReconnecting = true;
             this.reconnectAttempts++; // Increment here
             const delay = Math.min(this.RECONNECT_BASE_DELAY * Math.pow(2, this.reconnectAttempts), this.MAX_RECONNECT_DELAY);
-            console.log(`Next attempt in ${delay}ms (attempt ${this.reconnectAttempts})`);
+            debug.log(`Next attempt in ${delay}ms (attempt ${this.reconnectAttempts})`);
             this.reconnectTimeout = setTimeout(() => {
                 this.connectWebSocket();
                 this.isReconnecting = false;
             }, delay);
         } catch (error) {
-            console.error("Error during reconnection attempt:", error);
+            debug.error("Error during reconnection attempt:", error);
         }
     }
 
@@ -1141,14 +1136,14 @@ class ChatRoom {
                 timestamp: Date.now()
             };
 
-            console.log('Sending message:', message);  // Add debug log
+            debug.log('Sending message:', message);  // Add debug log
             await this.sendMessage(message);
             
             // Only clear input and reset height if message was sent successfully
             this.messageInput.value = '';
             this.messageInput.style.height = 'auto';
         } catch (error) {
-            console.error('Failed to send message:', error);
+            debug.error('Failed to send message:', error);
             this.addSystemMessage('Failed to send message. Please try again.');
         }
     }
@@ -1209,7 +1204,7 @@ class ChatRoom {
             }
 
         } catch (error) {
-            console.error('Image send failed:', error);
+            debug.error('Image send failed:', error);
             this.updateMessageStatus(messageId, 'failed');
         }
     }
@@ -1218,17 +1213,12 @@ class ChatRoom {
         this.connectionState = this.connectionStates.ROOM_NOT_FOUND;
         this.updateRoomStatus();
         this.addSystemMessage('Room not found.');
-        this.addSystemMessage('Redirecting...');
+        this.addSystemMessage(`<a href="/">${i18n.t("chatroom.homepage")}</a>`, true);
         
         // Clean up any existing connection
         if (this.ws) {
             this.ws.close();
         }
-        
-        // Redirect after short delay
-        setTimeout(() => {
-            window.location.href = '/';
-        }, 3000);
     }
 
     handleInvalidToken() {
@@ -1289,12 +1279,24 @@ class ChatRoom {
         return icons[status] || '';
     }
 
-    addSystemMessage(message) {
+    addSystemMessage(message, isHTML = false) {
         const messageDiv = document.createElement('div');
         messageDiv.className = 'message system';
-        messageDiv.textContent = message;
+        
+        if (isHTML) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(message, 'text/html');
+            messageDiv.appendChild(doc.body.firstChild);
+        } else {
+            messageDiv.textContent = message;
+        }
+        
         this.messages.appendChild(messageDiv);
         this.scrollToBottom();
+    }
+
+    scrollIfAtBottom() {
+        if (this.isAtBottom) this.scrollToBottom();
     }
 
     scrollToBottom() {
@@ -1319,7 +1321,7 @@ class ChatRoom {
             }
             this.scrollingInProgress = false;
 
-            console.log('[Scroll] scrollToBottom executed', {
+            debug.log('[Scroll] scrollToBottom executed', {
                 scrollTop: this.chatArea.scrollTop,
                 target,
                 diff: Math.abs(this.chatArea.scrollTop - target)
@@ -1395,7 +1397,7 @@ class ChatRoom {
             }
         }
 
-        console.log('[Scroll] checkScrollPosition', {
+        debug.log('[Scroll] checkScrollPosition', {
             scrollTop,
             clientHeight,
             scrollHeight,
@@ -1437,9 +1439,7 @@ class ChatRoom {
     handleViewportChange() {
         // Mobile browsers need this hack to handle keyboard properly
         setTimeout(() => {
-            if (this.isAtBottom) {
-                this.scrollToBottom(true);
-            }
+            this.scrollIfAtBottom();
         }, 300);
     }
 

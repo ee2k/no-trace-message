@@ -13,8 +13,7 @@ export default {
     // 阅后即焚消息功能部分
     burningMessage: {
       heading: "阅后即焚消息",
-      createButton: "创建消息",
-      getButton: "获取消息"
+      createButton: "创建消息"
     }
   }
 };

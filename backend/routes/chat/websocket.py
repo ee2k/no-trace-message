@@ -20,6 +20,8 @@ logger = logging.getLogger(__name__)
 
 chatroom_manager = ChatroomManager()
 
+INACTIVITY_TIMEOUT = 300  # 5 minutes for general chatrooms
+
 @singleton
 class WebSocketManager:
     def __init__(self):
@@ -99,6 +101,11 @@ class WebSocketManager:
             logger.error(f"Failed to add message to room: {str(e)}")
             return
 
+        # Update sender's status when sending a message
+        sender = next((p for p in room.participants if p.user_id == message.sender_id), None)
+        if sender:
+            sender.update_status(ParticipantStatus.ACTIVE)
+
         # Delivery logic
         first_attempt_failed = False
         delivered_count = 0
@@ -116,7 +123,6 @@ class WebSocketManager:
                     first_attempt_failed = True
 
         # Ack handling based on required recipients
-        sender = next((p for p in room.participants if p.user_id == message.sender_id), None)
         if sender and sender.is_connected():
             if message.content_type == ContentType.text and delivered_count == total_recipients:
                 await self.send_full_ack(sender, message)
@@ -252,7 +258,7 @@ class WebSocketManager:
                         await self.disconnect(participant, room_id)
                         continue
                     
-                    if current_time - participant.last_active.timestamp() > 20:
+                    if current_time - participant.last_active.timestamp() > INACTIVITY_TIMEOUT:
                         await self.disconnect(participant, room_id, 4001)
 
     async def broadcast_failed_join(self, room_id: str, username: str):
@@ -321,17 +327,19 @@ async def handle_websocket_messages(websocket: WebSocket, room_id: str, user: Us
                     if room_obj:
                         await websocket_manager.broadcast(room_id, {
                             "message_type": "room_deleted",
-                            "by": user.user_id,
                             "username": user.username
                         })
+
+                        for participant in room_obj.participants.copy():
+                            if participant.user_id != user.user_id:
+                                await websocket_manager.disconnect(participant, room_id, 4004)
+
+                        await websocket_manager.disconnect(user, room_id, 4004)
+
+                        # Delete the room after disconnecting everyone except initiator
                         if chatroom_manager.delete_private_room(room_id):
-                            await websocket.close()
+                            await websocket.close(code=4004)
                             return
-                        else:
-                            await websocket.send_json({
-                                "message_type": "error",
-                                "content": "Failed to delete room."
-                            })
                 case "leave_room":
                     await websocket.close()
                     return
