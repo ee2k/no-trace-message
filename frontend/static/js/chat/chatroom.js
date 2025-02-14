@@ -460,22 +460,7 @@ class ChatRoom {
                     this.verifyOrigin(event);
                     const data = this.decodeMessage(event.data);
                     
-                    switch(data.message_type) {
-                        case 'pong':
-                            this.lastPong = Date.now();
-                            break;
-                        case 'room_deleted':
-                            // Notify user, clear local data, and redirect to home
-                            this.addSystemMessage("This room has been deleted by " + data.username + ". Redirecting...");
-                            sessionStorage.clear();
-                            setTimeout(() => {
-                                this.messages.innerHTML = '';
-                                window.location.href = "/";
-                            }, 3000);
-                            break;
-                        default:
-                            this.handleMessage(data);
-                    }
+                    this.handleMessage(data);
                     
                     console.log('Processed message:', data);
                 } catch (error) {
@@ -512,6 +497,9 @@ class ChatRoom {
                 }
                 
                 this.updateRoomStatus();
+                this.participants.clear();  // Clear participant list
+                this.updateRoomDisplay();   // Refresh UI
+                this.attemptReconnect();
             };
 
             this.ws.onerror = (error) => {
@@ -584,8 +572,19 @@ class ChatRoom {
                 this.addSystemMessage(data.content);
                 break;
             
+            case 'ping':
+                // Respond to server's ping with a pong
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    this.ws.send(JSON.stringify({
+                        message_type: 'pong',
+                        timestamp: Date.now()
+                    }));
+                }
+                break;
+
             case 'pong':
                 this.lastPong = Date.now();
+                this.connectionQuality = 'good';
                 break;
             
             case 'participant_list':
@@ -621,6 +620,15 @@ class ChatRoom {
                 this.addSystemMessage(data.username + " " + "cleared messages");
                 break;
             
+            case 'room_deleted':
+                // Notify user, clear local data, and redirect to home
+                this.addSystemMessage("This room has been deleted by " + data.username + ". Redirecting...");
+                sessionStorage.clear();
+                setTimeout(() => {
+                    this.messages.innerHTML = '';
+                    window.location.href = "/";
+                }, 3000);
+                break;
             default:
                 console.warn('Unknown message type:', data, data.message_type);
         }
@@ -989,7 +997,7 @@ class ChatRoom {
 
         this.participantCount = this.participants.size
         // Update roomInfo with room ID and participant count
-        $('#roomInfo').textContent = `${formattedRoomId} 👤﹡ ${this.participantCount}`;
+        $('#roomInfo').textContent = `${formattedRoomId} 👤 ${this.participantCount}`;
     }
 
     updateConnectionStatus() {
@@ -1358,7 +1366,6 @@ class ChatRoom {
         const buffer = 15; // small margin of error
         const { scrollTop, clientHeight, scrollHeight } = this.chatArea;
         this.isAtBottom = scrollTop + clientHeight >= scrollHeight - buffer;
-        // console.log("=== checkScrollPosition - isAtBottom ", this.isAtBottom);
 
         // If at bottom, clear any pending new-message-indicator
         if (this.isAtBottom) {

@@ -10,18 +10,15 @@ class ParticipantStatus(Enum):
     ACTIVE = "active"
     IDLE = "idle"
     OFFLINE = "offline"
-    PENDING = "pending"  # For users who have room_token but haven't joined yet
 
 class User(BaseModel):
     user_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     username: str
     connection_id: Optional[str] = None
     websocket: Optional[WebSocket] = None
-    status: ParticipantStatus = ParticipantStatus.PENDING
+    status: ParticipantStatus = ParticipantStatus.IDLE
     joined_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     last_active: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    # is_creator: bool = False
-    # is_muted: bool = False
 
     model_config = {
         "use_enum_values": True,  # Serialize enums to their values

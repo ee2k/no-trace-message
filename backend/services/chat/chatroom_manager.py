@@ -79,7 +79,7 @@ class ChatroomManager:
         
         return True
 
-    def remove_private_room_participant(self, room_id: str, user_id: str) -> bool:
+    async def remove_private_room_participant(self, room_id: str, user_id: str) -> bool:
         """Remove a participant from a room"""
         room = self.get_room(room_id)
         if not room:
@@ -89,7 +89,7 @@ class ChatroomManager:
         for i, user in enumerate(room.participants):
             if user.user_id == user_id:
                 del room.participants[i]
-                room.last_activity = datetime.now(UTC)
+                await self.update_private_room_activity(room_id)
                 return True
         return False
 

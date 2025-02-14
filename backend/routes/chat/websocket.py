@@ -50,15 +50,20 @@ class WebSocketManager:
                 await self.send_participant_list(room_id)
 
     async def disconnect(self, user: User, room_id: str):
+        room = await chatroom_manager.get_room(room_id)
+        if room:
+            # Remove first, then broadcast
+            if room.remove_participant(user.user_id):
+                await self.broadcast(room_id, {
+                    "message_type": "participant_left",
+                    "user_id": user.user_id,
+                    "username": user.username
+                })
+                await self.send_participant_list(room_id)
+        
         if user.is_connected():
             user.clear_websocket()
             user.update_status(ParticipantStatus.OFFLINE)
-        
-        room = await chatroom_manager.get_room(room_id)
-        if room:
-            room.remove_participant(user.user_id)
-            # Force broadcast participant list after removal
-            await self.send_participant_list(room_id)
 
     async def send_participant_list(self, room_id: str):
         """Send participant list regardless of changes"""
@@ -207,18 +212,27 @@ class WebSocketManager:
     async def check_connections(self):
         """Periodically check connection health"""
         while True:
-            await asyncio.sleep(60)  # Match xx-second inactivity timeout
+            await asyncio.sleep(60)
             current_time = time.time()
-            # Iterate over a list of room IDs to avoid modifying the dictionary during iteration.
             room_ids = list(chatroom_manager.rooms.keys())
             for room_id in room_ids:
-                # Retrieve the room via get_room, which cleans up expired rooms.
                 room = await chatroom_manager.get_room(room_id)
                 if not room:
                     continue
                 for participant in room.participants:
                     if participant.is_connected():
-                        # Check for inactivity (e.g., via last_active timestamp)
+                        try:
+                            # Try to send a ping to verify connection
+                            await participant.websocket.send_json({
+                                "message_type": "ping",
+                                "timestamp": current_time
+                            })
+                        except Exception:
+                            # If sending fails, disconnect the participant
+                            await self.disconnect(participant, room.room_id)
+                            continue
+                        
+                        # Check for inactivity
                         if current_time - participant.last_active.timestamp() > 60:
                             await self.disconnect(participant, room.room_id)
 
@@ -238,35 +252,117 @@ class WebSocketManager:
                 if participant.is_connected():
                     await participant.websocket.send_json(system_message)
 
-    # async def send_participant_list(self, room_id: str):
-    #     """Send participant list only when there's actual changes"""
-    #     room = await chatroom_manager.get_room(room_id)
-    #     if not room:
-    #         return
-        
-    #     current_state = hash(tuple((p.user_id, p.status) for p in room.participants))
-    #     if room.last_participant_state == current_state:
-    #         return  # No changes since last update
-        
-    #     room.last_participant_state = current_state  # Store hash of participant state
-    #     participants = [{"user_id": p.user_id, "username": p.username} for p in room.participants]
-    #     await self.broadcast(room_id, {
-    #         "message_type": "participant_list",
-    #         "participants": participants
-    #     })
-
     async def broadcast(self, room_id: str, message: dict):
         room = await chatroom_manager.get_room(room_id)
         if room:
             for participant in room.participants:
                 if participant.is_connected():
-                    await participant.websocket.send_json(message)
+                    try:
+                        await participant.websocket.send_json(message)
+                    except Exception as e:
+                        logger.error(f"Failed to broadcast to {participant.user_id}: {str(e)}")
+                        # Disconnect the participant if we can't send to them
+                        await self.disconnect(participant, room_id)
 
-    async def handle_disconnect(self, room_id: str, user_id: str, username: str):
-        # Implementation of handle_disconnect method
-        pass
 
 websocket_manager = WebSocketManager()
+
+async def handle_websocket_messages(websocket: WebSocket, room_id: str, user: User):
+    """Handle incoming WebSocket messages in a dedicated loop"""
+    while True:
+        try:
+            data = await websocket.receive_text()
+            user.last_active = datetime.now(UTC)
+            message = json.loads(data)
+
+            if not message:
+                await websocket.send_json({
+                    "message_type": "error",
+                    "content": "Empty message received"
+                })
+                continue
+
+            match message.get("message_type"):
+                case "auth":
+                    await websocket.send_json({
+                        "message_type": "auth_ack",
+                        "status": "ok"
+                    })
+                case "ping":
+                    await websocket.send_json({
+                        "message_type": "pong",
+                        "timestamp": datetime.now(UTC).isoformat()
+                    })
+                case "pong":
+                    user.last_active = datetime.now(UTC)
+                case "get_participants":
+                    await websocket_manager.send_participant_list(room_id)
+                case "delete_room":
+                    room_obj = await chatroom_manager.get_room(room_id)
+                    if room_obj:
+                        await websocket_manager.broadcast(room_id, {
+                            "message_type": "room_deleted",
+                            "by": user.user_id,
+                            "username": user.username
+                        })
+                        if chatroom_manager.delete_private_room(room_id):
+                            await websocket.close()
+                            return
+                        else:
+                            await websocket.send_json({
+                                "message_type": "error",
+                                "content": "Failed to delete room."
+                            })
+                case "leave_room":
+                    await websocket.close()
+                    return
+                case "clear_messages":
+                    room = await chatroom_manager.get_room(room_id)
+                    if room:
+                        room.messages.clear()
+                        await websocket_manager.broadcast(room_id, {
+                            "message_type": "clear_messages",
+                            "username": user.username,
+                            "timestamp": time.time()
+                        })
+                case _:
+                    try:
+                        validated = Message.model_validate(message)
+                        if validated.content_type == ContentType.image:
+                            validated = ImageMessage(
+                                **validated.model_dump(),
+                                image_data=b''
+                            )
+                        else:
+                            validated = OutboundMessage(**validated.model_dump())
+                        
+                        if validated.message_type == "chat":
+                            if validated.sender_id != user.user_id:
+                                continue
+                            try:
+                                chatroom_manager.add_message_to_room(room_id, validated)
+                            except Exception as e:
+                                logger.error(f"Failed to add message to room: {str(e)}")
+                            await websocket_manager.send_message(room_id, validated)
+                        elif validated.message_type == "system":
+                            await websocket_manager.broadcast_system_message(
+                                room_id, validated.content
+                            )
+                    except ValidationError as e:
+                        logger.error(f"Invalid message: {str(e)}")
+
+        except json.JSONDecodeError:
+            logger.error("Invalid JSON message")
+            await websocket.send_json({
+                "message_type": "error",
+                "content": "Invalid JSON format"
+            })
+        except ValidationError as e:
+            logger.error(f"Invalid message format: {str(e)}")
+            await websocket.send_json({
+                "message_type": "error",
+                "content": f"Validation error: {str(e)}"
+            })
 
 @router.websocket("/chatroom/{room_id}")
 async def websocket_endpoint(websocket: WebSocket, room_id: str):
@@ -322,119 +418,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             "username": user.username
         })
 
-        # Main message loop
-        while True:
-            try:
-                data = await websocket.receive_text()
-                user.last_active = datetime.now(UTC)
-                message = json.loads(data)
-
-                if not message:
-                    await websocket.send_json({
-                        "message_type": "error",
-                        "content": "Empty message received"
-                    })
-                    continue
-
-                # Check for common control messages
-                if message.get("message_type") == "ping":
-                    await websocket.send_json({
-                        "message_type": "pong",
-                        "timestamp": datetime.now(UTC).isoformat()
-                    })
-                    continue
-                elif message.get("message_type") == "get_participants":
-                    await websocket_manager.send_participant_list(room_id)
-                    continue
-                elif message.get("message_type") == "delete_room":
-                    # Process room deletion request
-                    room_obj = await chatroom_manager.get_room(room_id)
-                    if room_obj:
-                        # Broadcast deletion notification to all participants
-                        await websocket_manager.broadcast(room_id, {
-                            "message_type": "room_deleted",
-                            "by": user.user_id,
-                            "username": user.username
-                        })
-                        # Now delete the room
-                        deleted = chatroom_manager.delete_private_room(room_id)
-                        if deleted:
-                            await websocket.close()
-                            break
-                        else:
-                            await websocket.send_json({
-                                "message_type": "error",
-                                "content": "Failed to delete room."
-                            })
-                    else:
-                        await websocket.send_json({
-                            "message_type": "error",
-                            "content": "Room does not exist."
-                        })
-                    continue
-                elif message.get("message_type") == "leave_room":
-                    # Process leave room request by closing the websocket connection
-                    await websocket.close()
-                    break
-
-                elif message.get("message_type") == "clear_messages":
-                    # --- New Block: Handle clear messages ---
-                    room = await chatroom_manager.get_room(room_id)
-                    if room:
-                        # Clear all messages stored in the room on the server
-                        room.messages.clear()
-                        # Broadcast the clear message command to all participants 
-                        # along with a system message that includes the username.
-                        await websocket_manager.broadcast(room_id, {
-                            "message_type": "clear_messages",
-                            "username": user.username,
-                            "timestamp": time.time()
-                        })
-                    continue
-
-                else:
-                    try:
-                        # Now validate and process messages that are not ping messages
-                        validated = Message.model_validate(message)
-                        
-                        # Convert to proper outbound type
-                        if validated.content_type == ContentType.image:
-                            validated = ImageMessage(
-                                **validated.model_dump(),
-                                image_data=b'',  # Will be populated from upload
-                            )
-                        else:
-                            validated = OutboundMessage(**validated.model_dump())
-                        
-                        if validated.message_type == "chat":
-                            if validated.sender_id != user_id:
-                                continue
-                            # Add message to room
-                            try:
-                                chatroom_manager.add_message_to_room(room_id, validated)
-                            except Exception as e:
-                                logger.error(f"Failed to add message to room: {str(e)}")
-                                continue
-                            await websocket_manager.send_message(room_id, validated)
-                        elif validated.message_type == "system":
-                            await websocket_manager.broadcast_system_message(
-                                room_id, validated.content
-                            )
-                    except ValidationError as e:
-                        logger.error(f"Invalid message: {str(e)}")
-
-            except json.JSONDecodeError:
-                logger.error("Invalid JSON message")
-                await websocket.send_json({
-                    "message_type": "error",
-                    "content": "Invalid JSON format"
-                })
-            except ValidationError as e:
-                logger.error(f"Invalid message format: {str(e)}")
-                await websocket.send_json({
-                    "message_type": "error",
-                    "content": f"Validation error: {str(e)}"
-                })
+        await handle_websocket_messages(websocket, room_id, user)
 
     except WebSocketDisconnect:
         logger.info(f"WebSocket disconnected: {user_id}")
@@ -442,12 +426,6 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
         if user:
             # Cleanup and notifications
             await websocket_manager.disconnect(user, room_id)
-            await websocket_manager.broadcast(room_id, {
-                "message_type": "participant_left",
-                "user_id": user.user_id,
-                "username": user.username
-            })
-            await websocket_manager.send_participant_list(room_id)
 
 def get_websocket_manager() -> WebSocketManager:
     """Dependency to get WebSocketManager instance"""

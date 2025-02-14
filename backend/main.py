@@ -57,7 +57,7 @@ async def cleanup_inactive_chatrooms():
         await asyncio.sleep(60)  # Check every 60 seconds; adjust as needed
         chatroom_manager.cleanup_inactive_rooms()
         # Log cleanup for debugging purposes
-        print("Inactive chatrooms cleanup executed.")
+        logger.info("Inactive chatrooms cleanup executed.")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
