@@ -110,12 +110,11 @@ class PrivateRoom(BaseModel):
         return True
 
     def remove_participant(self, user_id: str) -> bool:
-        # Use list comprehension to find matching user
-        matching_users = [user for user in self.participants if user.user_id == user_id]
-        if not matching_users:
-            return False
-        self.participants.remove(matching_users[0])
-        return True
+        for i, user in enumerate(self.participants):
+            if user.user_id == user_id:
+                del self.participants[i]
+                return True
+        return False
 
     def add_message(self, message: Message) -> None:
         self.messages.append(message)

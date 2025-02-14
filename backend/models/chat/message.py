@@ -36,7 +36,7 @@ class Message(BaseModel):
 class OutboundMessage(Message):
     required_recipients: set[str] = Field(default_factory=set)
     delivered_to: set[str] = Field(default_factory=set)
-    expires_at: datetime = Field(default_factory=lambda: datetime.now(UTC) + timedelta(minutes=30))
+    expires_at: datetime = Field(default_factory=lambda: datetime.now(UTC) + timedelta(minutes=5))
 
     def mark_delivered(self, user_id: str) -> None:
         self.delivered_to.add(user_id)

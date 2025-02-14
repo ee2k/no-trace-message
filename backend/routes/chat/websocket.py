@@ -25,7 +25,7 @@ class WebSocketManager:
     def __init__(self):
         # Removed local rooms variable; using chatroom_manager.rooms instead.
         # self.rooms: dict[str, PrivateRoom] = {}  # room_id -> PrivateRoom
-        pass
+        self.room_check_tasks: dict[str, asyncio.Task] = {}  # room_id -> check task
 
     async def connect(self, websocket: WebSocket, room_id: str, user: User):
         # Set user's WebSocket connection and mark active FIRST
@@ -49,21 +49,26 @@ class WebSocketManager:
                 # Immediately broadcast updated participant list
                 await self.send_participant_list(room_id)
 
-    async def disconnect(self, user: User, room_id: str):
+    async def disconnect(self, user: User, room_id: str, close_code: int = 1000):
+        logger.debug(f"=== disconnect {user.username}")
+        if not user.is_disconnected():
+            logger.debug(f'=== clear_websocket for {user.username}')
+            user.clear_websocket(close_code)
+            user.update_status(ParticipantStatus.OFFLINE)
+
         room = await chatroom_manager.get_room(room_id)
         if room:
             # Remove first, then broadcast
             if room.remove_participant(user.user_id):
+                logger.debug(f'=== remove_participant for {user.username} successful')
                 await self.broadcast(room_id, {
                     "message_type": "participant_left",
                     "user_id": user.user_id,
                     "username": user.username
                 })
+                logger.debug(f'=== after broadcast for {user.username} removal')
                 await self.send_participant_list(room_id)
-        
-        if user.is_connected():
-            user.clear_websocket()
-            user.update_status(ParticipantStatus.OFFLINE)
+                logger.debug(f'=== after send_participant_list for {user.username} removal')
 
     async def send_participant_list(self, room_id: str):
         """Send participant list regardless of changes"""
@@ -209,32 +214,46 @@ class WebSocketManager:
                 return
             await asyncio.sleep(5)
 
-    async def check_connections(self):
-        """Periodically check connection health"""
+    async def start_room_checks(self, room_id: str):
+        """Start connection checks for a specific room"""
+        if room_id not in self.room_check_tasks or self.room_check_tasks[room_id].done():
+            self.room_check_tasks[room_id] = asyncio.create_task(
+                self._check_room_connections(room_id)
+            )
+
+    async def stop_room_checks(self, room_id: str):
+        """Stop connection checks for a room"""
+        if task := self.room_check_tasks.get(room_id):
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+            del self.room_check_tasks[room_id]
+
+    async def _check_room_connections(self, room_id: str):
+        """Room-specific connection checking"""
         while True:
             await asyncio.sleep(60)
+            room = await chatroom_manager.get_room(room_id)
+            if not room or not room.participants:
+                await self.stop_room_checks(room_id)
+                return
+
             current_time = time.time()
-            room_ids = list(chatroom_manager.rooms.keys())
-            for room_id in room_ids:
-                room = await chatroom_manager.get_room(room_id)
-                if not room:
-                    continue
-                for participant in room.participants:
-                    if participant.is_connected():
-                        try:
-                            # Try to send a ping to verify connection
-                            await participant.websocket.send_json({
-                                "message_type": "ping",
-                                "timestamp": current_time
-                            })
-                        except Exception:
-                            # If sending fails, disconnect the participant
-                            await self.disconnect(participant, room.room_id)
-                            continue
-                        
-                        # Check for inactivity
-                        if current_time - participant.last_active.timestamp() > 60:
-                            await self.disconnect(participant, room.room_id)
+            for participant in room.participants:
+                if participant.is_connected():
+                    try:
+                        await participant.websocket.send_json({
+                            "message_type": "ping",
+                            "timestamp": current_time
+                        })
+                    except Exception:
+                        await self.disconnect(participant, room_id)
+                        continue
+                    
+                    if current_time - participant.last_active.timestamp() > 20:
+                        await self.disconnect(participant, room_id, 4001)
 
     async def broadcast_failed_join(self, room_id: str, username: str):
         """Broadcast failed join attempt to room participants"""
@@ -418,14 +437,21 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             "username": user.username
         })
 
+        # Start room checks when first participant joins
+        if len(room.participants) == 1:  # After adding the new user
+            await websocket_manager.start_room_checks(room_id)
+
         await handle_websocket_messages(websocket, room_id, user)
 
     except WebSocketDisconnect:
-        logger.info(f"WebSocket disconnected: {user_id}")
+        logger.debug(f"WebSocket disconnected: {user.user_id if user else 'unknown'}")
     finally:
         if user:
-            # Cleanup and notifications
             await websocket_manager.disconnect(user, room_id)
+            # Stop checks if last participant
+            room = await chatroom_manager.get_room(room_id)
+            if room and not room.participants:
+                await websocket_manager.stop_room_checks(room_id)
 
 def get_websocket_manager() -> WebSocketManager:
     """Dependency to get WebSocketManager instance"""

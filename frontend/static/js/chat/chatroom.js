@@ -470,36 +470,51 @@ class ChatRoom {
             };
 
             this.ws.onclose = (event) => {
-                console.log('[WebSocket] Connection closed:', event);
+                console.log('[WebSocket] Connection closed:', event.code);
                 this.connectionState = this.connectionStates.DISCONNECTED;
                 this.isConnected = false;
                 clearInterval(this.pingInterval);
                 
-                // Handle closure even if connection state was "CONNECTED"
                 switch (event.code) {
-                    case 4004: // ROOM_NOT_FOUND
-                        this.handleRoomNotFound();
+                    case 1000: // Normal closure
+                        this.addSystemMessage('Disconnected from chat');
+                        this.addSystemMessage('Try refreshing or join the chatroom again');
+                        this.addSystemMessage('join-private-chatroom link')
                         break;
-                    case 4003: // INVALID_TOKEN
+                    case 1001: // Going away
+                        this.addSystemMessage('Connection lost - page is navigating away');
+                        break;
+                    case 1002: // Protocol error
+                        this.addSystemMessage('Connection error - please refresh');
+                        break;
+                    case 1003: // Unsupported data
+                        this.addSystemMessage('Invalid message format');
+                        break;
+                    case 1008: // Policy violation
+                        this.addSystemMessage('Disconnected due to policy violation');
+                        break;
+                    case 1011: // Server error
+                        this.addSystemMessage('Server error - please try again later');
+                        break;
+                    case 4001:
+                        this.addSystemMessage('Disconnected due to inactivity');
+                        this.addSystemMessage('Please refresh to rejoin');
+                        this.addSystemMessage('join-private-chatroom link')
+                        break;
+                    case 4003: // Custom: Invalid token
                         this.handleInvalidToken();
                         break;
-                    case 1000: // NORMAL_CLOSURE
-                        this.addSystemMessage('Connection closed normally');
-                        break;
-                    case 1005: // NO_STATUS_CODE (server restart)
-                        // Treat this as a potential room expiration and check existence
-                        this.attemptReconnect();
+                    case 4004: // Custom: Room not found
+                        this.handleRoomNotFound();
                         break;
                     default:
-                        if (!event.wasClean) {
-                            this.attemptReconnect();
-                        }
+                        this.addSystemMessage('Connection lost');
+                        this.addSystemMessage(i18n.t("chatroom.status.reconnecting"));
+                        this.attemptReconnect();
                 }
                 
                 this.updateRoomStatus();
-                this.participants.clear();  // Clear participant list
-                this.updateRoomDisplay();   // Refresh UI
-                this.attemptReconnect();
+                this.participants.clear();
             };
 
             this.ws.onerror = (error) => {
@@ -622,7 +637,8 @@ class ChatRoom {
             
             case 'room_deleted':
                 // Notify user, clear local data, and redirect to home
-                this.addSystemMessage("This room has been deleted by " + data.username + ". Redirecting...");
+                this.addSystemMessage("This room has been deleted by " + data.username);
+                this.addSystemMessage("Redirecting...");
                 sessionStorage.clear();
                 setTimeout(() => {
                     this.messages.innerHTML = '';
@@ -980,10 +996,6 @@ class ChatRoom {
     }
 
     updateRoomStatus() {
-        this.updateRoomDisplay();
-    }
-
-    updateRoomDisplay() {
         this.updateRoomInfo();
         this.updateConnectionStatus();
     }
@@ -1013,9 +1025,9 @@ class ChatRoom {
                 this.statusIcon.classList.add('not-found');
                 this.statusText.textContent = i18n.t("chatroom.status.roomNotFound");
                 // Optionally redirect after a delay
-                setTimeout(() => {
-                    // window.location.href = '/join-private-chatroom';
-                }, 3000);
+                // setTimeout(() => {
+                //     window.location.href = '/join-private-chatroom';
+                // }, 3000);
                 break;
             
             case this.connectionStates.CONNECTING:
@@ -1023,6 +1035,10 @@ class ChatRoom {
                 this.statusText.textContent = i18n.t("chatroom.status.connecting");
                 break;
             
+            case this.connectionStates.DISCONNECTED:
+                this.statusIcon.classList.add('disconnected');
+                this.statusText.textContent = i18n.t("chatroom.status.disconnected");
+                break;
             default:
                 this.statusIcon.classList.add('connecting');
                 this.statusText.textContent = i18n.t("chatroom.status.reconnecting");
@@ -1432,7 +1448,7 @@ class ChatRoom {
         message.participants.forEach(p => {
             this.participants.set(p.user_id, p.username);
         });
-        this.updateRoomDisplay();
+        this.updateRoomStatus();
         this.updateMessageTimes();  // Force UI refresh
     }
 

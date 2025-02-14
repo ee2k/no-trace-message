@@ -54,7 +54,7 @@ async def cleanup_inactive_chatrooms():
     # Since ChatroomManager is a singleton, this returns the shared instance
     
     while True:
-        await asyncio.sleep(60)  # Check every 60 seconds; adjust as needed
+        await asyncio.sleep(120)
         chatroom_manager.cleanup_inactive_rooms()
         # Log cleanup for debugging purposes
         logger.info("Inactive chatrooms cleanup executed.")
@@ -70,13 +70,11 @@ async def lifespan(app: FastAPI):
         logger.info("Application startup complete")
         
         # Launch background tasks
-        websocket_conn_task = asyncio.create_task(websocket_manager.check_connections())
         cleanup_chatrooms_task = asyncio.create_task(cleanup_inactive_chatrooms())
         
         yield
         
         # On shutdown, cancel the background tasks
-        websocket_conn_task.cancel()
         cleanup_chatrooms_task.cancel()
     finally:
         # Shutdown: Cleanup resources

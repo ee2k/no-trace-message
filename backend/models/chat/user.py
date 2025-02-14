@@ -5,6 +5,10 @@ from pydantic import BaseModel, validator, Field
 import uuid
 from fastapi import WebSocket
 from starlette.websockets import WebSocketState
+import asyncio
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ParticipantStatus(Enum):
     ACTIVE = "active"
@@ -42,12 +46,24 @@ class User(BaseModel):
         self.websocket = websocket
         self.connection_id = str(id(websocket))
 
-    def clear_websocket(self) -> None:
-        self.websocket = None
-        self.connection_id = None
+    def clear_websocket(self, close_code: int = 1000) -> None:
+        if self.websocket:
+            try:
+                # Close the WebSocket connection if it's still open
+                if self.websocket.client_state == WebSocketState.CONNECTED:
+                    # Use asyncio to properly close the connection with a specific code
+                    asyncio.create_task(self.websocket.close(code=close_code))
+            except Exception as e:
+                logger.error(f"Error closing WebSocket: {str(e)}")
+            finally:
+                self.websocket = None
+                self.connection_id = None
 
     def is_connected(self) -> bool:
         return self.websocket is not None and self.websocket.client_state == WebSocketState.CONNECTED
+    
+    def is_disconnected(self) -> bool:
+        return self.websocket is not None and self.websocket.client_state != WebSocketState.CONNECTED
 
     def to_dict(self) -> dict:
         # return {

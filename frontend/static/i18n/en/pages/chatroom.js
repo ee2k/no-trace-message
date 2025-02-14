@@ -5,7 +5,8 @@ export default {
       connected: "Connected",
       roomNotFound: "Room not found",
       connecting: "Connecting...",
-      reconnecting: "Reconnecting..."
+      reconnecting: "Reconnecting...",
+      disconnected: "Disconnected"
     },
     menu: {
       clearMessages: "Clear Messages",
