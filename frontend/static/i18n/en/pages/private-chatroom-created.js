@@ -16,9 +16,15 @@ export default {
     },
     tokenHintLabel: "Token hint:",
     joinButton: "Join Chatroom",
-    shareTitle: "Join Private Chatroom"
-  },
-  error: {
-    roomIdNotFound: "Room ID not found"
+    shareTitle: "Join Private Chatroom",
+    share: {
+      title: 'Private Chatroom',
+      instruction: 'Please use this link in your browser to see the message',
+      tokenTitle: 'Token for private chatroom',
+      roomIdTitle: 'Chatroom ID'
+    },
+    error: {
+      roomIdNotFound: "Room ID not found"
+    }
   }
 };

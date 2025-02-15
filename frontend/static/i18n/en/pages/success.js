@@ -16,6 +16,7 @@ export default {
       instruction: 'Please use this link in your browser to see the message'
     },
     token: {
+      name: "One-Time Access Token",
       instruction: "Please pass the one-time token securely :",
       hint: "Token hint:"
     },

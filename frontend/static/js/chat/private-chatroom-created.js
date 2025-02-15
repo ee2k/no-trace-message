@@ -1,6 +1,7 @@
 import { $, $$ } from '../utils/dom.js';
 import { i18n } from '../utils/i18n.js';
 import { prettyEncodeURL } from '../utils/url.js'
+import { setupCopyButtons, setupShareButtons } from '../utils/copy-share.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -13,7 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Get room details from sessionStorage
     const roomId = sessionStorage.getItem('current_room_id');
     if (!roomId) {
-        alert(i18n.t("privateChatroomCreated.error.roomIdNotFound") || "Room ID not found");
+        alert(i18n.t("pagei18n.error.roomIdNotFound") || "Room ID not found");
         return;
     }
 
@@ -58,54 +59,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Setup copy buttons
-    $$('.copy-btn').forEach(button => {
-        button.addEventListener('click', async () => {
-            const targetId = button.dataset.clipboard;
-            const text = $('#' + targetId).textContent;
-            
-            try {
-                await navigator.clipboard.writeText(text);
-                
-                const normalContent = $('.btn-content', button);
-                const copiedContent = $('.btn-content-copied', button);
-                
-                // Show copied state
-                normalContent.style.display = 'none';
-                copiedContent.style.display = 'flex';
-                
-                // Revert after 2 seconds
-                setTimeout(() => {
-                    normalContent.style.display = 'flex';
-                    copiedContent.style.display = 'none';
-                }, 2000);
-            } catch (err) {
-                console.error('Failed to copy:', err);
-            }
-        });
-    });
+    setupCopyButtons();
 
-    // Setup share buttons if Web Share API is available
-    if (navigator.share) {
-        $$('.share-btn').forEach(btn => {
-            btn.style.display = 'flex';
-            btn.addEventListener('click', async () => {
-                const targetId = btn.previousElementSibling.dataset.clipboard;
-                const text = $('#' + targetId).textContent;
-                const shareTitle = i18n.t("privateChatroomCreated.shareTitle") || "Join Private Chatroom";
-                
-                try {
-                    await navigator.share({
-                        title: shareTitle,
-                        text: text
-                    });
-                } catch (err) {
-                    if (err.name !== 'AbortError') {
-                        console.error('Error sharing:', err);
-                    }
-                }
-            });
-        });
-    }
+    // Setup share buttons
+    setupShareButtons();
 
     // Setup join button
     $('#joinBtn').addEventListener('click', () => {

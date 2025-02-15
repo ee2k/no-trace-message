@@ -28,7 +28,7 @@
                 <div class="url-container">
                     <p data-i18n="success.share.link">Share this link :</p>
                     <div class="url-box">
-                        <span id="messageUrl"></span>
+                        <span id="messageUrl" data-share-title="success.share.name" data-share-instruction="success.share.instruction"></span>
                         <div class="button-group">
                             <button class="copy-btn" data-clipboard="messageUrl" title="Copy" data-i18n-title="success.share.copy">
                                 <div class="btn-content">
@@ -46,8 +46,8 @@
                 <div id="tokenSection" class="token-section" style="display: none;">
                     <p data-i18n="success.token.instruction">Please pass the one-time token securely :</p>
                     <div class="token-box">
-                        <span id="messageToken">your-custom-token</span>
-                        <button class="copy-btn" data-clipboard="messageToken" title="Copy" data-i18n-title="success.share.copy">
+                        <span id="messageToken" data-share-title="success.token.name">your-custom-token</span>
+                        <button class="copy-btn" data-clipboard="messageToken" data-i18n-title="success.share.copy">
                             <div class="btn-content">
                                 <svg class="copy-icon"><use href="static/images/copy.svg#icon"></use></svg>
                             </div>
@@ -55,7 +55,7 @@
                                 <svg class="copy-icon"><use href="static/images/checkmark.svg#icon"></use></svg>
                             </div>
                         </button>
-                        <button class="share-btn" style="display: none;" title="Share" data-i18n-title="success.share.share">
+                        <button class="share-btn" style="display: none;" data-i18n-title="success.share.share">
                             <div class="btn-share"><svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg></div>
                         </button>
                     </div>

@@ -1,6 +1,7 @@
 import { $, $$ } from './utils/dom.js';
 import { i18n } from './utils/i18n.js';
 import { prettyEncodeURL } from './utils/url.js'
+import { setupCopyButtons, setupShareButtons } from './utils/copy-share.js';
 
 class SuccessPage {
     static async initialize() {
@@ -34,68 +35,11 @@ class SuccessPage {
         this.messageTokenHint = $('#messageTokenHint');
         this.tokenHintSection = $('#tokenHintSection');
         
-        this.setupCopyButtons();
-        this.setupShareButtons();
+        setupCopyButtons();
+        setupShareButtons();
         this.loadMessageMeta().then(() => {
             // Only remove from sessionStorage after successful load
             sessionStorage.removeItem('current_message_id');
-        });
-    }
-    
-    setupCopyButtons() {
-        $$('.copy-btn').forEach(button => {
-            button.addEventListener('click', async () => {
-                const targetId = button.dataset.clipboard;
-                const url = $('#' + targetId).textContent;
-                const text = `${i18n.t('success.share.name')}\n${i18n.t('success.share.instruction')}\n\n${url}`;
-                
-                try {
-                    await navigator.clipboard.writeText(text);
-                    
-                    const normalContent = button.$('.btn-content');
-                    const copiedContent = button.$('.btn-content-copied');
-                    
-                    // Show copied state
-                    normalContent.style.display = 'none';
-                    copiedContent.style.display = 'flex';
-                    
-                    // Revert after 2 seconds
-                    setTimeout(() => {
-                        normalContent.style.display = 'flex';
-                        copiedContent.style.display = 'none';
-                    }, 2000);
-                } catch (err) {
-                    console.error('Failed to copy:', err);
-                }
-            });
-        });
-    }
-
-    setupShareButtons() {
-        if (!navigator.share) {
-            return;
-        }
-
-        // Show all share buttons if Web Share API is supported
-        $$('.share-btn').forEach(btn => {
-            btn.style.display = 'flex';
-            
-            btn.addEventListener('click', async () => {
-                const targetId = btn.previousElementSibling.dataset.clipboard;
-                const url = $('#' + targetId).textContent;
-                const text = `${i18n.t('success.share.name')}\n${i18n.t('success.share.instruction')}\n\n${url}`;
-
-                try {
-                    await navigator.share({
-                        title: '',
-                        text: text
-                    });
-                } catch (err) {
-                    if (err.name !== 'AbortError') {
-                        console.error('Share failed:', err);
-                    }
-                }
-            });
         });
     }
 
