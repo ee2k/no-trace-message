@@ -1,48 +1,14 @@
-header {
-    text-align: center;
-    margin: 1rem;
-}
-h1 {
+/* Main layout and spacing */
+.content {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-}
-h1 a {
-    display: inline-flex;
-    align-items: center;
-}
-.subtitle {
-    color: var(--text-secondary);
-    margin: 0.5rem 0 0.5rem;
-}
-
-.features {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 1.5rem;
-    margin: 0.6rem 0;
-}
-
-.feature-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--text-secondary);
-}
-.header-hr {
-    border: none;
-    height: 0.1rem;
-    background-color: var(--bg-secondary);
-    margin: 1rem auto;
-    width: 90%;
 }
 .room-form {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    margin: 0 auto;
+    gap: 1.2rem;
+    width: 90%;
 }
 .nickname-form {
     width: 100%;
@@ -246,15 +212,10 @@ footer {
     animation: shake 0.4s ease-in-out;
 }
 
-/* Main layout and spacing */
-.content {
-    display: flex;
-    flex-direction: column;
-    margin: 0 auto;
-}
 .legal-text {
     text-align: center;
     font-size: 0.8rem;
+    opacity: 0.6;
 }
 /* Section spacing */
 .code-section {
@@ -270,30 +231,15 @@ footer {
 /* Always put screen size media queries at the end of the file */
 /* For very small screens and mobile devices */
 @media (max-width: 600px) {
-    h1 {
-        font-size: 1.5rem;
+    .room-form {
+        width: 95%;
     }
     .nickname-form {
         max-width: 100%;
-    }
-    .room-form {
-        width: 100%;
     }
 }
 
 /* For very small screens only */
 @media (max-width: 428px) {
-    .subtitle {
-        margin: 0.5rem 0 0.2rem;
-        font-size: 0.8rem;
-    }
-    
-    .features {
-        gap: 0.5rem;
-        font-size: 0.8rem;
-    }
-    
-    .feature-item {
-        gap: 0.2rem;
-    }
+
 }

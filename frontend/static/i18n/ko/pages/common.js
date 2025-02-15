@@ -1,7 +1,4 @@
 export default {
-  common: {
-    header: '읽고 삭제'
-  },
   times: {
     expiry: {
       0: '1분',

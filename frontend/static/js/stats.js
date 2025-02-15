@@ -15,7 +15,6 @@ async function loadStats() {
         
         // Update message counts
         $('#messagesCreated').textContent = data.messages_created.toLocaleString();
-        // $('#messagesRead').textContent = data.messages_read.toLocaleString();
         
     } catch (error) {
         console.error('Error loading stats:', error);
@@ -24,4 +23,4 @@ async function loadStats() {
 
 // Load stats immediately and refresh every minute
 loadStats();
-setInterval(loadStats, 60000); 
+setInterval(loadStats, 60000);

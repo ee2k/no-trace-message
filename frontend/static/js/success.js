@@ -46,7 +46,8 @@ class SuccessPage {
         $$('.copy-btn').forEach(button => {
             button.addEventListener('click', async () => {
                 const targetId = button.dataset.clipboard;
-                const text = $('#' + targetId).textContent;
+                const url = $('#' + targetId).textContent;
+                const text = `${i18n.t('success.share.name')}\n${i18n.t('success.share.instruction')}\n\n${url}`;
                 
                 try {
                     await navigator.clipboard.writeText(text);
@@ -63,7 +64,6 @@ class SuccessPage {
                         normalContent.style.display = 'flex';
                         copiedContent.style.display = 'none';
                     }, 2000);
-                    
                 } catch (err) {
                     console.error('Failed to copy:', err);
                 }
@@ -82,13 +82,13 @@ class SuccessPage {
             
             btn.addEventListener('click', async () => {
                 const targetId = btn.previousElementSibling.dataset.clipboard;
-                const text = $('#' + targetId).textContent;
-                const title = i18n.t('common.header');
-                
+                const url = $('#' + targetId).textContent;
+                const text = `${i18n.t('success.share.name')}\n${i18n.t('success.share.instruction')}\n\n${url}`;
+
                 try {
                     await navigator.share({
-                        title: title,
-                        text: `${title}\n${text}`,
+                        title: '',
+                        text: text
                     });
                 } catch (err) {
                     if (err.name !== 'AbortError') {

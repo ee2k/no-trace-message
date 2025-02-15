@@ -1,7 +1,4 @@
 export default {
-  common: {
-    header: 'Nach dem Lesen löschen'
-  },
   times: {
     expiry: {
       0: '1 Min',

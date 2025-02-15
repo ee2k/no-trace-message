@@ -6,13 +6,26 @@
     <title data-i18n="index.title">NoTrace Chat - Secure Communication</title>
     <base href="/">
     <link rel="stylesheet" href="static/css/global.css">
+    <link rel="stylesheet" href="static/css/header.css">
     <link rel="stylesheet" href="static/css/index.css">
     <link rel="stylesheet" href="static/css/languageSelector.css">
     <link rel="icon" type="image/svg+xml" href="static/images/favicon.svg">
 </head>
 <body>
     <div class="container">
-        <div id="headerComponent"></div>
+        <header>
+            <h1>
+                <a href="/"><svg class="fire-icon"><use href="static/images/fire.svg#icon"></use></svg></a>
+                <span data-i18n="index.header">NoTrace Chat</span>
+            </h1>
+            <p class="subtitle" data-i18n="subtitle" data-i18n-html="true">A secure, anonymous open-source platform</p>
+            <div class="features">
+                <div class="feature-item">•<span data-i18n="features.noHistory">No history</span></div>
+                <div class="feature-item">•<span data-i18n="features.noTracking">No tracking</span></div>
+                <div class="feature-item">•<span data-i18n="features.noDatabase">No database</span></div>
+            </div>
+            <!-- <hr class="header-hr"> -->
+        </header>
         <div id="languageSelector" class="language-selector-container"></div>
         <main class="content">
             <div class="action-buttons">

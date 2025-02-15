@@ -15,7 +15,7 @@ export default {
     useAccessToken: 'アクセストークンを使用',
     visible: '表示期間',
     validity: '有効期限',
-    tokenPlaceholder: '6～70文字\n\n覚えやすいフレーズがおすすめです～',
+    tokenPlaceholder: '覚えやすいフレーズがおすすめです～',
     tokenHintPlaceholder: 'トークンのヒント（任意）\n\n例：\'お気に入りのカフェ\'',
     validation: {
       emptyCustomID: 'カスタムメッセージIDを入力してください',

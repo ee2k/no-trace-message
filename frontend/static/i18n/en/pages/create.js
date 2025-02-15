@@ -1,17 +1,13 @@
 export default {
   create: {
     title: 'Burning Message - Create',
-    subtitle: 'A secure, anonymous open-source platform',
-    features: {
-      noHistory: 'No history',
-      noTracking: 'No tracking',
-      noDatabase: 'No database'
-    },
+    header: 'Burn after reading Message',
     messageInput: 'Type your message here...',
     createButton: 'Create Burning Message',
     dropZoneText: 'Click or drop image here to upload',
     dropZoneHint: '1 image, 3MB max',
     dropZoneFormat: '( jpg png gif webp )',
+    useCustomID: 'Use custom Message ID',
     useAccessToken: 'Use access token',
     visible: 'Visible',
     validity: 'Validity',

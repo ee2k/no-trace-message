@@ -1,7 +1,4 @@
 export default {
-  common: {
-    header: 'حرق بعد القراءة'
-  },
   times: {
     expiry: {
       0: 'دقيقة',

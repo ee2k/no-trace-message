@@ -1,7 +1,4 @@
 export default {
-  common: {
-    header: '阅后即焚'
-  },
   times: {
     expiry: {
       0: '1分钟',

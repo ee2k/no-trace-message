@@ -1,7 +1,4 @@
 export default {
-  common: {
-    header: 'Quemar después de leer'
-  },
   times: {
     expiry: {
       0: '1 min',

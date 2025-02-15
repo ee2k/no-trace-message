@@ -14,7 +14,6 @@ class Statistics:
             cls._instance = super().__new__(cls)
             cls._instance.startup_time = datetime.now()
             cls._instance.messages_created = 0
-            # cls._instance.messages_read = 0
             # Use PROJECT_ROOT constant
             cls._instance.stats_file = PROJECT_ROOT / "data" / "statistics.json"
             cls._instance.load_stats()
@@ -27,7 +26,6 @@ class Statistics:
                 with open(self.stats_file, 'r') as f:
                     data = json.load(f)
                     self.messages_created = data.get('messages_created', 0)
-                    # self.messages_read = data.get('messages_read', 0)
         except Exception as e:
             print(f"Error loading statistics: {e}")
 
@@ -47,10 +45,6 @@ class Statistics:
         self.messages_created += 1
         self.save_stats()
 
-    # def increment_messages_read(self):
-    #     self.messages_read += 1
-    #     self.save_stats()
-
     def get_stats(self):
         uptime = datetime.now() - self.startup_time
         days = uptime.days
@@ -61,5 +55,4 @@ class Statistics:
             'startup_time': self.startup_time.isoformat(),
             'uptime': f"{days}d {hours}h {minutes}m",
             'messages_created': self.messages_created
-            # 'messages_read': self.messages_read
         } 

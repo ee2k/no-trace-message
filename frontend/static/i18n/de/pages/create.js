@@ -15,7 +15,7 @@ export default {
     useAccessToken: 'Zugangstoken verwenden',
     visible: 'Sichtbar',
     validity: 'Gültigkeit',
-    tokenPlaceholder: '6~70 Zeichen\n\nEine einprägsame Zeile könnte gut sein~',
+    tokenPlaceholder: 'Eine einprägsame Zeile könnte gut sein~',
     tokenHintPlaceholder: 'Optionaler Token-Hinweis\n\nz.B. \'Unser Lieblingscafé\'',
     validation: {
       emptyCustomID: 'Bitte geben Sie eine benutzerdefinierte Nachrichten-ID ein',

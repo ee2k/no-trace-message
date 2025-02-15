@@ -1,21 +1,17 @@
 export default {
   create: {
     title: 'Burning Message - 创建',
-    subtitle: '一个安全、匿名的开源平台',
-    features: {
-      noHistory: '无历史记录',
-      noTracking: '无跟踪',
-      noDatabase: '无数据库'
-    },
+    header: '阅后即焚消息',
     messageInput: '在此输入消息...',
     createButton: '创建阅后即焚消息',
     dropZoneText: '点击或拖放图片上传',
     dropZoneHint: '1张图片，3MB以内',
     dropZoneFormat: '( jpg png gif webp )',
     useAccessToken: '使用访问令牌',
+    useCustomID: '使用自定义消息ID',
     visible: '可见',
     validity: '有效期',
-    tokenPlaceholder: '6~70个字符\n\n可以是你们共同知道的信息~',
+    tokenPlaceholder: '可以是你们共同知道的信息~',
     tokenHintPlaceholder: '可选的令牌提示\n\n例如：\'我们最喜欢的咖啡店\'',
     validation: {
       emptyCustomID: '请输入自定义消息ID。',

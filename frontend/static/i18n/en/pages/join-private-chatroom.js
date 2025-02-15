@@ -2,12 +2,6 @@ export default {
   join: {
     title: "NoTrace Chat - Join a private room",
     header: "Join Private Chatroom",
-    subtitle: "A secure, anonymous open-source platform",
-    features: {
-      noHistory: "No history",
-      noTracking: "No tracking",
-      noDatabase: "No database"
-    },
     roomIdPlaceholder: "Room ID",
     tokenPlaceholder: "Access token",
     nicknamePlaceholder: "Nickname (Click icon to auto create)",

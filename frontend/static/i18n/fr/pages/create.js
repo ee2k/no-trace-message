@@ -15,7 +15,7 @@ export default {
     useAccessToken: 'Utiliser un jeton d\'accès',
     visible: 'Visible',
     validity: 'Validité',
-    tokenPlaceholder: '6~70 caractères\n\nUne phrase mémorable pourrait convenir~',
+    tokenPlaceholder: 'Une phrase mémorable pourrait convenir~',
     tokenHintPlaceholder: 'Indice optionnel pour le jeton\n\nex : \'Notre café préféré\'',
     validation: {
       emptyCustomID: 'Veuillez saisir un identifiant de message personnalisé',

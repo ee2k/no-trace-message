@@ -15,7 +15,7 @@ export default {
     useAccessToken: 'Использовать токен доступа',
     visible: 'Видимость',
     validity: 'Срок действия',
-    tokenPlaceholder: '6~70 символов\n\nМожно использовать запоминающуюся фразу~',
+    tokenPlaceholder: 'Можно использовать запоминающуюся фразу~',
     tokenHintPlaceholder: 'Необязательная подсказка для токена\n\nнапр.: \'Наше любимое кафе\'',
     validation: {
       emptyCustomID: 'Пожалуйста, введите пользовательский ID сообщения.',

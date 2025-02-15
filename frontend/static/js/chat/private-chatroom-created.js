@@ -78,7 +78,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     normalContent.style.display = 'flex';
                     copiedContent.style.display = 'none';
                 }, 2000);
-                
             } catch (err) {
                 console.error('Failed to copy:', err);
             }

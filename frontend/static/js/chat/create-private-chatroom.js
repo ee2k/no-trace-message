@@ -1,13 +1,10 @@
 import { $ } from '../utils/dom.js';
-import { loadComponent } from '../utils/components.js';
 import { setupCounter } from '../utils/input.js';
 import { i18n } from '../utils/i18n.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // Load header component
-        await loadComponent('headerComponent', '/components/header');
-        await i18n.loadTranslations(i18n.currentLocale, null, 'share');
+        await i18n.loadTranslations(i18n.currentLocale, null, 'share', 'header');
         i18n.updateTranslations();
 
         // Setup custom ID section

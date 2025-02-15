@@ -15,7 +15,7 @@ export default {
     useAccessToken: '使用存取權杖',
     visible: '可見',
     validity: '有效期',
-    tokenPlaceholder: '6~70個字元\n\n可以是你們共同知道的資訊~',
+    tokenPlaceholder: '可以是你們共同知道的資訊~',
     tokenHintPlaceholder: '可選的權杖提示\n\n例如：\'我們最喜歡的咖啡店\'',
     validation: {
       emptyCustomID: '請輸入自訂訊息ID。',

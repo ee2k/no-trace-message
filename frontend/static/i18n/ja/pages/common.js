@@ -1,7 +1,4 @@
 export default {
-  common: {
-    header: '閲覧後に消去'
-  },
   times: {
     expiry: {
       0: '1分',

@@ -1,7 +1,4 @@
 export default {
-  common: {
-    header: 'Сжечь после прочтения'
-  },
   times: {
     expiry: {
       0: '1 мин',

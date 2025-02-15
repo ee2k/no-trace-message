@@ -15,7 +15,7 @@ export default {
     useAccessToken: '액세스 토큰 사용',
     visible: '표시 기간',
     validity: '유효 기간',
-    tokenPlaceholder: '6~70자\n\n기억하기 쉬운 문구를 추천합니다~',
+    tokenPlaceholder: '기억하기 쉬운 문구를 추천합니다~',
     tokenHintPlaceholder: '토큰 힌트 (선택사항)\n\n예: \'우리가 좋아하는 카페\'',
     validation: {
       emptyCustomID: '사용자 지정 메시지 ID를 입력해 주세요',

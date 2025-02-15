@@ -8,10 +8,12 @@ export default {
       expiresIn: "Expires without reading in"
     },
     share: {
+      name: 'Burn after reading',
       link: "Share this link :",
       copy: "Copy",
       copied: "Copied!",
-      share: "Share"
+      share: "Share",
+      instruction: 'Please use this link in your browser to see the message'
     },
     token: {
       instruction: "Please pass the one-time token securely :",

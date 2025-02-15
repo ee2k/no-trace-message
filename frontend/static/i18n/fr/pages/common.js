@@ -1,7 +1,4 @@
 export default {
-  common: {
-    header: 'Brûler après lecture'
-  },
   times: {
     expiry: {
       0: '1 min',

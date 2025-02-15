@@ -15,7 +15,7 @@ export default {
     useAccessToken: 'Usar token de acceso',
     visible: 'Visible',
     validity: 'Validez',
-    tokenPlaceholder: '6~70 caracteres\n\nPuede ser una frase memorable~',
+    tokenPlaceholder: 'Puede ser una frase memorable~',
     tokenHintPlaceholder: 'Pista opcional para el token\n\np.ej. \'Nuestro café favorito\'',
     validation: {
       emptyCustomID: 'Por favor, ingresa un ID de mensaje personalizado',
