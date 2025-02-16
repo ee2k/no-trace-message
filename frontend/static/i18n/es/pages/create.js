@@ -1,6 +1,7 @@
 export default {
   create: {
-    title: 'Burning Message - Crear',
+    title: 'Mensaje Autodestructivo - Crear',
+    header: 'Mensaje que se autodestruye',
     subtitle: 'Una plataforma de código abierto segura y anónima',
     features: {
       noHistory: 'Sin historial',
@@ -8,35 +9,36 @@ export default {
       noDatabase: 'Sin base de datos'
     },
     messageInput: 'Escribe tu mensaje aquí...',
-    createButton: 'Crear Mensaje Efímero',
-    dropZoneText: 'Haz clic o arrastra una imagen aquí',
-    dropZoneHint: '1 imagen, máx. 3MB',
+    createButton: 'Crear Mensaje Autodestructivo',
+    dropZoneText: 'Haz clic o suelta la imagen aquí',
+    dropZoneHint: '1 imagen, 3MB máximo',
     dropZoneFormat: '( jpg png gif webp )',
+    useCustomID: 'Usar ID de mensaje personalizado',
     useAccessToken: 'Usar token de acceso',
     visible: 'Visible',
     validity: 'Validez',
-    tokenPlaceholder: 'Puede ser una frase memorable~',
-    tokenHintPlaceholder: 'Pista opcional para el token\n\np.ej. \'Nuestro café favorito\'',
+    tokenPlaceholder: 'una línea memorable podría ser buena~',
+    tokenHintPlaceholder: 'Pista de token opcional\n\nej., \'Nuestra cafetería favorita\'',
     validation: {
-      emptyCustomID: 'Por favor, ingresa un ID de mensaje personalizado',
-      emptyMessage: 'Por favor, ingresa un mensaje o agrega imágenes',
-      emptyToken: 'Por favor, ingresa un token personalizado',
-      maxImages: 'Solo se permite {{count}} imagen. Por favor, elimina la imagen existente primero',
+      emptyCustomID: 'Por favor ingrese un ID de mensaje personalizado.',
+      emptyMessage: 'Por favor ingrese un mensaje o agregue imágenes',
+      emptyToken: 'Por favor ingrese un token personalizado.',
+      maxImages: 'Solo se permite {{count}} imagen. Por favor elimine la imagen existente primero.',
       fileType: 'Tipo de archivo {{type}} no soportado',
       fileSize: 'El tamaño del archivo excede el límite de {{size}}MB'
     },
     errors: {
-      INVALID_EXPIRY: 'Tiempo de expiración seleccionado no válido',
-      INVALID_BURN: 'Tiempo de lectura seleccionado no válido',
-      INVALID_FONT: 'Tamaño de fuente seleccionado no válido',
+      INVALID_EXPIRY: 'Tiempo de expiración seleccionado inválido',
+      INVALID_BURN: 'Tiempo de destrucción seleccionado inválido',
+      INVALID_FONT: 'Tamaño de fuente seleccionado inválido',
       MAX_IMAGES_EXCEEDED: 'Solo se permite 1 imagen',
       INVALID_FILE_TYPE: 'Tipo de archivo no soportado',
       FILE_TOO_LARGE: 'El tamaño del archivo excede el límite de 3MB',
-      TOO_MANY_ATTEMPTS: 'Demasiadas solicitudes. Por favor, espera un momento',
-      SERVER_ERROR: 'Error del servidor. Por favor, inténtalo más tarde',
-      createFailed: 'No se pudo crear el mensaje. Por favor, inténtalo de nuevo',
-      networkError: 'Error de red. Por favor, inténtalo más tarde',
-      MESSAGE_ID_EXISTS: 'El ID del mensaje ya existe, por favor elige otro.'
+      TOO_MANY_ATTEMPTS: 'Demasiadas solicitudes. Por favor espere un momento.',
+      SERVER_ERROR: 'Error del servidor. Por favor intente nuevamente más tarde.',
+      createFailed: 'Error al crear el mensaje. Por favor intente nuevamente.',
+      networkError: 'Error de red. Por favor intente nuevamente más tarde.',
+      MESSAGE_ID_EXISTS: 'El ID de mensaje ya existe, por favor elija otro.'
     }
   }
 }

@@ -1,25 +1,28 @@
 export default {
   success: {
-    title: "Nachricht erstellt - Burning Message",
+    title: "Nachricht Erstellt - Burning Message",
     header: "Nachricht erstellt!",
     timing: {
       visibleFor: "Sichtbar für",
       or: "oder",
-      expiresIn: "Läuft ohne Lesen ab in"
+      expiresIn: "Läuft ab ohne Lesen in"
     },
     share: {
-      link: "Link teilen:",
+      name: 'Nach dem Lesen verbrennen',
+      link: "Teilen Sie diesen Link:",
       copy: "Kopieren",
       copied: "Kopiert!",
-      share: "Teilen"
+      share: "Teilen",
+      instruction: 'Bitte verwenden Sie diesen Link in Ihrem Browser, um die Nachricht zu sehen'
     },
     token: {
-      instruction: "Bitte geben Sie den Einmal-Token sicher weiter:",
+      name: "Einmal-Zugriffstoken",
+      instruction: "Bitte übergeben Sie das Einmal-Token sicher:",
       hint: "Token-Hinweis:"
     },
     actions: {
-      createAnother: "Weitere Nachricht erstellen"
+      createAnother: "Erstellen Sie eine weitere Nachricht"
     },
-    notice: "Die Plattform scannt oder speichert keine Inhalte, plant aber die Implementierung einer automatischen CSAM-Erkennung in zukünftigen Updates."
+    notice: "Die Plattform scannt oder speichert keine Inhalte, plant jedoch die Implementierung der automatischen CSAM-Erkennung in zukünftigen Updates."
   }
 } 

@@ -5,4 +5,4 @@ export default {
         noTracking: 'No tracking',
         noDatabase: 'No database'
     }
-  };
+};

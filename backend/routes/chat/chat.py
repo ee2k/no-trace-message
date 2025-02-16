@@ -1,61 +1,12 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
-from auth.dependencies import get_current_user
-from utils.chat_error_codes import STATUS_CODES
-from utils.exceptions import APIException
-from .websocket import websocket_endpoint
-from constants import AUTH_HEADER, CONTENT_TYPE, APPLICATION_JSON
+from constants import CONTENT_TYPE, APPLICATION_JSON
 from services.chat.chatroom_manager import RoomNotFoundError, ChatroomManager
 from models.chat.chatroom import ValidateAccessRequest
 
 router = APIRouter()
 
 chatroom_manager = ChatroomManager()
-
-@router.get("/{room_id}/history", headers={AUTH_HEADER: "Bearer token"})
-async def get_chat_history(room_id: str, user = Depends(get_current_user)):
-    """Get chat history"""
-    try:
-        # History implementation
-        return JSONResponse(
-            content={"status": "ok"},
-            headers={CONTENT_TYPE: APPLICATION_JSON}
-        )
-    except APIException as e:
-        raise HTTPException(
-            status_code=STATUS_CODES.get(e.code, 500),
-            detail={"code": e.code, "message": e.message}
-        )
-
-@router.put("/{room_id}/messages/{message_id}/read")
-async def update_read_status(room_id: str, message_id: str, user = Depends(get_current_user)):
-    """Update message read status"""
-    try:
-        # Read status implementation
-        return JSONResponse(
-            content={"status": "ok"},
-            headers={CONTENT_TYPE: APPLICATION_JSON}
-        )
-    except APIException as e:
-        raise HTTPException(
-            status_code=STATUS_CODES.get(e.code, 500),
-            detail={"code": e.code, "message": e.message}
-        )
-
-@router.post("/{room_id}/typing")
-async def update_typing_status(room_id: str, user = Depends(get_current_user)):
-    """Update typing status"""
-    try:
-        # Typing status implementation
-        return JSONResponse(
-            content={"status": "ok"},
-            headers={CONTENT_TYPE: APPLICATION_JSON}
-        )
-    except APIException as e:
-        raise HTTPException(
-            status_code=STATUS_CODES.get(e.code, 500),
-            detail={"code": e.code, "message": e.message}
-        )
 
 @router.post("/validate_access")
 async def validate_access(request: ValidateAccessRequest):

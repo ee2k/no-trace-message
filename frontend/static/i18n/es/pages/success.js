@@ -1,24 +1,27 @@
 export default {
   success: {
-    title: "Mensaje creado - Burning Message",
+    title: "Mensaje Creado - Burning Message",
     header: "¡Mensaje creado!",
     timing: {
-      visibleFor: "Visible durante",
+      visibleFor: "Visible por",
       or: "o",
       expiresIn: "Expira sin leer en"
     },
     share: {
-      link: "Compartir enlace:",
+      name: 'Quemar después de leer',
+      link: "Comparte este enlace:",
       copy: "Copiar",
       copied: "¡Copiado!",
-      share: "Compartir"
+      share: "Compartir",
+      instruction: 'Por favor usa este enlace en tu navegador para ver el mensaje'
     },
     token: {
-      instruction: "Por favor, comparte el token de un solo uso de forma segura:",
+      name: "Token de Acceso Único",
+      instruction: "Por favor pasa el token de una sola vez de manera segura:",
       hint: "Pista del token:"
     },
     actions: {
-      createAnother: "Crear otro mensaje"
+      createAnother: "Crear Otro Mensaje"
     },
     notice: "La plataforma no escanea ni almacena ningún contenido, pero planea implementar la detección automática de CSAM en futuras actualizaciones."
   }

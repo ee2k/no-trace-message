@@ -14,6 +14,14 @@ class MessageCreator {
         this.messageInput = $('#messageContent');
         this.dropZone = $('#dropZone');
         this.fileInput = $('#fileInput');
+        
+        // Check for burn message content
+        const burnContent = sessionStorage.getItem('burn_message_content');
+        if (burnContent) {
+            this.messageInput.value = burnContent;
+            sessionStorage.removeItem('burn_message_content');
+        }
+        
         this.imagePreviews = $('#imagePreviews');
         this.createBtn = $('#createBtn');
         

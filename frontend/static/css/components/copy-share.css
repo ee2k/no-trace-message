@@ -1,4 +1,4 @@
-.copy-btn, .share-btn {
+.copy-btn, .share-btn, .burn-message-btn {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -9,18 +9,18 @@
     cursor: pointer;
     transition: background 0.2s;
 }
-.copy-btn:hover, .share-btn:hover {
+.copy-btn:hover, .share-btn:hover, .burn-message-btn:hover {
     background: var(--accent-color-dark);
 }
 
-.copy-icon, .share-icon {
+.copy-icon, .share-icon, .burn-message-icon {
     width: 1.3rem;
     height: 1.3rem;
     fill: currentColor;
 }
-.btn-share, .btn-content, .btn-content-copied {
-    width: 4rem;
-    height: 1.6rem;
+.btn-share, .btn-content, .btn-content-copied, .btn-burn-message {
+    width: 3.5rem;
+    height: 1.3rem;
     align-items: center;
     justify-content: center;
 }

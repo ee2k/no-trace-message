@@ -1,6 +1,7 @@
 export default {
   create: {
     title: 'Burning Message - Crea',
+    header: 'Messaggio autodistruggente',
     subtitle: 'Una piattaforma open source sicura e anonima',
     features: {
       noHistory: 'Nessuna cronologia',
@@ -12,6 +13,7 @@ export default {
     dropZoneText: 'Clicca o trascina un\'immagine qui',
     dropZoneHint: '1 immagine, max. 3MB',
     dropZoneFormat: '( jpg png gif webp )',
+    useCustomID: 'Usa ID messaggio personalizzato',
     useAccessToken: 'Usa token di accesso',
     visible: 'Visibile',
     validity: 'Validità',
@@ -27,7 +29,7 @@ export default {
     },
     errors: {
       INVALID_EXPIRY: 'Tempo di scadenza selezionato non valido',
-      INVALID_BURN: 'Tempo di lettura selezionato non valido',
+      INVALID_BURN: 'Tempo di distruzione selezionato non valido',
       INVALID_FONT: 'Dimensione del carattere selezionata non valida',
       MAX_IMAGES_EXCEEDED: 'È consentita una sola immagine',
       INVALID_FILE_TYPE: 'Tipo di file non supportato',

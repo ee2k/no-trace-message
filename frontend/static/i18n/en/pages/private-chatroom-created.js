@@ -19,8 +19,8 @@ export default {
     shareTitle: "Join Private Chatroom",
     share: {
       title: 'Private Chatroom',
-      instruction: 'Please use this link in your browser to see the message',
-      tokenTitle: 'Token for private chatroom',
+      instruction: 'Please use this link in your browser to join the chatroom',
+      tokenTitle: 'Token for chatroom',
       roomIdTitle: 'Chatroom ID'
     },
     error: {

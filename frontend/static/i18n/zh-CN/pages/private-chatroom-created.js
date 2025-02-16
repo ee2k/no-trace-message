@@ -1,24 +1,29 @@
 export default {
   pagei18n: {
-    title: "NoTrace Chat - 房间创建成功",
+    title: "NoTrace Chat - 私密聊天室创建成功",
     header: "聊天室已创建！",
     basicSection: {
-      heading: "房间信息",
-      hint: "分开发送链接和令牌（更安全）",
+      heading: "聊天室信息",
+      hint: "请分别分享链接和令牌（更安全）",
       tokenLabel: "令牌:"
     },
     separateSection: {
-      heading: "单独信息（最安全）",
-      hint: "分开发送每项信息",
-      baseLabel: "基础 URL:",
-      chatroomIdLabel: "房间 ID:",
+      heading: "分离信息（更安全）",
+      hint: "请分别分享每条信息",
+      baseLabel: "基础URL:",
+      chatroomIdLabel: "聊天室ID:",
       tokenLabel: "令牌:"
     },
     tokenHintLabel: "令牌提示:",
     joinButton: "加入聊天室",
-    shareTitle: "加入私密聊天室"
-  },
-  error: {
-    roomIdNotFound: "未找到房间 ID"
+    share: {
+      title: '私密聊天室',
+      instruction: '请在浏览器中使用此链接加入聊天室',
+      tokenTitle: '聊天室令牌',
+      roomIdTitle: '聊天室ID'
+    },
+    error: {
+      roomIdNotFound: "未找到聊天室ID"
+    }
   }
 };

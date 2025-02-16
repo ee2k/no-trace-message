@@ -9,6 +9,7 @@ export default {
     },    
     burningMessage: {
       heading: "Burn after reading Message",
+      createButton: "Create Message"
     }
   }
 };

@@ -1,6 +1,7 @@
 export default {
   create: {
     title: 'Burning Message - Criar',
+    header: 'Mensagem que se autodestrói',
     subtitle: 'Uma plataforma open source segura e anônima',
     features: {
       noHistory: 'Sem histórico',
@@ -12,6 +13,7 @@ export default {
     dropZoneText: 'Clique ou arraste uma imagem aqui',
     dropZoneHint: '1 imagem, máx. 3MB',
     dropZoneFormat: '( jpg png gif webp )',
+    useCustomID: 'Usar ID de mensagem personalizado',
     useAccessToken: 'Usar token de acesso',
     visible: 'Visível',
     validity: 'Validade',
@@ -27,8 +29,8 @@ export default {
     },
     errors: {
       INVALID_EXPIRY: 'Tempo de expiração selecionado inválido',
-      INVALID_BURN: 'Tempo de leitura selecionado inválido',
-      INVALID_FONT: 'Tamanho de fonte selecionado inválido',
+      INVALID_BURN: 'Tempo de destruição selecionado inválido',
+      INVALID_FONT: 'Tamanho da fonte selecionado inválido',
       MAX_IMAGES_EXCEEDED: 'Apenas 1 imagem permitida',
       INVALID_FILE_TYPE: 'Tipo de arquivo não suportado',
       FILE_TOO_LARGE: 'O tamanho do arquivo excede o limite de 3MB',

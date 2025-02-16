@@ -1,25 +1,28 @@
 export default {
   success: {
-    title: "Message créé - Burning Message",
+    title: "Message Créé - Burning Message",
     header: "Message créé !",
     timing: {
-      visibleFor: "Visible pendant",
+      visibleFor: "Visible pour",
       or: "ou",
       expiresIn: "Expire sans lecture dans"
     },
     share: {
-      link: "Partager le lien :",
+      name: 'Brûler après lecture',
+      link: "Partagez ce lien :",
       copy: "Copier",
       copied: "Copié !",
-      share: "Partager"
+      share: "Partager",
+      instruction: 'Veuillez utiliser ce lien dans votre navigateur pour voir le message'
     },
     token: {
-      instruction: "Veuillez transmettre le jeton à usage unique de manière sécurisée :",
+      name: "Jeton d'Accès Unique",
+      instruction: "Veuillez transmettre le jeton unique en toute sécurité :",
       hint: "Indice du jeton :"
     },
     actions: {
-      createAnother: "Créer un autre message"
+      createAnother: "Créer un Autre Message"
     },
-    notice: "La plateforme ne scanne ni ne stocke aucun contenu, mais prévoit d'implémenter la détection automatique CSAM dans les futures mises à jour."
+    notice: "La plateforme ne scanne ni ne stocke aucun contenu, mais prévoit d'implémenter la détection automatique de CSAM dans les futures mises à jour."
   }
 } 

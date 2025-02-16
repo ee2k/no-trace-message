@@ -1,7 +1,7 @@
 import { $, $$ } from '../utils/dom.js';
 import { i18n } from '../utils/i18n.js';
 import { prettyEncodeURL } from '../utils/url.js'
-import { setupCopyButtons, setupShareButtons } from '../utils/copy-share.js';
+import { setupCopyButtons, setupShareButtons, setupBurnMessageButtons } from '../utils/copy-share.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -58,11 +58,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Setup copy buttons
     setupCopyButtons();
-
-    // Setup share buttons
     setupShareButtons();
+    setupBurnMessageButtons();
 
     // Setup join button
     $('#joinBtn').addEventListener('click', () => {

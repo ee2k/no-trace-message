@@ -76,3 +76,20 @@ export function setupShareButtons() {
         });
     });
 }
+
+export function setupBurnMessageButtons() {
+    $$('.burn-message-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const targetId = button.parentElement.previousElementSibling.id;
+            const element = $('#' + targetId);
+            if (!element) {
+                console.error('Target element not found for:', targetId);
+                return;
+            }
+            
+            const text = createShareData(element);
+            sessionStorage.setItem('burn_message_content', text);
+            window.open('/create', '_blank');
+        });
+    });
+}
