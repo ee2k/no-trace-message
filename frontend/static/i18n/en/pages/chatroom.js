@@ -2,6 +2,7 @@ export default {
   chatroom: {
     title: "NoTrace Chat - Private Room",
     homepage: "Homepage",
+    joinpage: "Join chatroom",
     status: {
       connected: "Connected",
       roomNotFound: "Room not found",
@@ -32,7 +33,9 @@ export default {
       invalidToken: "Invalid or missing access token",
       unexpectedError: "An unexpected error occurred",
       genericError: "An error occurred",
-      joinFailed: "Join attempt by {username} was unsuccessful"
+      joinFailed: "Join attempt by {username} was unsuccessful",
+      errorprocessmsg: "Error processing message",
+      connErrorRefresh: "Connection error - please refresh"
     },
     alert: {
       sessionNotFound: "Session not found. Please join a room.",

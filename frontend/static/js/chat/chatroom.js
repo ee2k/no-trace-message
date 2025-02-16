@@ -387,13 +387,14 @@ class ChatRoom {
     buildWebSocketUrl() {
         const chatSession = JSON.parse(sessionStorage.getItem('chat_session'));
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const params = new URLSearchParams({
-            // username: encodeURIComponent(this.username),
-            username: this.username,
-            room_token: this.room_token || '',
-            user_id: chatSession.user_id || ''
-        });
         
+        // Manually encode each component without using URLSearchParams
+        const params = [
+            `username=${encodeURIComponent(this.username)}`,
+            `room_token=${encodeURIComponent(this.room_token || '')}`,
+            `user_id=${encodeURIComponent(chatSession.user_id || '')}`
+        ].join('&');
+
         // Handle development ports
         const isLocalhost = window.location.hostname === 'localhost';
         const port = window.location.port ? `:${window.location.port}` : '';
@@ -473,7 +474,7 @@ class ChatRoom {
                     debug.log('Processed message:', data);
                 } catch (error) {
                     debug.error('Message processing error:', error);
-                    this.addSystemMessage('Error processing message');
+                    this.addSystemMessage(i18n.t("chatroom.message.errorprocessmsg"));
                 }
             };
 
@@ -485,28 +486,28 @@ class ChatRoom {
                 
                 switch (event.code) {
                     case 1000: // Normal closure
-                        this.addSystemMessage('Disconnected from chat');
-                        this.addSystemMessage('Try refreshing or join the chatroom again');
+                        this.addSystemMessage(i18n.t("chatroom.message.disconnected"));
+                        this.addSystemMessage(i18n.t("chatroom.message.tryRefreshing"));
                         this.addSystemMessage(`<a href="/">${i18n.t("chatroom.homepage")}</a>`, true);
                         break;
                     case 1001: // Going away
-                        this.addSystemMessage('Connection lost - page is navigating away');
+                        this.addSystemMessage(i18n.t("chatroom.message.connectionLost"));
                         break;
                     case 1002: // Protocol error
-                        this.addSystemMessage('Connection error - please refresh');
+                        this.addSystemMessage(i18n.t("chatroom.message.connErrorRefresh"));
                         break;
                     case 1003: // Unsupported data
-                        this.addSystemMessage('Invalid message format');
+                        this.addSystemMessage(i18n.t("chatroom.message.invalidFormat"));
                         break;
                     case 1008: // Policy violation
-                        this.addSystemMessage('Disconnected due to policy violation');
+                        this.addSystemMessage(i18n.t("chatroom.message.policyViolation"));
                         break;
                     case 1011: // Server error
-                        this.addSystemMessage('Server error - please try again later');
+                        this.addSystemMessage(i18n.t("chatroom.message.serverError"));
                         break;
                     case 4001:
-                        this.addSystemMessage('Disconnected due to inactivity');
-                        this.addSystemMessage('Please refresh or rejoin');
+                        this.addSystemMessage(i18n.t("chatroom.message.inactiveDisconnect"));
+                        this.addSystemMessage(i18n.t("chatroom.message.tryRefreshing"));
                         this.addSystemMessage(`<a href="/">${i18n.t("chatroom.homepage")}</a>`, true);
                         break;
                     case 4003: // Custom: Invalid token
@@ -516,7 +517,7 @@ class ChatRoom {
                         this.handleRoomNotFound();
                         break;
                     default:
-                        this.addSystemMessage('Connection lost');
+                        this.addSystemMessage(i18n.t("chatroom.message.connectionLost"));
                         this.addSystemMessage(i18n.t("chatroom.status.reconnecting"));
                         this.attemptReconnect();
                 }
@@ -970,7 +971,7 @@ class ChatRoom {
                 
                 // Update message display to show failed status
                 this.addChatMessage(message.sender_id, message.content, message.content_type, 'failed');
-                this.addSystemMessage('Message failed to send. Click the retry button to try again.');
+                this.addSystemMessage(i18n.t("chatroom.message.messageFailed"));
             } else {
                 // Try sending again if under max retries
                 this.sendMessage(message);
@@ -1219,9 +1220,7 @@ class ChatRoom {
         this.addSystemMessage(i18n.t("chatroom.message.invalidToken"));
         this.ws.close();
         
-        setTimeout(() => {
-            window.location.href = '/join-private-chatroom';
-        }, 2000);
+        this.addSystemMessage(`<a href="/join-private-chatroom">${i18n.t("chatroom.joinpage")}</a>`, true);
     }
 
     handleServerError() {

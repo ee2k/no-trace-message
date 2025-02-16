@@ -2,6 +2,7 @@ export default {
   chatroom: {
     title: "NoTrace Chat - プライベートルーム",
     homepage: "ホームページ",
+    joinpage: "ルームに参加",
     status: {
       connected: "接続済み",
       roomNotFound: "ルームが見つかりません",
@@ -10,7 +11,7 @@ export default {
       disconnected: "切断されました"
     },
     menu: {
-      clearMessages: "メッセージをクリア",
+      clearMessages: "メッセージを消去",
       leaveRoom: "ルームを退出",
       deleteRoom: "ルームを削除"
     },
@@ -20,10 +21,10 @@ export default {
       invalidImage: "無効な画像ファイル",
       imageTooLarge: "画像が大きすぎます（最大 {maxSize}MB）",
       messageFailed: "メッセージの送信に失敗しました。再試行ボタンをクリックしてください。",
-      clearedBy: "{username} がメッセージをクリアしました",
+      clearedBy: "{username} がメッセージを消去しました",
       roomDeleted: "このルームは {username} によって削除されました",
       disconnected: "チャットから切断されました",
-      tryRefreshing: "更新するか、再度チャットルームに参加してください",
+      tryRefreshing: "ページを更新するか、再度ルームに参加してください",
       connectionLost: "接続が失われました",
       invalidFormat: "無効なメッセージ形式",
       policyViolation: "ポリシー違反により切断されました",
@@ -32,7 +33,9 @@ export default {
       invalidToken: "無効または欠落しているアクセストークン",
       unexpectedError: "予期しないエラーが発生しました",
       genericError: "エラーが発生しました",
-      joinFailed: "{username} の参加試行が失敗しました"
+      joinFailed: "{username} の接続試行が失敗しました",
+      errorprocessmsg: "メッセージ処理エラー",
+      connErrorRefresh: "接続エラー - ページを更新してください"
     },
     alert: {
       sessionNotFound: "セッションが見つかりません。ルームに参加してください。",
