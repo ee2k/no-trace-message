@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 chatroom_manager = ChatroomManager()
 
-INACTIVITY_TIMEOUT = 300  # 5 minutes for general chatrooms
+INACTIVITY_TIMEOUT = 300  # seconds for general chatrooms
 
 @singleton
 class WebSocketManager:
@@ -255,7 +255,9 @@ class WebSocketManager:
                             "timestamp": current_time
                         })
                     except Exception:
-                        await self.disconnect(participant, room_id)
+                        # Only disconnect if multiple pings fail
+                        if current_time - participant.last_active.timestamp() > INACTIVITY_TIMEOUT:
+                            await self.disconnect(participant, room_id)
                         continue
                     
                     if current_time - participant.last_active.timestamp() > INACTIVITY_TIMEOUT:
@@ -413,6 +415,21 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
             await websocket.close(code=4004, reason="Room not found")
             return
 
+        # Check if user already has an active connection in this room
+        # existing_user = next((p for p in room.participants 
+        #                     if p.user_id == claimed_user_id and p.is_connected()), None)
+        # if existing_user:
+        #     # Close the existing connection first
+        #     try:
+        #         await existing_user.websocket.close(code=4000, reason="New connection initiated")
+        #     except Exception:
+        #         pass
+        #     # Remove the user from participants to ensure clean reconnection
+        #     room.remove_participant(existing_user.user_id)
+        #     await websocket_manager.send_participant_list(room_id)
+
+        # Continue with normal connection process...
+
         # room_token validation for private rooms
         if room.requires_token():
             if not room_token or not await chatroom_manager.validate_room_token(room_id, room_token):
@@ -431,11 +448,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
         # Notify client and participants
         await websocket.send_json({
             "message_type": "connection_info",
-            "user_id": user_id,
-            "participants": [
-                {"user_id": p.user_id, "username": p.username}
-                for p in room.participants
-            ]
+            "user_id": user_id
         })
         
         # Broadcast join notification

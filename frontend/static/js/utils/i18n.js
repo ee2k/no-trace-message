@@ -32,13 +32,6 @@ class I18nManager {
     return lang || this.defaultLocale;
   }
 
-  /**
-   * Loads the translations for the given locale and page.
-   *
-   * @param {string} locale - The locale to load.
-   * @param {string|null} i18nFile - The page-specific key or file to load translations for.
-   * @param {string|null} commonFile - Optional name of the common translations file (without the .js extension). If provided, it loads from ../../i18n/${locale}/${commonFile}.js.
-   */
   async loadTranslations(locale, i18nFile = null, ...commonFiles) {
     if (!this.translations.has(locale)) {
       try {
@@ -83,16 +76,25 @@ class I18nManager {
     window.location.reload();
   }
 
-  t(key) {
+  t(key, params = {}) {
     // If no translations loaded for current locale, keep original text
     const translation = this.translations.get(this.currentLocale);
     if (!translation) return null;
 
     // Navigate the nested object using the key path
-    const value = key.split('.').reduce((obj, k) => obj && obj[k], translation);
+    let value = key.split('.').reduce((obj, k) => obj && obj[k], translation);
     
     // Return null if translation not found (to keep original text)
-    return value || null;
+    if (!value) return null;
+
+    // Handle string interpolation if params are provided
+    if (params && typeof value === 'string') {
+      Object.keys(params).forEach(param => {
+        value = value.replace(new RegExp(`\\{${param}\\}`, 'g'), params[param]);
+      });
+    }
+
+    return value;
   }
 
   updateTranslations() {

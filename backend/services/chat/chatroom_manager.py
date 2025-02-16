@@ -10,6 +10,8 @@ from utils.singleton import singleton
 import time
 from utils.error import Coded_Error
 from utils.chat_error_codes import ChatErrorCodes, STATUS_CODES
+from fastapi import WebSocket
+from models.chat.user import ParticipantStatus
 
 @singleton
 class ChatroomManager:

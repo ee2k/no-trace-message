@@ -588,7 +588,7 @@ class ChatRoom {
             case 'system':
                 if (data.code === 'FAILED_JOIN_ATTEMPT') {
                     const username = data.username;
-                    const message = `Join attempt by ${username} was unsuccessful`;
+                    const message = i18n.t("chatroom.message.joinFailed", { username: username });
                     this.addSystemMessage(message);
                     return;
                 }
@@ -640,13 +640,13 @@ class ChatRoom {
             
             case 'clear_messages':
                 this.messages.innerHTML = '';
-                this.addSystemMessage(data.username + " " + "cleared messages");
+                this.addSystemMessage(i18n.t("chatroom.message.clearedBy", { username: data.username }));
                 break;
             
             case 'room_deleted':
                 sessionStorage.clear();
                 // Notify user, clear local data, and redirect to home
-                this.addSystemMessage("This room has been deleted by " + data.username);
+                this.addSystemMessage(i18n.t("chatroom.message.roomDeleted", { username: data.username }));
                 this.updateRoomStatus();
                 break;
             default:
@@ -1019,10 +1019,6 @@ class ChatRoom {
             case this.connectionStates.ROOM_NOT_FOUND:
                 this.statusIcon.classList.add('not-found');
                 this.statusText.textContent = i18n.t("chatroom.status.roomNotFound");
-                // Optionally redirect after a delay
-                // setTimeout(() => {
-                //     window.location.href = '/join-private-chatroom';
-                // }, 3000);
                 break;
             
             case this.connectionStates.CONNECTING:
@@ -1136,26 +1132,25 @@ class ChatRoom {
                 timestamp: Date.now()
             };
 
-            debug.log('Sending message:', message);  // Add debug log
+            debug.log('Sending message:', message);
             await this.sendMessage(message);
             
-            // Only clear input and reset height if message was sent successfully
             this.messageInput.value = '';
             this.messageInput.style.height = 'auto';
         } catch (error) {
             debug.error('Failed to send message:', error);
-            this.addSystemMessage('Failed to send message. Please try again.');
+            this.addSystemMessage(i18n.t("chatroom.message.failedToSend"));
         }
     }
 
     async sendImageMessage(file) {
         if (!file || !file.type.startsWith('image/')) {
-            this.addSystemMessage('Invalid image file');
+            this.addSystemMessage(i18n.t("chatroom.message.invalidImage"));
             return;
         }
 
         if (file.size > this.MAX_IMAGE_SIZE) {
-            this.addSystemMessage(`Image too large (max ${this.MAX_IMAGE_SIZE / 1024 / 1024}MB)`);
+            this.addSystemMessage(i18n.t("chatroom.message.imageTooLarge", { maxSize: this.MAX_IMAGE_SIZE / 1024 / 1024 }));
             return;
         }
 
@@ -1212,33 +1207,31 @@ class ChatRoom {
     handleRoomNotFound() {
         this.connectionState = this.connectionStates.ROOM_NOT_FOUND;
         this.updateRoomStatus();
-        this.addSystemMessage('Room not found.');
+        this.addSystemMessage(i18n.t("chatroom.status.roomNotFound"));
         this.addSystemMessage(`<a href="/">${i18n.t("chatroom.homepage")}</a>`, true);
         
-        // Clean up any existing connection
         if (this.ws) {
             this.ws.close();
         }
     }
 
     handleInvalidToken() {
-        this.addSystemMessage('Invalid or missing access token');
-        this.ws.close(); // Close the connection
+        this.addSystemMessage(i18n.t("chatroom.message.invalidToken"));
+        this.ws.close();
         
-        // Redirect to join-private-chatroom after 2 seconds
         setTimeout(() => {
             window.location.href = '/join-private-chatroom';
         }, 2000);
     }
 
     handleServerError() {
-        this.addSystemMessage('An unexpected error occurred');
-        this.ws.close(); // Close the connection
+        this.addSystemMessage(i18n.t("chatroom.message.serverError"));
+        this.ws.close();
     }
 
     handleGenericError() {
-        this.addSystemMessage('An error occurred');
-        this.ws.close(); // Close the connection
+        this.addSystemMessage(i18n.t("chatroom.message.genericError"));
+        this.ws.close();
     }
 
     updateMessageStatus(messageId, newStatus) {
