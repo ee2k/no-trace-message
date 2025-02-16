@@ -1005,7 +1005,7 @@ class ChatRoom {
 
     updateRoomInfo() {
         this.participantCount = this.participants.size
-        $('#roomInfo').textContent = `${this.formattedRoomId} 👤 ${this.participantCount}`;
+        $('#roomInfo').textContent = `${this.formattedRoomId} 👤 ${this.participantCount} / 6`;
     }
 
     updateConnectionStatus() {
