@@ -1,6 +1,6 @@
 from models.chat.chatroom import PrivateRoom
 from utils.num_generator import generate_id
-from datetime import datetime, UTC, timedelta
+from datetime import datetime, UTC
 from typing import Optional
 import secrets
 import string
@@ -10,8 +10,7 @@ from utils.singleton import singleton
 import time
 from utils.error import Coded_Error
 from utils.chat_error_codes import ChatErrorCodes, STATUS_CODES
-from fastapi import WebSocket
-from models.chat.user import ParticipantStatus
+from services.statistics import Statistics
 
 @singleton
 class ChatroomManager:
@@ -41,6 +40,7 @@ class ChatroomManager:
         )
         
         self.rooms[room.room_id] = room
+        Statistics().increment_chatrooms_created()
         return room
 
     async def validate_room_token(self, room_id: str, room_token: str) -> bool:

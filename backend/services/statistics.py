@@ -26,6 +26,7 @@ class Statistics:
                 with open(self.stats_file, 'r') as f:
                     data = json.load(f)
                     self.messages_created = data.get('messages_created', 0)
+                    self.chatrooms_created = data.get('chatrooms_created', 0)
         except Exception as e:
             print(f"Error loading statistics: {e}")
 
@@ -36,13 +37,17 @@ class Statistics:
             with open(self.stats_file, 'w') as f:
                 json.dump({
                     'messages_created': self.messages_created,
-                    # 'messages_read': self.messages_read
+                    'chatrooms_created': self.chatrooms_created
                 }, f)
         except Exception as e:
             print(f"Error saving statistics: {e}")
 
     def increment_messages_created(self):
         self.messages_created += 1
+        self.save_stats()
+        
+    def increment_chatrooms_created(self):
+        self.chatrooms_created += 1
         self.save_stats()
 
     def get_stats(self):
@@ -54,5 +59,6 @@ class Statistics:
         return {
             'startup_time': self.startup_time.isoformat(),
             'uptime': f"{days}d {hours}h {minutes}m",
-            'messages_created': self.messages_created
+            'messages_created': self.messages_created,
+            'chatrooms_created': self.chatrooms_created
         } 

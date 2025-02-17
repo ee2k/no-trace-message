@@ -13,8 +13,8 @@ async function loadStats() {
         $('#startupTime').textContent = 
             `Started: ${startupDate.toLocaleString()}`;
         
-        // Update message counts
         $('#messagesCreated').textContent = data.messages_created.toLocaleString();
+        $('#chatroomsCreated').textContent = data.chatrooms_created.toLocaleString();
         
     } catch (error) {
         console.error('Error loading stats:', error);
