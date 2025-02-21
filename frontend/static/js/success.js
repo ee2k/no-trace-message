@@ -1,7 +1,7 @@
 import { $, $$ } from './utils/dom.js';
 import { i18n } from './utils/i18n.js';
 import { prettyEncodeURL } from './utils/url.js'
-import { setupCopyButtons, setupShareButtons } from './utils/copy-share.js';
+import { setupCopyButtons, setupShareButtons, setupBurnMessageButtons } from './utils/copy-share.js';
 
 class SuccessPage {
     static async initialize() {
@@ -37,6 +37,7 @@ class SuccessPage {
         
         setupCopyButtons();
         setupShareButtons();
+        setupBurnMessageButtons();
         this.loadMessageMeta().then(() => {
             // Only remove from sessionStorage after successful load
             sessionStorage.removeItem('current_message_id');

@@ -218,7 +218,6 @@ class MessageCreator {
             if (customIDBtn && customIDBtn.classList.contains('active')) {
                 const customIDValue = customIDElement.value.trim();
                 if (!customIDValue) {
-                    alert(i18n.t("create.validation.emptyCustomID"));
                     customIDElement.classList.add('input-error');
                     customIDElement.focus();
                     setTimeout(() => customIDElement.classList.remove('input-error'), 400);
@@ -233,7 +232,6 @@ class MessageCreator {
 
         if (this.tokenInputContainer.style.display !== 'none') {
             if (!customToken || customToken.length < this.MIN_TOKEN_LENGTH) {
-                alert(i18n.t('create.validation.emptyToken'));
                 this.customToken.classList.add('input-error');
                 this.customToken.focus();
                 setTimeout(() => this.customToken.classList.remove('input-error'), 400);

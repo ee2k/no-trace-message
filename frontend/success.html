@@ -39,6 +39,11 @@
                             <button class="share-btn" style="display: none;" title="Share" data-i18n-title="success.share.share">
                                 <div class="btn-share"><svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg></div>
                             </button>
+                            <button class="burn-message-btn">
+                                <div class="btn-burn-message">
+                                    <svg class="burn-message-icon"><use href="static/images/fire.svg#icon"></use></svg>
+                                </div>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -47,17 +52,24 @@
                     <p data-i18n="success.token.instruction">Please pass the one-time token securely :</p>
                     <div class="token-box">
                         <span id="messageToken" data-share-title="success.token.name">your-custom-token</span>
-                        <button class="copy-btn" data-clipboard="messageToken" data-i18n-title="success.share.copy">
-                            <div class="btn-content">
-                                <svg class="copy-icon"><use href="static/images/copy.svg#icon"></use></svg>
-                            </div>
-                            <div class="btn-content-copied" style="display: none;">
-                                <svg class="copy-icon"><use href="static/images/checkmark.svg#icon"></use></svg>
-                            </div>
-                        </button>
-                        <button class="share-btn" style="display: none;" data-i18n-title="success.share.share">
-                            <div class="btn-share"><svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg></div>
-                        </button>
+                        <div class="button-group">
+                            <button class="copy-btn" data-clipboard="messageToken" data-i18n-title="success.share.copy">
+                                <div class="btn-content">
+                                    <svg class="copy-icon"><use href="static/images/copy.svg#icon"></use></svg>
+                                </div>
+                                <div class="btn-content-copied" style="display: none;">
+                                    <svg class="copy-icon"><use href="static/images/checkmark.svg#icon"></use></svg>
+                                </div>
+                            </button>
+                            <button class="share-btn" style="display: none;" data-i18n-title="success.share.share">
+                                <div class="btn-share"><svg class="share-icon"><use href="static/images/share.svg#icon"></use></svg></div>
+                            </button>
+                            <button class="burn-message-btn">
+                                <div class="btn-burn-message">
+                                    <svg class="burn-message-icon"><use href="static/images/fire.svg#icon"></use></svg>
+                                </div>
+                            </button>
+                        </div>
                     </div>
                     <div id="tokenHintSection" class="token-hint" style="display: none;">
                         <p><span data-i18n="success.token.hint">Token hint:</span><span id="messageTokenHint"></span></p>
