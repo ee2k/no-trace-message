@@ -1,11 +1,19 @@
 import { $ } from '../utils/dom.js';
 import { setupCounter } from '../utils/input.js';
+import { setupSlider } from '../utils/ui.js';
 import { i18n } from '../utils/i18n.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         await i18n.loadTranslations(i18n.currentLocale, null, 'share', 'header');
         i18n.updateTranslations();
+
+        // Setup max participants slider
+        const maxParticipantsSlider = $('#maxParticipants');
+        const maxParticipantsValue = maxParticipantsSlider.parentElement.$('.slider-value');
+        const participantValues = ['2', '7'];
+        
+        setupSlider(maxParticipantsSlider, maxParticipantsValue, participantValues);
 
         // Setup custom ID section
         const customIDBtn = $('#customIDBtn');
@@ -82,6 +90,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const roomId = customID.value.trim();
             const token = customToken.value.trim();
             const tokenHintValue = tokenHint.value.trim();
+            const maxParticipants = parseInt(maxParticipantsSlider.value);
 
             // Check if the user has chosen to use custom chatroom ID or token
             const isCustomIDActive = customIDBtn.classList.contains('active');
@@ -114,7 +123,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     body: JSON.stringify({
                         room_id: roomId || undefined,
                         room_token: token || undefined,
-                        room_token_hint: tokenHintValue || undefined
+                        room_token_hint: tokenHintValue || undefined,
+                        max_participants: maxParticipants
                     })
                 });
 

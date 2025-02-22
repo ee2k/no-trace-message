@@ -13,6 +13,7 @@ export default {
     validity: 'Validity',
     tokenPlaceholder: 'a memorable line could be good~',
     tokenHintPlaceholder: 'Optional token hint\n\ne.g., \'Our favorite coffee shop\'',
+    maxParticipants: 'Participants',
     validation: {
       emptyCustomID: 'Please enter a custom message ID.',
       emptyMessage: 'Please enter a message or add images',

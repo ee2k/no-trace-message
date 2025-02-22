@@ -215,11 +215,88 @@ footer {
     margin: 0 auto;
 }
 
+
+.settings {
+    display: flex;
+    gap: 2rem;
+    margin-top: 0.5rem;
+}
+
+.setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 50%;
+}
+
+/* Update slider styles to match create.css */
+.slider {
+    width: 100%;
+    height: 0.25rem;
+    background: linear-gradient(to right, var(--accent-color) var(--slider-progress, 50%), var(--bg-secondary) var(--slider-progress, 50%));
+    outline: none;
+    border-radius: 0.25rem;
+    margin: 0.7rem 0;
+    -webkit-appearance: none;
+    appearance: none;
+    padding: 0.2rem;
+}
+
+.slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 0.25rem;
+    background: transparent;
+    border-radius: 0.25rem;
+    border: none;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 0.9rem;
+    height: 0.9rem;
+    background: var(--accent-color);
+    border-radius: 50%;
+    cursor: pointer;
+    margin-top: -0.325rem;
+}
+
+.slider::-moz-range-track {
+    width: 100%;
+    height: 0.25rem;
+    background: transparent;
+    border-radius: 0.25rem;
+    border: none;
+}
+
+.slider::-moz-range-thumb {
+    width: 0.9rem;
+    height: 0.9rem;
+    background: var(--accent-color);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+.slider-value {
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
 /* Always put screen size media queries at the end of the file */
 /* For very small screens and mobile devices */
 @media (max-width: 600px) {
     .room-form {
         width: 95%;
+    }
+
+    .settings {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .setting-item {
+        width: 100%;
     }
 }
 

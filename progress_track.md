@@ -2,11 +2,11 @@
 
 ## To-do list
 
-- When a user joins a chatroom, use a system message to list all existing members
-
-- add a small explanation line after chatroom and burn after reading message in main page, including chatroom expiry texts
+- add user number and expiry time setting to chatroom
 
 - add phone call functionality (1v1)
+
+- When a user joins a chatroom, use a system message to list all existing members
 
 - fix mobile chrome display problem
 

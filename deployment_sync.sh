@@ -17,6 +17,9 @@ success_msg() {
     echo -e "${GREEN}$1${NC}"
 }
 
+# Get the repository name from the current directory
+REPO_NAME=$(basename "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")
+
 # Configuration
 if [ $# -ne 2 ]; then
     echo "Usage: $0 <remote_user> <remote_host>"
@@ -25,7 +28,8 @@ fi
 
 REMOTE_USER=$1
 REMOTE_HOST=$2
-REMOTE_DIR="/var/www/no-trace-message"
+REMOTE_DIR="/var/www/$REPO_NAME"
+echo "Syncing changed files to $REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR"
 
 # Upload changed files
 success_msg "Syncing changed files..."

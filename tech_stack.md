@@ -1,7 +1,7 @@
 ## Tech Stack
 
 - Linux     Debian 11 (Bullseye)
-- Python    Python 3.10.12
+- Python    Python 3.11
 - FastAPI   FastAPI 0.95.2
 - HTML      HTML5
 - CSS       CSS3
@@ -103,7 +103,7 @@ http {
         client_max_body_size 5M;
 
         # Root directory for static files - adjust path to your local project
-        root /Path/to/burning-message/frontend;
+        root /Path/to/no-trace-message/frontend;
 
         # Static assets - no rewriting
         location /static/ {
