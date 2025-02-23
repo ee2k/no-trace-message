@@ -4,24 +4,50 @@ import { i18n } from '../utils/i18n.js';
 import { LanguageSelector } from '../components/languageSelector.js';
 
 // Global constants for random username generation
-const ADJECTIVES = [
-  'Happy', 'Sad', 'Angry', 'Joyful', 'Fearful', 'Disgusted', 'Lucky',
-  'Sunny', 'Clever', 'Swift', 'Gloomy', 'Boring', 'Sleepy', 'Grumpy',
-  'Lazy', 'Dreamy', 'Silly', 'Witty', 'Clumsy', 'Brave', 'Shy', 'Wild',
-  'Calm', 'Quiet', 'Loud', 'Gentle', 'Bold', 'Wise', 'Fancy', 'Neat',
-  'Smart', 'Crazy', 'Smartass'
-];
+const NAMES = [
+  // Harry Potter characters
+  'Harry Potter', 'Ron Weasley', 'Hermione Granger', 'Albus Dumbledore', 
+  'Severus Snape', 'Tom Riddle', 'Minerva McGonagall', 'Rubeus Hagrid', 'Sirius Black', 
+  'Remus Lupin', 'Draco Malfoy', 'Neville Longbottom', 'Luna Lovegood', 
+  'Ginny Weasley', 'Bellatrix Lestrange', 'Dobby',
+  
+  // Naruto characters  
+  'Naruto Uzumaki', 'Sasuke Uchiha', 'Sakura Haruno', 'Kakashi Hatake', 'Itachi Uchiha', 
+  'Hinata Hyuga', 'Jiraiya', 'Tsunade Senju', 'Orochimaru', 'Gaara', 'Rock Lee', 
+  'Neji Hyuga', 'Shikamaru Nara', 'Madara Uchiha', 'Nagato', 'Minato Namikaze',
 
-const NOUNS = [
-  'Rat', 'Ox', 'Tiger', 'Rabbit', 'Dragon', 'Snake', 'Horse', 'Goat',
-  'Monkey', 'Rooster', 'Dog', 'Pig', 'Cat', 'Panda', 'Eagle', 'Dolphin',
-  'Fox', 'Wolf', 'Whale', 'Turtle', 'Giraffe', 'Lion', 'Bear', 'Penguin',
-  'Koala', 'Elephant', 'Zebra', 'Deer', 'Jellyfish', 'Kangaroo', 'Crane',
-  'Mantis', 'Pigeon', 'Seal', 'Viper', 'Tigeress', 'Vulture', 'Phoenix',
-  'Unicorn', 'Griffin', 'Pegasus', 'Narwhal', 'Axolotl', 'Pangolin',
-  'Platypus', 'Sloth', 'Otter', 'Raccoon', 'RedPanda', 'Tree', 'Sequoia',
-  'Rose', 'Lily', 'Daisy', 'Sunflower', 'Tulip', 'Orchid', 'Daffodil',
-  'Iris', 'Hyacinth', 'Dahlia', 'Poppy', 'Marigold', 'Poppy'
+  // Dragon Ball characters
+  'Son Goku', 'Vegeta', 'Gohan Son', 'Bulma Brief', 'Piccolo', 'Trunks Brief', 
+  'Frieza', 'Cell', 'Majin Buu', 'Krillin', 'Master Roshi', 'Android 16',
+  'Android 17', 'Android 18',
+  
+  // One Piece characters
+  'Monkey D. Luffy', 'Roronoa Zoro', 'Nami', 'Usopp', 'Sanji Vinsmoke', 'Tony Tony Chopper',
+  'Nico Robin', 'Franky', 'Brook', 'Portgas D. Ace', 'Trafalgar D. Water Law', 'Shanks',
+
+  // Game of Thrones characters
+  'Jon Snow', 'Daenerys Targaryen', 'Tyrion Lannister', 'Arya Stark', 'Ned Stark',
+  'Cersei Lannister', 'Jaime Lannister', 'Brienne Tarth', 'Tywin Lannister',
+  'Sansa Stark', 'Petyr Baelish', 'Samwell Tarly', 'Sandor Clegane',
+
+  // The Matrix characters
+  'Neo Anderson', 'Trinity', 'Morpheus', 'Agent Smith', 'Oracle', 'Niobe',
+  'Tank', 'Dozer', 'Commander Lock',
+
+  // Studio Ghibli characters
+  'Chihiro Ogino', 'Haku', 'Howl Jenkins', 'Sophie Hatter', 'Princess Mononoke',
+  'Ashitaka', 'Totoro', 'Kiki', 'Princess Nausicaa', 'Baron Humbert',
+  'Ponyo', 'Jiro Horikoshi', 'Porco Rosso',
+
+  // Marvel characters
+  'Tony Stark', 'Steve Rogers', 'Peter Parker', 'Thor Odinson', 'Bruce Banner',
+  'Natasha Romanoff', 'Stephen Strange', 'Wanda Maximoff', 'Carol Danvers',
+  'Peter Quill', 'Loki Laufeyson', 'Nick Fury', 'Thanos',
+
+  // DC characters
+  'Bruce Wayne', 'Clark Kent', 'Diana Prince', 'Barry Allen', 'Arthur Curry',
+  'Hal Jordan', 'Oliver Queen', 'Victor Stone', 'Selina Kyle',
+  'Harley Quinn', 'Joker', 'Lex Luthor', 'Darkseid'
 ];
 
 class JoinPrivateChatroomPage {
@@ -77,12 +103,10 @@ class JoinPrivateChatroomPage {
       e.target.classList.remove('input-error');
     });
 
-    // Generate random username using the globally defined arrays
+    // Generate random username using the NAMES array
     this.generateBtn.addEventListener('click', () => {
-      const username =
-        `${ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)]} ` +
-        `${NOUNS[Math.floor(Math.random() * NOUNS.length)]}`;
-      this.usernameInput.value = username;
+      const randomName = NAMES[Math.floor(Math.random() * NAMES.length)];
+      this.usernameInput.value = randomName;
     });
 
     // Join button handler
